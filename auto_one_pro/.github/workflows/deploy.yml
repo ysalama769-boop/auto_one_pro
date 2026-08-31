@@ -1,6 +1,6 @@
 name: Deploy Flutter Web
 
-on:
+"on":
   push:
     branches:
       - master
