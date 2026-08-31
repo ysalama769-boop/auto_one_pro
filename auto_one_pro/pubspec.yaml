@@ -1,0 +1,61 @@
+name: auto_one
+publish_to: 'none'
+description: AUTO ONE - luxury car inventory and booking foundation
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  supabase_flutter: ^2.10.3
+  font_awesome_flutter: ^11.0.0
+  cupertino_icons: ^1.0.8
+  url_launcher: ^6.3.2
+
+flutter:
+  uses-material-design: true
+
+  assets:
+
+    - assets/logo-autoone.png
+
+    - assets/BACKGRAOUND.jpg
+    
+    - assets/google_maps_pin.png
+
+    - assets/youssefcar1.jpg
+    - assets/youssefcar22.jpg
+    - assets/youssefcar3.jpg
+    - assets/youssefcar4.jpg
+    - assets/youssefcar5.jpg
+
+    - assets/sonet full1.jpeg
+    - assets/sonet full2.jpeg
+    - assets/sonet full3.jpeg
+    - assets/sonet full4.jpeg
+    - assets/sonet full5.jpeg
+
+    - assets/g700lux1.jpeg
+    - assets/g700lux2.jpeg
+    - assets/g700lux3.jpeg
+    - assets/g700lux4.jpeg
+    - assets/g700lux5.jpeg
+
+    - assets/yaris_white.jpeg 
+    - assets/yaris_black.jpeg 
+    - assets/yaris_gray.jpeg 
+
+
+
+    - assets/brands/
+
+        
+
+
+  
+dev_dependencies:
+  flutter_lints: 6.0.0
