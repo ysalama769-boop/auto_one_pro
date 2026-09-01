@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,40 @@ import 'env.dart';
 const Color kHeaderColor = Color.fromARGB(255, 238, 221, 221);
 const Color kHeaderTextColor = Color.fromARGB(255, 20, 20, 20);
 
+// ============================================================
+// FAVORITES (stored locally in the browser)
+// ============================================================
+Set<int> favoriteCarIds = {};
+
+void loadFavorites() {
+  try {
+    final saved = html.window.localStorage['auto_one_favorites'];
+    if (saved != null && saved.isNotEmpty) {
+      favoriteCarIds =
+          saved.split(',').where((s) => s.isNotEmpty).map(int.parse).toSet();
+    }
+  } catch (e) {
+    debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل المفضلة: $e');
+  }
+}
+
+void _saveFavorites() {
+  try {
+    html.window.localStorage['auto_one_favorites'] = favoriteCarIds.join(',');
+  } catch (e) {
+    debugPrint('AUTO_ONE_DEBUG: تعذّر حفظ المفضلة: $e');
+  }
+}
+
+void toggleFavorite(int carId) {
+  if (favoriteCarIds.contains(carId)) {
+    favoriteCarIds.remove(carId);
+  } else {
+    favoriteCarIds.add(carId);
+  }
+  _saveFavorites();
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -21,6 +56,8 @@ Future<void> main() async {
     url: Env.supabaseUrl,
     publishableKey: Env.supabaseAnonKey,
   );
+
+  loadFavorites();
 
   runApp(const AutoOneApp());
 }
@@ -485,7 +522,30 @@ InkWell(
     onTap: onCars,
   ),
 
-  const SizedBox(width: 25),
+  const SizedBox(width: 10),
+
+  HoverLift(
+    scale: 1.1,
+    borderRadius: BorderRadius.circular(8),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () {
+        Navigator.of(context).push(
+          smoothRoute(FavoritesPage(isArabic: isArabic)),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          Icons.favorite_rounded,
+          color: Colors.red,
+          size: 20,
+        ),
+      ),
+    ),
+  ),
+
+  const SizedBox(width: 15),
 
   InkWell(
     onTap: onLanguage,
@@ -2569,7 +2629,7 @@ Widget build(BuildContext context) {
                 },
               ),
 
-              // NEW
+              // NEW / OFFER
               Positioned(
                 top: 12,
                 left: 12,
@@ -2579,11 +2639,13 @@ Widget build(BuildContext context) {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: car.isOffer ? Colors.orange.shade800 : Colors.red,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    isArabic ? 'جديد' : 'NEW',
+                    car.isOffer
+                        ? (isArabic ? 'عرض خاص' : 'OFFER')
+                        : (isArabic ? 'جديد' : 'NEW'),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -2642,6 +2704,13 @@ Widget build(BuildContext context) {
                     ),
                   ),
                 ),
+              ),
+
+              // FAVORITE BUTTON
+              Positioned(
+                bottom: 10,
+                left: 10,
+                child: FavoriteButton(carId: car.id),
               ),
             ],
           ),
@@ -2741,7 +2810,17 @@ Text(
                           ),
                         ),
 
-                        const SizedBox(height: 9),
+                        const SizedBox(height: 4),
+
+                        if (car.isOffer && car.oldPrice.isNotEmpty)
+                          Text(
+                            car.oldPrice,
+                            style: const TextStyle(
+                              color: Colors.black38,
+                              fontSize: 11,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
 
                         Text(
                           car.price,
@@ -3311,6 +3390,7 @@ class Car {
   // ==========================================================
 
   final bool isOffer;
+  final String oldPrice;
 
   const Car({
      this.id,
@@ -3368,6 +3448,7 @@ class Car {
 
     // Offer
     this.isOffer = false,
+    this.oldPrice = '',
   });
 
   // ==========================================================
@@ -3404,6 +3485,8 @@ class Car {
       wirelessCharger: (map['wireless_charger'] ?? '') as String,
       airbags: (map['airbags'] ?? '') as String,
       absSystem: (map['abs_system'] ?? '') as String,
+      isOffer: (map['is_offer'] ?? false) as bool,
+      oldPrice: (map['old_price'] ?? '') as String,
     );
   }
 }
@@ -4694,6 +4777,11 @@ void initState() {
   String selectedCategory = 'ALL';
   String selectedModel = 'ALL';
 
+  // فلترة السعر والترتيب
+  double? minPrice;
+  double? maxPrice;
+  String sortOption = 'newest'; // newest, price_asc, price_desc
+
   final TextEditingController controller =
       TextEditingController();
 
@@ -5143,10 +5231,16 @@ String _searchAlias(Car car) {
   // SEARCH + FILTERED CARS
   // ============================================================
 
+  // بتحول نص السعر (زي "65,285") لرقم قابل للمقارنة
+  double _parsePrice(String price) {
+    final digits = price.replaceAll(RegExp(r'[^0-9.]'), '');
+    return double.tryParse(digits) ?? 0;
+  }
+
   List<Car> get filteredCars {
     final query = _normalize(search);
 
-    return cars.where((car) {
+    final result = cars.where((car) {
       final searchableText = _searchAlias(car);
 
       final matchesSearch =
@@ -5171,13 +5265,37 @@ String _searchAlias(Car car) {
           final matchesOffer =
     !showOffers || car.isOffer;
 
+      final price = _parsePrice(car.price);
+      final matchesMinPrice = minPrice == null || price >= minPrice!;
+      final matchesMaxPrice = maxPrice == null || price <= maxPrice!;
+
      return matchesSearch &&
     matchesBrand &&
     matchesType &&
     matchesCategory &&
     matchesModel &&
-    matchesOffer;
+    matchesOffer &&
+    matchesMinPrice &&
+    matchesMaxPrice;
     }).toList();
+
+    switch (sortOption) {
+      case 'price_asc':
+        result.sort(
+          (a, b) => _parsePrice(a.price).compareTo(_parsePrice(b.price)),
+        );
+        break;
+      case 'price_desc':
+        result.sort(
+          (a, b) => _parsePrice(b.price).compareTo(_parsePrice(a.price)),
+        );
+        break;
+      default:
+        // الأحدث: نرتب حسب الـ id تنازليًا (الأحدث إضافة أولًا)
+        result.sort((a, b) => (b.id ?? 0).compareTo(a.id ?? 0));
+    }
+
+    return result;
   }
 
   // ============================================================
@@ -5860,6 +5978,123 @@ String _searchAlias(Car car) {
             ],
           ),
 
+          const SizedBox(height: 14),
+
+          // SORT + PRICE RANGE
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Container(
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: sortOption,
+                    icon: const Icon(Icons.sort_rounded, size: 18),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'newest',
+                        child: Text(
+                          widget.isArabic ? 'الأحدث' : 'Newest',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'price_asc',
+                        child: Text(
+                          widget.isArabic
+                              ? 'السعر: الأرخص أولًا'
+                              : 'Price: Low to High',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'price_desc',
+                        child: Text(
+                          widget.isArabic
+                              ? 'السعر: الأغلى أولًا'
+                              : 'Price: High to Low',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() => sortOption = value);
+                    },
+                  ),
+                ),
+              ),
+
+              SizedBox(
+                width: 130,
+                height: 44,
+                child: TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: widget.isArabic ? 'أقل سعر' : 'Min price',
+                    filled: true,
+                    fillColor: Colors.white,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      minPrice = double.tryParse(value);
+                    });
+                  },
+                ),
+              ),
+
+              SizedBox(
+                width: 130,
+                height: 44,
+                child: TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: widget.isArabic ? 'أعلى سعر' : 'Max price',
+                    filled: true,
+                    fillColor: Colors.white,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      maxPrice = double.tryParse(value);
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+
           const SizedBox(height: 30),
 
           LayoutBuilder(
@@ -6033,6 +6268,53 @@ Route<T> smoothRoute<T>(Widget page) {
 // ============================================================
 // HOVER LIFT (subtle scale + shadow on mouse hover — desktop web)
 // ============================================================
+// ============================================================
+// FAVORITE BUTTON (heart icon, toggles local favorite storage)
+// ============================================================
+class FavoriteButton extends StatefulWidget {
+  final int? carId;
+  final double size;
+
+  const FavoriteButton({super.key, required this.carId, this.size = 15});
+
+  @override
+  State<FavoriteButton> createState() => _FavoriteButtonState();
+}
+
+class _FavoriteButtonState extends State<FavoriteButton> {
+  @override
+  Widget build(BuildContext context) {
+    if (widget.carId == null) return const SizedBox.shrink();
+
+    final isFav = favoriteCarIds.contains(widget.carId);
+
+    return HoverLift(
+      scale: 1.15,
+      borderRadius: BorderRadius.circular(30),
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () {
+            setState(() {
+              toggleFavorite(widget.carId!);
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Icon(
+              isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+              color: isFav ? Colors.red : Colors.black45,
+              size: widget.size,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class HoverLift extends StatefulWidget {
   final Widget child;
   final double scale;
@@ -9791,6 +10073,70 @@ class _AdminBookingsBodyState extends State<AdminBookingsBody> {
     }
   }
 
+  // بتصدّر الحجوزات لملف CSV (بيتفتح عادي في Excel) وتنزّله في المتصفح
+  void _exportBookingsToExcel() {
+    if (bookings.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic ? 'مفيش حجوزات تتصدّر دلوقتي' : 'No bookings to export',
+          ),
+        ),
+      );
+      return;
+    }
+
+    String cell(dynamic value) {
+      final text = (value ?? '').toString().replaceAll('"', '""');
+      return '"$text"';
+    }
+
+    final buffer = StringBuffer();
+    buffer.writeln([
+      isArabic ? 'اسم العميل' : 'Customer Name',
+      isArabic ? 'رقم الجوال' : 'Phone',
+      isArabic ? 'رقم الواتساب' : 'WhatsApp',
+      isArabic ? 'الإيميل' : 'Email',
+      isArabic ? 'المدينة' : 'City',
+      isArabic ? 'السيارة' : 'Car',
+      isArabic ? 'الماركة' : 'Brand',
+      isArabic ? 'السعر' : 'Price',
+      isArabic ? 'اللون' : 'Color',
+      isArabic ? 'الحالة' : 'Status',
+      isArabic ? 'ملاحظات' : 'Notes',
+      isArabic ? 'تاريخ الحجز' : 'Date',
+    ].map(cell).join(','));
+
+    for (final b in bookings) {
+      buffer.writeln([
+        cell(b['customer_name']),
+        cell(b['phone']),
+        cell(b['whatsapp']),
+        cell(b['email']),
+        cell(b['city']),
+        cell(b['car_name']),
+        cell(b['car_brand']),
+        cell(b['car_price']),
+        cell(b['selected_color']),
+        cell(b['status']),
+        cell(b['notes']),
+        cell(b['created_at']),
+      ].join(','));
+    }
+
+    // بنضيف BOM في الأول عشان الحروف العربية تظهر صح في Excel
+    final bytes = utf8.encode('\uFEFF${buffer.toString()}');
+    final blob = html.Blob([bytes], 'text/csv;charset=utf-8');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute(
+        'download',
+        'auto_one_bookings_${DateTime.now().millisecondsSinceEpoch}.csv',
+      )
+      ..click();
+    html.Url.revokeObjectUrl(url);
+  }
+
   Future<void> _updateStatus(Map<String, dynamic> booking, String newStatus) async {
     final id = booking['id'] as int;
 
@@ -9931,9 +10277,20 @@ class _AdminBookingsBodyState extends State<AdminBookingsBody> {
                       fontSize: 15,
                     ),
                   ),
-                  IconButton(
-                    onPressed: _loadBookings,
-                    icon: const Icon(Icons.refresh_rounded),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: _exportBookingsToExcel,
+                        tooltip: isArabic
+                            ? 'تصدير Excel (CSV)'
+                            : 'Export to Excel (CSV)',
+                        icon: const Icon(Icons.file_download_outlined),
+                      ),
+                      IconButton(
+                        onPressed: _loadBookings,
+                        icon: const Icon(Icons.refresh_rounded),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -10152,7 +10509,121 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   int currentTab = 0;
 
+  bool isLoadingStats = true;
+  int totalBookings = 0;
+  int pendingBookings = 0;
+  int totalCars = 0;
+  String? bestSellingCar;
+
   bool get isArabic => widget.isArabic;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final bookingsResponse = await Supabase.instance.client
+          .from('bookings')
+          .select('status, car_name, car_brand');
+      final carsResponse =
+          await Supabase.instance.client.from('cars').select('id');
+
+      final bookingsList =
+          List<Map<String, dynamic>>.from(bookingsResponse as List);
+
+      final pending =
+          bookingsList.where((b) => (b['status'] ?? 'pending') == 'pending');
+
+      // نحسب السيارة الأكتر طلبًا
+      final Map<String, int> carCounts = {};
+      for (final b in bookingsList) {
+        final label =
+            '${b['car_brand'] ?? ''} ${b['car_name'] ?? ''}'.trim();
+        if (label.isEmpty) continue;
+        carCounts[label] = (carCounts[label] ?? 0) + 1;
+      }
+      String? topCar;
+      int topCount = 0;
+      carCounts.forEach((label, count) {
+        if (count > topCount) {
+          topCount = count;
+          topCar = label;
+        }
+      });
+
+      if (!mounted) return;
+      setState(() {
+        totalBookings = bookingsList.length;
+        pendingBookings = pending.length;
+        totalCars = (carsResponse as List).length;
+        bestSellingCar = topCar;
+        isLoadingStats = false;
+      });
+    } catch (e) {
+      debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل إحصائيات الإدارة: $e');
+      if (mounted) setState(() => isLoadingStats = false);
+    }
+  }
+
+  Widget _statCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      width: 150,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Colors.black54,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10179,6 +10650,49 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
         body: Column(
           children: [
+            // STATS ROW
+            if (!isLoadingStats)
+              Container(
+                width: double.infinity,
+                color: kHeaderColor,
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _statCard(
+                        icon: Icons.event_note_rounded,
+                        label: isArabic ? 'كل الحجوزات' : 'Total Bookings',
+                        value: '$totalBookings',
+                        color: Colors.blue,
+                      ),
+                      const SizedBox(width: 10),
+                      _statCard(
+                        icon: Icons.hourglass_top_rounded,
+                        label: isArabic ? 'قيد الانتظار' : 'Pending',
+                        value: '$pendingBookings',
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(width: 10),
+                      _statCard(
+                        icon: Icons.directions_car_filled_rounded,
+                        label: isArabic ? 'السيارات بالمخزون' : 'Cars in Stock',
+                        value: '$totalCars',
+                        color: Colors.green,
+                      ),
+                      const SizedBox(width: 10),
+                      _statCard(
+                        icon: Icons.star_rounded,
+                        label: isArabic ? 'الأكتر طلبًا' : 'Best Seller',
+                        value: bestSellingCar ??
+                            (isArabic ? 'لا يوجد بعد' : 'None yet'),
+                        color: Colors.purple,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             Container(
               color: kHeaderColor,
               padding: const EdgeInsets.symmetric(
@@ -10193,6 +10707,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       icon: Icons.event_note_rounded,
                       selected: currentTab == 0,
                       onTap: () => setState(() => currentTab = 0),
+                      badgeCount: pendingBookings,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -10227,6 +10742,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     required IconData icon,
     required bool selected,
     required VoidCallback onTap,
+    int badgeCount = 0,
   }) {
     return HoverLift(
       scale: 1.02,
@@ -10256,6 +10772,27 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     fontSize: 13,
                   ),
                 ),
+                if (badgeCount > 0) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected ? Colors.white : Colors.red,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: TextStyle(
+                        color: selected ? Colors.red : Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -10572,6 +11109,8 @@ class _CarFormPageState extends State<CarFormPage> {
   late final TextEditingController absSystemCtrl;
 
   late bool isAvailable;
+  late bool isOffer;
+  late final TextEditingController oldPriceCtrl;
   bool isSaving = false;
 
   // الألوان المتاحة في المتجر كله، وإيه اللي متحدد للسيارة دي
@@ -10644,6 +11183,9 @@ class _CarFormPageState extends State<CarFormPage> {
         TextEditingController(text: car?['abs_system']?.toString() ?? '');
 
     isAvailable = (car?['is_available'] ?? true) as bool;
+    isOffer = (car?['is_offer'] ?? false) as bool;
+    oldPriceCtrl =
+        TextEditingController(text: car?['old_price']?.toString() ?? '');
 
     _loadExtras();
   }
@@ -10724,6 +11266,7 @@ class _CarFormPageState extends State<CarFormPage> {
     wirelessChargerCtrl.dispose();
     airbagsCtrl.dispose();
     absSystemCtrl.dispose();
+    oldPriceCtrl.dispose();
     for (final controller in extraImageControllers) {
       controller.dispose();
     }
@@ -10766,6 +11309,8 @@ class _CarFormPageState extends State<CarFormPage> {
       'wireless_charger': wirelessChargerCtrl.text.trim(),
       'airbags': airbagsCtrl.text.trim(),
       'abs_system': absSystemCtrl.text.trim(),
+      'is_offer': isOffer,
+      'old_price': oldPriceCtrl.text.trim(),
       'is_available': isAvailable,
     };
 
@@ -11467,6 +12012,42 @@ class _CarFormPageState extends State<CarFormPage> {
                   },
                 ),
               ),
+
+              const SizedBox(height: 10),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    isArabic ? 'عرض خاص / خصم' : 'Special Offer',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  value: isOffer,
+                  activeColor: Colors.red,
+                  onChanged: (value) {
+                    setState(() => isOffer = value);
+                  },
+                ),
+              ),
+
+              if (isOffer) ...[
+                const SizedBox(height: 10),
+                _field(
+                  controller: oldPriceCtrl,
+                  label: isArabic
+                      ? 'السعر القديم (قبل الخصم)'
+                      : 'Old price (before discount)',
+                ),
+              ],
+
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -11681,6 +12262,92 @@ class _BookingSuccessDialogState extends State<BookingSuccessDialog>
           ),
         ),
       ],
+    );
+  }
+}
+
+// ============================================================
+// FAVORITES PAGE
+// ============================================================
+class FavoritesPage extends StatefulWidget {
+  final bool isArabic;
+
+  const FavoritesPage({super.key, required this.isArabic});
+
+  @override
+  State<FavoritesPage> createState() => _FavoritesPageState();
+}
+
+class _FavoritesPageState extends State<FavoritesPage> {
+  bool get isArabic => widget.isArabic;
+
+  @override
+  Widget build(BuildContext context) {
+    final favoriteCars =
+        cars.where((c) => c.id != null && favoriteCarIds.contains(c.id)).toList();
+
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: const Color(0xfff6f6f8),
+        appBar: AppBar(
+          backgroundColor: kHeaderColor,
+          foregroundColor: kHeaderTextColor,
+          title: Text(isArabic ? 'السيارات المفضلة' : 'Favorite Cars'),
+        ),
+        body: favoriteCars.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.favorite_border_rounded,
+                      size: 60,
+                      color: Colors.black26,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      isArabic
+                          ? 'لسه مفيش سيارات في المفضلة'
+                          : 'No favorite cars yet',
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      isArabic
+                          ? 'دوسي على أيقونة ♡ في أي سيارة عشان تضيفيها هنا'
+                          : 'Tap ♡ on any car to add it here',
+                      style: const TextStyle(
+                        color: Colors.black38,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : GridView.builder(
+                padding: const EdgeInsets.all(20),
+                gridDelegate:
+                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 340,
+                  mainAxisExtent: 360,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: favoriteCars.length,
+                itemBuilder: (context, index) {
+                  final car = favoriteCars[index];
+                  return FeaturedCarCard(
+                    key: ValueKey('${car.name}-${car.year}'),
+                    car: car,
+                    isArabic: isArabic,
+                  );
+                },
+              ),
+      ),
     );
   }
 }
