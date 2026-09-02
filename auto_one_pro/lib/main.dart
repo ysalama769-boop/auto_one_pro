@@ -1409,7 +1409,7 @@ for (final keyword in featuredNames) {
   }
 }
 
-    int columns = 1;
+    int columns = 2;
 
     if (constraints.maxWidth >= 1400) {
       columns = 5;
@@ -1418,7 +1418,7 @@ for (final keyword in featuredNames) {
     } else if (constraints.maxWidth >= 800) {
       columns = 2;
     } else {
-      columns = 1;
+      columns = 2;
     }
 
 return GridView.builder(
@@ -1430,9 +1430,9 @@ return GridView.builder(
   gridDelegate:
       SliverGridDelegateWithFixedCrossAxisCount(
     crossAxisCount: columns,
-    crossAxisSpacing: 16,
-    mainAxisSpacing: 20,
-    childAspectRatio: 0.70,
+    crossAxisSpacing: 12,
+    mainAxisSpacing: 16,
+    childAspectRatio: constraints.maxWidth < 800 ? 0.60 : 0.70,
   ),
 
   itemBuilder: (context, index) {
@@ -6222,7 +6222,7 @@ String _searchAlias(Car car) {
 
           LayoutBuilder(
   builder: (context, constraints) {
-    int columns = 1;
+    int columns = 2;
 
     if (constraints.maxWidth >= 1400) {
       columns = 5;
@@ -6231,7 +6231,7 @@ String _searchAlias(Car car) {
     } else if (constraints.maxWidth >= 800) {
       columns = 2;
     } else {
-      columns = 1;
+      columns = 2;
     }
 
               if (filteredCars.isEmpty) {
@@ -6329,9 +6329,10 @@ String _searchAlias(Car car) {
                 gridDelegate:
                     SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: columns,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20,
-                  childAspectRatio: 0.72,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 16,
+                  childAspectRatio:
+                      constraints.maxWidth < 800 ? 0.60 : 0.72,
                 ),
                 itemBuilder: (context, index) {
                   final car = filteredCars[index];
@@ -9042,8 +9043,36 @@ Container(
             );
           }
 
-          Widget specColumn(String title, List<Widget> cards) {
+          Widget specColumn(
+            String title,
+            List<Widget> cards, {
+            bool twoPerRow = false,
+          }) {
             if (cards.isEmpty) return const SizedBox.shrink();
+
+            List<Widget> body;
+            if (twoPerRow) {
+              body = [];
+              for (int i = 0; i < cards.length; i += 2) {
+                if (i + 1 < cards.length) {
+                  body.add(
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: cards[i]),
+                        const SizedBox(width: 12),
+                        Expanded(child: cards[i + 1]),
+                      ],
+                    ),
+                  );
+                } else {
+                  body.add(cards[i]);
+                }
+              }
+            } else {
+              body = cards;
+            }
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -9056,7 +9085,7 @@ Container(
                   ),
                 ),
                 const SizedBox(height: 12),
-                ...cards,
+                ...body,
               ],
             );
           }
@@ -9202,26 +9231,25 @@ Container(
               ),
           ];
 
-          final columns = [
-            specColumn(
-              isArabic ? 'القيادة' : 'DRIVING',
-              drivingCards,
-            ),
-            specColumn(
-              isArabic ? 'التجهيزات والمزايا' : 'FEATURES',
-              featureCards,
-            ),
-            specColumn(
-              isArabic ? 'الأبعاد' : 'DIMENSIONS',
-              dimensionCards,
-            ),
-            specColumn(
-              isArabic ? 'الأمان' : 'SAFETY',
-              safetyCards,
-            ),
-          ];
-
           if (wide) {
+            final columns = [
+              specColumn(
+                isArabic ? 'القيادة' : 'DRIVING',
+                drivingCards,
+              ),
+              specColumn(
+                isArabic ? 'التجهيزات والمزايا' : 'FEATURES',
+                featureCards,
+              ),
+              specColumn(
+                isArabic ? 'الأبعاد' : 'DIMENSIONS',
+                dimensionCards,
+              ),
+              specColumn(
+                isArabic ? 'الأمان' : 'SAFETY',
+                safetyCards,
+              ),
+            ];
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -9236,15 +9264,38 @@ Container(
             );
           }
 
+          final mobileColumns = [
+            specColumn(
+              isArabic ? 'القيادة' : 'DRIVING',
+              drivingCards,
+              twoPerRow: true,
+            ),
+            specColumn(
+              isArabic ? 'التجهيزات والمزايا' : 'FEATURES',
+              featureCards,
+              twoPerRow: true,
+            ),
+            specColumn(
+              isArabic ? 'الأبعاد' : 'DIMENSIONS',
+              dimensionCards,
+              twoPerRow: true,
+            ),
+            specColumn(
+              isArabic ? 'الأمان' : 'SAFETY',
+              safetyCards,
+              twoPerRow: true,
+            ),
+          ];
+
           return Column(
             children: [
-              columns[0],
+              mobileColumns[0],
               const SizedBox(height: 20),
-              columns[1],
+              mobileColumns[1],
               const SizedBox(height: 20),
-              columns[2],
+              mobileColumns[2],
               const SizedBox(height: 20),
-              columns[3],
+              mobileColumns[3],
             ],
           );
         },
