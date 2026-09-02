@@ -49,6 +49,24 @@ void toggleFavorite(int carId) {
   _saveFavorites();
 }
 
+// ============================================================
+// COMPARISON (session only — up to 3 cars)
+// ============================================================
+final ValueNotifier<List<int>> compareCarIds = ValueNotifier<List<int>>([]);
+
+void toggleCompare(int carId) {
+  final list = List<int>.from(compareCarIds.value);
+  if (list.contains(carId)) {
+    list.remove(carId);
+  } else {
+    if (list.length >= 3) {
+      list.removeAt(0);
+    }
+    list.add(carId);
+  }
+  compareCarIds.value = list;
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -80,9 +98,38 @@ class _AutoOneAppState extends State<AutoOneApp> {
   bool isArabic = true;
   bool showSplash = true;
 
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  // بتفتح صفحة السيارة تلقائيًا لو الرابط جاي بـ ?car=رقم (رابط مشاركة)
+  void _handleDeepLink() {
+    try {
+      final search = html.window.location.search;
+      final uri = Uri.parse('http://x$search');
+      final carIdParam = uri.queryParameters['car'];
+      if (carIdParam == null) return;
+
+      final carId = int.tryParse(carIdParam);
+      if (carId == null) return;
+
+      final matches = cars.where((c) => c.id == carId);
+      if (matches.isEmpty) return;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        navigatorKey.currentState?.push(
+          smoothRoute(
+            CarDetailsPage(car: matches.first, isArabic: isArabic),
+          ),
+        );
+      });
+    } catch (e) {
+      debugPrint('AUTO_ONE_DEBUG: تعذّر فتح رابط المشاركة: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'AUTO ONE',
 
@@ -106,6 +153,7 @@ class _AutoOneAppState extends State<AutoOneApp> {
                 setState(() {
                   showSplash = false;
                 });
+                _handleDeepLink();
               },
             )
           : AutoOneShell(
@@ -357,6 +405,74 @@ class _AutoOneShellState extends State<AutoOneShell> {
             ),
           ],
         ),
+      
+      bottomNavigationBar: ValueListenableBuilder<List<int>>(
+        valueListenable: compareCarIds,
+        builder: (context, list, _) {
+          if (list.length < 2) return const SizedBox.shrink();
+
+          return Material(
+            color: Colors.black,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.compare_arrows_rounded,
+                        color: Colors.white, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        widget.isArabic
+                            ? 'محددة ${list.length} سيارات للمقارنة'
+                            : '${list.length} cars selected to compare',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        compareCarIds.value = [];
+                      },
+                      child: Text(
+                        widget.isArabic ? 'مسح' : 'Clear',
+                        style: const TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          smoothRoute(
+                            ComparisonPage(isArabic: widget.isArabic),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        widget.isArabic ? 'قارني الآن' : 'Compare now',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
       ),
     );
   }
@@ -2711,6 +2827,13 @@ Widget build(BuildContext context) {
                 bottom: 10,
                 left: 10,
                 child: FavoriteButton(carId: car.id),
+              ),
+
+              // COMPARE BUTTON
+              Positioned(
+                bottom: 10,
+                left: 54,
+                child: CompareButton(carId: car.id),
               ),
             ],
           ),
@@ -6315,6 +6438,167 @@ class _FavoriteButtonState extends State<FavoriteButton> {
   }
 }
 
+// ============================================================
+// CREATIVE BOOK BUTTON (gradient + pulsing glow + sliding arrow)
+// ============================================================
+class CreativeBookButton extends StatefulWidget {
+  final bool isArabic;
+  final VoidCallback onTap;
+
+  const CreativeBookButton({
+    super.key,
+    required this.isArabic,
+    required this.onTap,
+  });
+
+  @override
+  State<CreativeBookButton> createState() => _CreativeBookButtonState();
+}
+
+class _CreativeBookButtonState extends State<CreativeBookButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  bool _hovering = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final glow = 0.25 + (_controller.value * 0.25);
+            return AnimatedScale(
+              scale: _hovering ? 1.03 : 1.0,
+              duration: const Duration(milliseconds: 150),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 13,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFFE53935),
+                      Color(0xFFB71C1C),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withValues(alpha: glow),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.bolt_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      widget.isArabic ? 'احجز الآن' : 'BOOK NOW',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      margin: EdgeInsets.only(
+                        left: _hovering ? 10 : 6,
+                      ),
+                      child: Icon(
+                        widget.isArabic
+                            ? Icons.arrow_back_rounded
+                            : Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// COMPARE BUTTON (checkbox icon, adds car to comparison list)
+// ============================================================
+class CompareButton extends StatelessWidget {
+  final int? carId;
+
+  const CompareButton({super.key, required this.carId});
+
+  @override
+  Widget build(BuildContext context) {
+    if (carId == null) return const SizedBox.shrink();
+
+    return ValueListenableBuilder<List<int>>(
+      valueListenable: compareCarIds,
+      builder: (context, list, _) {
+        final isSelected = list.contains(carId);
+
+        return HoverLift(
+          scale: 1.15,
+          borderRadius: BorderRadius.circular(30),
+          child: Material(
+            color: isSelected ? Colors.blue : Colors.white,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => toggleCompare(carId!),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Icon(
+                  isSelected
+                      ? Icons.check_box_rounded
+                      : Icons.add_box_outlined,
+                  color: isSelected ? Colors.white : Colors.black45,
+                  size: 15,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class HoverLift extends StatefulWidget {
   final Widget child;
   final double scale;
@@ -6567,22 +6851,34 @@ class AutoOneFooter extends StatelessWidget {
   }
 
   Widget _branchLine(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.location_on_outlined,
-              size: 15, color: Colors.black45),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.black54,
-              fontSize: 13,
-            ),
+    return HoverLift(
+      scale: 1.02,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: () => _openLink(
+          'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('AUTO ONE $text')}',
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.location_on_outlined,
+                  size: 15, color: Colors.black45),
+              const SizedBox(width: 6),
+              Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.black54,
+                  fontSize: 13,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.black26,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -7910,6 +8206,29 @@ class CarDetailsPage extends StatefulWidget {
       );
     }
   }
+
+  // بتعمل رابط مباشر للسيارة دي وتنسخه لحافظة الجهاز
+  Future<void> _shareCarLink(BuildContext context) async {
+    if (car.id == null) return;
+
+    final baseUrl =
+        '${html.window.location.origin}${html.window.location.pathname}';
+    final link = '$baseUrl?car=${car.id}';
+
+    await Clipboard.setData(ClipboardData(text: link));
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isArabic
+              ? '🔗 تم نسخ رابط السيارة!'
+              : '🔗 Car link copied!',
+        ),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
   
   Widget _topInfoChip({
   required IconData icon,
@@ -8127,6 +8446,11 @@ floatingActionButtonLocation:
         ),
 
         actions: [
+          IconButton(
+            tooltip: isArabic ? 'مشاركة السيارة' : 'Share car',
+            onPressed: () => _shareCarLink(context),
+            icon: const Icon(Icons.share_outlined),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Image.asset(
@@ -8464,41 +8788,19 @@ Column(
 
     const SizedBox(height: 10),
 
-    ElevatedButton.icon(
-    onPressed: () {
-  Navigator.push(
-    context,
-    smoothRoute(
-      CarBookingPage(
-        car: car,
-        isArabic: isArabic,
-      ),
-    ),
-  );
-},
-      icon: const Icon(
-        Icons.calendar_month_rounded,
-        size: 16,
-      ),
-      label: Text(
-        isArabic ? 'حجز السيارة' : 'BOOK',
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 10,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        textStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
+    CreativeBookButton(
+      isArabic: isArabic,
+      onTap: () {
+        Navigator.push(
+          context,
+          smoothRoute(
+            CarBookingPage(
+              car: car,
+              isArabic: isArabic,
+            ),
+          ),
+        );
+      },
     ),
   ],
 ),
@@ -9733,8 +10035,11 @@ onPressed: () async {
 
   // تسجيل الحجز في Supabase
   bool bookingSaved = false;
+  int? bookingId;
   try {
-    await Supabase.instance.client.from('bookings').insert({
+    final inserted = await Supabase.instance.client
+        .from('bookings')
+        .insert({
       'customer_name': nameController.text.trim(),
       'phone': phoneController.text.trim(),
       'city': cityController.text.trim(),
@@ -9747,7 +10052,8 @@ onPressed: () async {
       'whatsapp': whatsappController.text.trim(),
       'email': emailController.text.trim(),
       'status': 'pending',
-    });
+    }).select().single();
+    bookingId = inserted['id'] as int?;
     bookingSaved = true;
   } catch (e) {
     debugPrint('AUTO_ONE_DEBUG: تعذّر تسجيل الحجز في Supabase: $e');
@@ -9765,6 +10071,7 @@ onPressed: () async {
         carBrand: car.brand,
         colorName: selectedColorName,
         phone: phoneController.text.trim(),
+        bookingId: bookingId,
       ),
     );
     if (context.mounted) {
@@ -12096,6 +12403,7 @@ class BookingSuccessDialog extends StatefulWidget {
   final String carBrand;
   final String? colorName;
   final String phone;
+  final int? bookingId;
 
   const BookingSuccessDialog({
     super.key,
@@ -12104,6 +12412,7 @@ class BookingSuccessDialog extends StatefulWidget {
     required this.carBrand,
     required this.colorName,
     required this.phone,
+    this.bookingId,
   });
 
   @override
@@ -12187,6 +12496,33 @@ class _BookingSuccessDialogState extends State<BookingSuccessDialog>
                   fontSize: 13,
                 ),
               ),
+              if (widget.bookingId != null) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Text(
+                    isArabic
+                        ? 'رقم الحجز: #AO-${widget.bookingId}'
+                        : 'Booking #: AO-${widget.bookingId}',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 22),
               Container(
                 width: double.infinity,
@@ -12346,6 +12682,220 @@ class _FavoritesPageState extends State<FavoritesPage> {
                     isArabic: isArabic,
                   );
                 },
+              ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// COMPARISON PAGE
+// ============================================================
+class ComparisonPage extends StatefulWidget {
+  final bool isArabic;
+
+  const ComparisonPage({super.key, required this.isArabic});
+
+  @override
+  State<ComparisonPage> createState() => _ComparisonPageState();
+}
+
+class _ComparisonPageState extends State<ComparisonPage> {
+  bool get isArabic => widget.isArabic;
+
+  Widget _row(String label, List<String> values) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade200),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.black54,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          ...values.map((v) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12, horizontal: 8),
+                  child: Text(
+                    v.isEmpty ? '—' : v,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedCars = compareCarIds.value
+        .map((id) => cars.where((c) => c.id == id))
+        .where((iterable) => iterable.isNotEmpty)
+        .map((iterable) => iterable.first)
+        .toList();
+
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: const Color(0xfff6f6f8),
+        appBar: AppBar(
+          backgroundColor: kHeaderColor,
+          foregroundColor: kHeaderTextColor,
+          title: Text(isArabic ? 'مقارنة السيارات' : 'Compare Cars'),
+        ),
+        body: selectedCars.length < 2
+            ? Center(
+                child: Text(
+                  isArabic
+                      ? 'اختاري سيارتين على الأقل للمقارنة'
+                      : 'Select at least 2 cars to compare',
+                  style: const TextStyle(color: Colors.black54),
+                ),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // IMAGES + NAMES ROW
+                    Row(
+                      children: [
+                        const SizedBox(width: 130),
+                        ...selectedCars.map((car) {
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6),
+                              child: Column(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(12),
+                                    child: SizedBox(
+                                      height: 90,
+                                      child: carImageAdaptive(
+                                        car.image,
+                                        fit: BoxFit.cover,
+                                        showWatermark: false,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${car.brand} ${car.name}',
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _row(
+                      isArabic ? 'السعر' : 'Price',
+                      selectedCars.map((c) => c.price).toList(),
+                    ),
+                    _row(
+                      isArabic ? 'السنة' : 'Year',
+                      selectedCars.map((c) => c.year).toList(),
+                    ),
+                    _row(
+                      isArabic ? 'المحرك' : 'Engine',
+                      selectedCars.map((c) => c.engine).toList(),
+                    ),
+                    _row(
+                      isArabic ? 'ناقل الحركة' : 'Transmission',
+                      selectedCars.map((c) => c.transmission).toList(),
+                    ),
+                    _row(
+                      isArabic ? 'الوقود' : 'Fuel',
+                      selectedCars.map((c) => c.fuel).toList(),
+                    ),
+                    _row(
+                      isArabic ? 'المقاعد' : 'Seats',
+                      selectedCars.map((c) => c.seats).toList(),
+                    ),
+                    _row(
+                      isArabic ? 'نظام الدفع' : 'Drive',
+                      selectedCars.map((c) => c.drive).toList(),
+                    ),
+                    _row(
+                      isArabic ? 'قوة المحرك' : 'Horsepower',
+                      selectedCars.map((c) => c.horsepower).toList(),
+                    ),
+                    _row(
+                      isArabic ? 'عدد الوسائد الهوائية' : 'Airbags',
+                      selectedCars.map((c) => c.airbags).toList(),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const SizedBox(width: 130),
+                        ...selectedCars.map((car) {
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    smoothRoute(
+                                      CarDetailsPage(
+                                        car: car,
+                                        isArabic: isArabic,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: Text(
+                                  isArabic ? 'التفاصيل' : 'Details',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ],
+                ),
               ),
       ),
     );
