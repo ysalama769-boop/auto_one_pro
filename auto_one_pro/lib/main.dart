@@ -1409,7 +1409,7 @@ for (final keyword in featuredNames) {
   }
 }
 
-    int columns = 2;
+    int columns = 1;
 
     if (constraints.maxWidth >= 1400) {
       columns = 5;
@@ -1418,7 +1418,7 @@ for (final keyword in featuredNames) {
     } else if (constraints.maxWidth >= 800) {
       columns = 2;
     } else {
-      columns = 2;
+      columns = 1;
     }
 
 return GridView.builder(
@@ -1430,16 +1430,15 @@ return GridView.builder(
   gridDelegate:
       SliverGridDelegateWithFixedCrossAxisCount(
     crossAxisCount: columns,
-    crossAxisSpacing: 12,
-    mainAxisSpacing: 16,
-    childAspectRatio: constraints.maxWidth < 800 ? 0.74 : 0.70,
+    crossAxisSpacing: 16,
+    mainAxisSpacing: 20,
+    childAspectRatio: 0.70,
   ),
 
   itemBuilder: (context, index) {
     return FeaturedCarCard(
       car: featuredCars[index],
       isArabic: widget.isArabic,
-      compact: constraints.maxWidth < 800,
     );
   },
 );
@@ -6234,7 +6233,7 @@ String _searchAlias(Car car) {
 
           LayoutBuilder(
   builder: (context, constraints) {
-    int columns = 2;
+    int columns = 1;
 
     if (constraints.maxWidth >= 1400) {
       columns = 5;
@@ -6243,7 +6242,7 @@ String _searchAlias(Car car) {
     } else if (constraints.maxWidth >= 800) {
       columns = 2;
     } else {
-      columns = 2;
+      columns = 1;
     }
 
               if (filteredCars.isEmpty) {
@@ -6341,10 +6340,9 @@ String _searchAlias(Car car) {
                 gridDelegate:
                     SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: columns,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 16,
-                  childAspectRatio:
-                      constraints.maxWidth < 800 ? 0.74 : 0.72,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  childAspectRatio: 0.72,
                 ),
                 itemBuilder: (context, index) {
                   final car = filteredCars[index];
@@ -6355,7 +6353,6 @@ String _searchAlias(Car car) {
   ),
   car: car,
   isArabic: widget.isArabic,
-  compact: constraints.maxWidth < 800,
 );
                 },
               );
