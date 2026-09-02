@@ -6052,8 +6052,7 @@ String _searchAlias(Car car) {
 
           Row(
             children: [
-              SizedBox(
-             width: 360,
+              Expanded(
               child: Container(
                  height: 48,
                   decoration: BoxDecoration(
@@ -6103,7 +6102,8 @@ String _searchAlias(Car car) {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  minimumSize: const Size(110, 48),
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
