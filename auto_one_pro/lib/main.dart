@@ -1432,13 +1432,14 @@ return GridView.builder(
     crossAxisCount: columns,
     crossAxisSpacing: 12,
     mainAxisSpacing: 16,
-    childAspectRatio: constraints.maxWidth < 800 ? 0.60 : 0.70,
+    childAspectRatio: constraints.maxWidth < 800 ? 0.74 : 0.70,
   ),
 
   itemBuilder: (context, index) {
     return FeaturedCarCard(
       car: featuredCars[index],
       isArabic: widget.isArabic,
+      compact: constraints.maxWidth < 800,
     );
   },
 );
@@ -2662,12 +2663,14 @@ class FeaturedCarCard extends StatelessWidget {
   final Car car;
   final bool isArabic;
   final VoidCallback? onDetails;
+  final bool compact;
 
   const FeaturedCarCard({
     super.key,
     required this.car,
     required this.isArabic,
     this.onDetails,
+    this.compact = false,
   });
   String _brandLogo() {
     return getBrandLogo(car.brand);
@@ -2723,7 +2726,7 @@ Widget build(BuildContext context) {
         // =====================================================
 
         SizedBox(
-          height: 195,
+          height: compact ? 120 : 195,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -2734,10 +2737,10 @@ Widget build(BuildContext context) {
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey.shade200,
-                    child: const Center(
+                    child: Center(
                       child: Icon(
                         Icons.directions_car_filled_rounded,
-                        size: 75,
+                        size: compact ? 44 : 75,
                         color: Colors.black26,
                       ),
                     ),
@@ -2777,8 +2780,8 @@ Widget build(BuildContext context) {
                   top: 12,
                   right: 12,
                   child: Container(
-                    width: 54,
-                    height: 54,
+                    width: compact ? 38 : 54,
+                    height: compact ? 38 : 54,
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -2844,7 +2847,9 @@ Widget build(BuildContext context) {
         // =====================================================
 
         Padding(
-        padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
+        padding: compact
+            ? const EdgeInsets.fromLTRB(10, 9, 10, 9)
+            : const EdgeInsets.fromLTRB(13, 11, 13, 12),
           child: Directionality(
             textDirection: TextDirection.rtl,
             child: Column(
@@ -2865,19 +2870,19 @@ Widget build(BuildContext context) {
  
    Text(
     car.name,
-    maxLines: 2,
+    maxLines: compact ? 1 : 2,
     overflow: TextOverflow.ellipsis,
     textAlign: TextAlign.right,
-    style: const TextStyle(
+    style: TextStyle(
       color: Colors.black,
-      fontSize: 15,
+      fontSize: compact ? 12.5 : 15,
       fontWeight: FontWeight.w900,
       height: 1.15,
     ),
   ),
 
 
-                          const SizedBox(height: 7),
+                          SizedBox(height: compact ? 4 : 7),
 
                           Row(
                             children: [
@@ -2886,9 +2891,9 @@ Text(
   car.brand,
   maxLines: 1,
   overflow: TextOverflow.ellipsis,
-  style: const TextStyle(
+  style: TextStyle(
     color: Colors.red,
-    fontSize: 11,
+    fontSize: compact ? 10 : 11,
     fontWeight: FontWeight.w900,
   ),
 ),
@@ -2905,9 +2910,9 @@ Text(
 
                               Text(
                                 car.year,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.black45,
-                                  fontSize: 11,
+                                  fontSize: compact ? 10 : 11,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -2924,11 +2929,11 @@ Text(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
 
-                        const Text(
+                        Text(
                           'السعر',
                           style: TextStyle(
                             color: Colors.red,
-                            fontSize: 12,
+                            fontSize: compact ? 10 : 12,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -2938,9 +2943,9 @@ Text(
                         if (car.isOffer && car.oldPrice.isNotEmpty)
                           Text(
                             car.oldPrice,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.black38,
-                              fontSize: 11,
+                              fontSize: compact ? 9 : 11,
                               decoration: TextDecoration.lineThrough,
                             ),
                           ),
@@ -2949,9 +2954,9 @@ Text(
                           car.price,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.red,
-                            fontSize: 15,
+                            fontSize: compact ? 12.5 : 15,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -2960,6 +2965,7 @@ Text(
                   ],
                 ),
 
+                if (!compact) ...[
                 const SizedBox(height: 10),
 
                 // =================================================
@@ -3022,8 +3028,9 @@ Text(
                     ],
                   ),
                 ),
+                ],
 
-                const SizedBox(height: 5),
+                SizedBox(height: compact ? 8 : 5),
 
                 // =================================================
                 // BUTTONS
@@ -3035,35 +3042,37 @@ Text(
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: _openWhatsApp,
-                        icon: const FaIcon(
+                        icon: FaIcon(
                           FontAwesomeIcons.whatsapp,
-                          size: 15,
+                          size: compact ? 12 : 15,
                         ),
                         label: Text(
-                          isArabic
-                              ? 'واتساب'
-                              : 'WHATSAPP',
+                          compact
+                              ? ''
+                              : (isArabic
+                                  ? 'واتساب'
+                                  : 'WHATSAPP'),
                         ),
                         style: ElevatedButton.styleFrom(
 backgroundColor: const Color(0xff25D366),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 11,
+                          padding: EdgeInsets.symmetric(
+                            vertical: compact ? 8 : 11,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius:
                                 BorderRadius.circular(11),
                           ),
-                          textStyle: const TextStyle(
-                            fontSize: 12,
+                          textStyle: TextStyle(
+                            fontSize: compact ? 10 : 12,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(width: 9),
+                    SizedBox(width: compact ? 6 : 9),
 
                     Expanded(
                       child: ElevatedButton.icon(
@@ -3079,27 +3088,29 @@ backgroundColor: const Color(0xff25D366),
                                 ),
                               );
                             },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.description_outlined,
-                          size: 15,
+                          size: compact ? 12 : 15,
                         ),
                         label: Text(
-                          isArabic
-                              ? 'التفاصيل'
-                              : 'DETAILS',
+                          compact
+                              ? ''
+                              : (isArabic
+                                  ? 'التفاصيل'
+                                  : 'DETAILS'),
                         ),
                       style: ElevatedButton.styleFrom(
   backgroundColor: const Color(0xff0B0B0B),
   foregroundColor: Colors.white,
   elevation: 0,
-  padding: const EdgeInsets.symmetric(
-    vertical: 9,
+  padding: EdgeInsets.symmetric(
+    vertical: compact ? 6 : 9,
   ),
   shape: RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(11),
   ),
-  textStyle: const TextStyle(
-    fontSize: 12,
+  textStyle: TextStyle(
+    fontSize: compact ? 10 : 12,
     fontWeight: FontWeight.w800,
   ),
 ),
@@ -3117,6 +3128,7 @@ backgroundColor: const Color(0xff25D366),
   ),
   );
 }
+
 
 
 Widget _lightspecDivider() {
@@ -6332,7 +6344,7 @@ String _searchAlias(Car car) {
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 16,
                   childAspectRatio:
-                      constraints.maxWidth < 800 ? 0.60 : 0.72,
+                      constraints.maxWidth < 800 ? 0.74 : 0.72,
                 ),
                 itemBuilder: (context, index) {
                   final car = filteredCars[index];
@@ -6343,6 +6355,7 @@ String _searchAlias(Car car) {
   ),
   car: car,
   isArabic: widget.isArabic,
+  compact: constraints.maxWidth < 800,
 );
                 },
               );
