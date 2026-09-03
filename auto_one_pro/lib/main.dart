@@ -3124,11 +3124,14 @@ backgroundColor: const Color(0xff25D366),
   ),
 
   // =====================================================
-  // COMPARE BADGE — floating outside the card, top corner
+  // COMPARE BADGE — a tab jutting out from the right edge,
+  // sitting right on the seam between photo and details so
+  // it never touches the brand logo, the NEW/OFFER ribbon,
+  // or the favorite heart.
   // =====================================================
   Positioned(
-    top: -14,
-    right: 14,
+    top: (compact ? 120 : 195) - 22,
+    right: -13,
     child: CompareCornerBadge(carId: car.id),
   ),
   ],
@@ -5386,7 +5389,10 @@ String _searchAlias(Car car) {
 
       final matchesSearch =
           query.isEmpty ||
-          searchableText.contains(query);
+          query
+              .split(' ')
+              .where((w) => w.trim().isNotEmpty)
+              .every((word) => searchableText.contains(word));
 
       final matchesBrand =
           selectedBrand == 'ALL' ||
@@ -6057,19 +6063,28 @@ String _searchAlias(Car car) {
 
           const SizedBox(height: 30),
 
-          Row(
+          LayoutBuilder(
+            builder: (context, searchConstraints) {
+              const barHeight = 42.0;
+              const fontSize = 13.0;
+              const iconSize = 20.0;
+
+              return Row(
             children: [
               Expanded(
               child: Container(
-                 height: 48,
+                 height: barHeight,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.06),
+                    ),
                     boxShadow: const [
                       BoxShadow(
                         color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
+                        blurRadius: 8,
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
@@ -6083,12 +6098,18 @@ String _searchAlias(Car car) {
                     textAlign: widget.isArabic
                         ? TextAlign.right
                         : TextAlign.left,
+                    style: const TextStyle(fontSize: fontSize),
                     decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                      ),
                       hintText: widget.isArabic
                           ? 'ابحث عن سيارة...'
                           : 'Search for a car...',
+                      hintStyle: TextStyle(fontSize: fontSize),
                       prefixIcon:
-                          const Icon(Icons.search_rounded),
+                          Icon(Icons.search_rounded, size: iconSize),
                       border: InputBorder.none,
                     ),
                   ),
@@ -6102,21 +6123,27 @@ String _searchAlias(Car car) {
                 icon: const Icon(
                   Icons.tune_rounded,
                   color: Colors.white,
+                  size: 18,
                 ),
                 label: Text(
                   widget.isArabic ? 'فلتر' : 'FILTER',
+                  style: const TextStyle(fontSize: 13),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  minimumSize: const Size(0, 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  minimumSize: const Size(0, barHeight),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                  ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
               ),
             ],
+              );
+            },
           ),
 
           const SizedBox(height: 14),
@@ -6574,10 +6601,11 @@ class _CreativeBookButtonState extends State<CreativeBookButton>
 }
 
 // ============================================================
-// COMPARE CORNER BADGE — creative floating tag outside the card
-// A rotated ribbon-style tag that "hangs" off the card's top
-// corner, like a price tag. Turns into a dark filled check when
-// the car is added to comparison.
+// COMPARE CORNER BADGE — creative floating tab outside the card
+// Sits attached to the card's right edge like a bookmark tab,
+// half in / half out, completely separate from the brand logo,
+// the NEW/OFFER ribbon and the favorite heart. Turns into a
+// dark filled check when the car is added to comparison.
 // ============================================================
 class CompareCornerBadge extends StatelessWidget {
   final int? carId;
@@ -6593,70 +6621,87 @@ class CompareCornerBadge extends StatelessWidget {
       builder: (context, list, _) {
         final isSelected = list.contains(carId);
 
-        return Transform.rotate(
-          angle: -0.30,
-          child: HoverLift(
-            scale: 1.14,
-            borderRadius: BorderRadius.circular(14),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () => toggleCompare(carId!),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOut,
-                  padding: const EdgeInsets.fromLTRB(9, 12, 9, 7),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: isSelected
-                          ? const [
-                              Color(0xff1B1B1B),
-                              Color(0xff3B3B3B),
-                            ]
-                          : const [
-                              Colors.white,
-                              Color(0xfff5f5f5),
-                            ],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
+        return HoverLift(
+          scale: 1.08,
+          borderRadius: const BorderRadius.horizontal(
+            right: Radius.circular(16),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: const BorderRadius.horizontal(
+                right: Radius.circular(16),
+              ),
+              onTap: () => toggleCompare(carId!),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                padding: const EdgeInsets.fromLTRB(7, 10, 11, 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isSelected
+                        ? const [
+                            Color(0xff1B1B1B),
+                            Color(0xff3B3B3B),
+                          ]
+                        : const [
+                            Colors.white,
+                            Color(0xfff5f5f5),
+                          ],
+                  ),
+                  borderRadius: const BorderRadius.horizontal(
+                    right: Radius.circular(16),
+                  ),
+                  border: Border(
+                    top: BorderSide(
                       color: isSelected
                           ? Colors.transparent
                           : Colors.red.withValues(alpha: 0.4),
                       width: 1.3,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.22),
-                        blurRadius: 14,
-                        offset: const Offset(0, 7),
-                      ),
-                    ],
+                    right: BorderSide(
+                      color: isSelected
+                          ? Colors.transparent
+                          : Colors.red.withValues(alpha: 0.4),
+                      width: 1.3,
+                    ),
+                    bottom: BorderSide(
+                      color: isSelected
+                          ? Colors.transparent
+                          : Colors.red.withValues(alpha: 0.4),
+                      width: 1.3,
+                    ),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isSelected
-                            ? Icons.check_circle_rounded
-                            : Icons.compare_arrows_rounded,
-                        size: 17,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 12,
+                      offset: const Offset(3, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isSelected
+                          ? Icons.check_circle_rounded
+                          : Icons.compare_arrows_rounded,
+                      size: 17,
+                      color: isSelected ? Colors.white : Colors.red,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'قارن',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
                         color: isSelected ? Colors.white : Colors.red,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'قارن',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          color: isSelected ? Colors.white : Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
