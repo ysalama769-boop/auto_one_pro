@@ -405,65 +405,145 @@ class _AutoOneShellState extends State<AutoOneShell> {
             ),
           ],
         ),
-      
       bottomNavigationBar: ValueListenableBuilder<List<int>>(
         valueListenable: compareCarIds,
         builder: (context, list, _) {
           if (list.length < 2) return const SizedBox.shrink();
 
           return Material(
-            color: Colors.black,
+            color: Colors.transparent,
             child: SafeArea(
               top: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF1A1A1A),
+                      Color(0xFF000000),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFFD4AF37).withValues(alpha: 0.35),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.compare_arrows_rounded,
-                        color: Colors.white, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        widget.isArabic
-                            ? 'محددة ${list.length} سيارات للمقارنة'
-                            : '${list.length} cars selected to compare',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        compareCarIds.value = [];
-                      },
-                      child: Text(
-                        widget.isArabic ? 'مسح' : 'Clear',
-                        style: const TextStyle(color: Colors.white54),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          smoothRoute(
-                            ComparisonPage(isArabic: widget.isArabic),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD4AF37)
+                                .withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          child: const Icon(
+                            Icons.compare_arrows_rounded,
+                            color: Color(0xFFD4AF37),
+                            size: 18,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        widget.isArabic ? 'قارني الآن' : 'Compare now',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            widget.isArabic
+                                ? '${list.length} سيارات محددة للمقارنة'
+                                : '${list.length} cars selected',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            compareCarIds.value = [];
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: Colors.white38,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    HoverLift(
+                      scale: 1.02,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              smoothRoute(
+                                ComparisonPage(isArabic: widget.isArabic),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 13),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFD4AF37),
+                                  Color(0xFFB8860B),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  widget.isArabic
+                                      ? 'قارني الآن'
+                                      : 'Compare Now',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Icon(
+                                  widget.isArabic
+                                      ? Icons.arrow_back_rounded
+                                      : Icons.arrow_forward_rounded,
+                                  color: Colors.black,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -473,7 +553,7 @@ class _AutoOneShellState extends State<AutoOneShell> {
           );
         },
       ),
-      ),
+    ),
     );
   }
 }
@@ -1288,7 +1368,11 @@ BrandStrip(
   },
 ),
 
-const SizedBox(height: 45),
+Container(
+  color: Colors.white,
+  width: double.infinity,
+  height: 20,
+),
 
           // ====================================================
           // FEATURES
@@ -2662,14 +2746,12 @@ class FeaturedCarCard extends StatelessWidget {
   final Car car;
   final bool isArabic;
   final VoidCallback? onDetails;
-  final bool compact;
 
   const FeaturedCarCard({
     super.key,
     required this.car,
     required this.isArabic,
     this.onDetails,
-    this.compact = false,
   });
   String _brandLogo() {
     return getBrandLogo(car.brand);
@@ -2699,10 +2781,7 @@ class FeaturedCarCard extends StatelessWidget {
 Widget build(BuildContext context) {
   final logo = _brandLogo();
 
-  return Stack(
-    clipBehavior: Clip.none,
-    children: [
-  HoverLift(
+  return HoverLift(
     borderRadius: BorderRadius.circular(22),
     child: Material(
   color: Colors.white,
@@ -2728,7 +2807,7 @@ Widget build(BuildContext context) {
         // =====================================================
 
         SizedBox(
-          height: compact ? 120 : 195,
+          height: 195,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -2739,10 +2818,10 @@ Widget build(BuildContext context) {
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey.shade200,
-                    child: Center(
+                    child: const Center(
                       child: Icon(
                         Icons.directions_car_filled_rounded,
-                        size: compact ? 44 : 75,
+                        size: 75,
                         color: Colors.black26,
                       ),
                     ),
@@ -2782,8 +2861,8 @@ Widget build(BuildContext context) {
                   top: 12,
                   right: 12,
                   child: Container(
-                    width: compact ? 38 : 54,
-                    height: compact ? 38 : 54,
+                    width: 54,
+                    height: 54,
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -2833,6 +2912,13 @@ Widget build(BuildContext context) {
                 left: 10,
                 child: FavoriteButton(carId: car.id),
               ),
+
+              // COMPARE BUTTON
+              Positioned(
+                bottom: 10,
+                left: 54,
+                child: CompareButton(carId: car.id),
+              ),
             ],
           ),
         ),
@@ -2842,9 +2928,7 @@ Widget build(BuildContext context) {
         // =====================================================
 
         Padding(
-        padding: compact
-            ? const EdgeInsets.fromLTRB(10, 9, 10, 9)
-            : const EdgeInsets.fromLTRB(13, 11, 13, 12),
+        padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
           child: Directionality(
             textDirection: TextDirection.rtl,
             child: Column(
@@ -2865,19 +2949,19 @@ Widget build(BuildContext context) {
  
    Text(
     car.name,
-    maxLines: compact ? 1 : 2,
+    maxLines: 2,
     overflow: TextOverflow.ellipsis,
     textAlign: TextAlign.right,
-    style: TextStyle(
+    style: const TextStyle(
       color: Colors.black,
-      fontSize: compact ? 12.5 : 15,
+      fontSize: 15,
       fontWeight: FontWeight.w900,
       height: 1.15,
     ),
   ),
 
 
-                          SizedBox(height: compact ? 4 : 7),
+                          const SizedBox(height: 7),
 
                           Row(
                             children: [
@@ -2886,9 +2970,9 @@ Text(
   car.brand,
   maxLines: 1,
   overflow: TextOverflow.ellipsis,
-  style: TextStyle(
+  style: const TextStyle(
     color: Colors.red,
-    fontSize: compact ? 10 : 11,
+    fontSize: 11,
     fontWeight: FontWeight.w900,
   ),
 ),
@@ -2905,9 +2989,9 @@ Text(
 
                               Text(
                                 car.year,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.black45,
-                                  fontSize: compact ? 10 : 11,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -2924,11 +3008,11 @@ Text(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
 
-                        Text(
+                        const Text(
                           'السعر',
                           style: TextStyle(
                             color: Colors.red,
-                            fontSize: compact ? 10 : 12,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -2938,9 +3022,9 @@ Text(
                         if (car.isOffer && car.oldPrice.isNotEmpty)
                           Text(
                             car.oldPrice,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.black38,
-                              fontSize: compact ? 9 : 11,
+                              fontSize: 11,
                               decoration: TextDecoration.lineThrough,
                             ),
                           ),
@@ -2949,9 +3033,9 @@ Text(
                           car.price,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.red,
-                            fontSize: compact ? 12.5 : 15,
+                            fontSize: 15,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -2960,7 +3044,6 @@ Text(
                   ],
                 ),
 
-                if (!compact) ...[
                 const SizedBox(height: 10),
 
                 // =================================================
@@ -3023,9 +3106,8 @@ Text(
                     ],
                   ),
                 ),
-                ],
 
-                SizedBox(height: compact ? 8 : 5),
+                const SizedBox(height: 5),
 
                 // =================================================
                 // BUTTONS
@@ -3037,37 +3119,35 @@ Text(
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: _openWhatsApp,
-                        icon: FaIcon(
+                        icon: const FaIcon(
                           FontAwesomeIcons.whatsapp,
-                          size: compact ? 12 : 15,
+                          size: 15,
                         ),
                         label: Text(
-                          compact
-                              ? ''
-                              : (isArabic
-                                  ? 'واتساب'
-                                  : 'WHATSAPP'),
+                          isArabic
+                              ? 'واتساب'
+                              : 'WHATSAPP',
                         ),
                         style: ElevatedButton.styleFrom(
 backgroundColor: const Color(0xff25D366),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(
-                            vertical: compact ? 8 : 11,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 11,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius:
                                 BorderRadius.circular(11),
                           ),
-                          textStyle: TextStyle(
-                            fontSize: compact ? 10 : 12,
+                          textStyle: const TextStyle(
+                            fontSize: 12,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
                     ),
 
-                    SizedBox(width: compact ? 6 : 9),
+                    const SizedBox(width: 9),
 
                     Expanded(
                       child: ElevatedButton.icon(
@@ -3083,29 +3163,27 @@ backgroundColor: const Color(0xff25D366),
                                 ),
                               );
                             },
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.description_outlined,
-                          size: compact ? 12 : 15,
+                          size: 15,
                         ),
                         label: Text(
-                          compact
-                              ? ''
-                              : (isArabic
-                                  ? 'التفاصيل'
-                                  : 'DETAILS'),
+                          isArabic
+                              ? 'التفاصيل'
+                              : 'DETAILS',
                         ),
                       style: ElevatedButton.styleFrom(
   backgroundColor: const Color(0xff0B0B0B),
   foregroundColor: Colors.white,
   elevation: 0,
-  padding: EdgeInsets.symmetric(
-    vertical: compact ? 6 : 9,
+  padding: const EdgeInsets.symmetric(
+    vertical: 9,
   ),
   shape: RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(11),
   ),
-  textStyle: TextStyle(
-    fontSize: compact ? 10 : 12,
+  textStyle: const TextStyle(
+    fontSize: 12,
     fontWeight: FontWeight.w800,
   ),
 ),
@@ -3121,23 +3199,8 @@ backgroundColor: const Color(0xff25D366),
     ),
     ),
   ),
-  ),
-
-  // =====================================================
-  // COMPARE BADGE — a tab jutting out from the right edge,
-  // sitting right on the seam between photo and details so
-  // it never touches the brand logo, the NEW/OFFER ribbon,
-  // or the favorite heart.
-  // =====================================================
-  Positioned(
-    top: (compact ? 120 : 195) - 22,
-    right: -13,
-    child: CompareCornerBadge(carId: car.id),
-  ),
-  ],
   );
 }
-
 
 
 Widget _lightspecDivider() {
@@ -5389,10 +5452,7 @@ String _searchAlias(Car car) {
 
       final matchesSearch =
           query.isEmpty ||
-          query
-              .split(' ')
-              .where((w) => w.trim().isNotEmpty)
-              .every((word) => searchableText.contains(word));
+          searchableText.contains(query);
 
       final matchesBrand =
           selectedBrand == 'ALL' ||
@@ -6063,28 +6123,20 @@ String _searchAlias(Car car) {
 
           const SizedBox(height: 30),
 
-          LayoutBuilder(
-            builder: (context, searchConstraints) {
-              const barHeight = 42.0;
-              const fontSize = 13.0;
-              const iconSize = 20.0;
-
-              return Row(
+          Row(
             children: [
-              Expanded(
+              SizedBox(
+             width: 360,
               child: Container(
-                 height: barHeight,
+                 height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.black.withValues(alpha: 0.06),
-                    ),
+                    borderRadius: BorderRadius.circular(14),
                     boxShadow: const [
                       BoxShadow(
                         color: Colors.black12,
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
                       ),
                     ],
                   ),
@@ -6098,18 +6150,12 @@ String _searchAlias(Car car) {
                     textAlign: widget.isArabic
                         ? TextAlign.right
                         : TextAlign.left,
-                    style: const TextStyle(fontSize: fontSize),
                     decoration: InputDecoration(
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                      ),
                       hintText: widget.isArabic
                           ? 'ابحث عن سيارة...'
                           : 'Search for a car...',
-                      hintStyle: TextStyle(fontSize: fontSize),
                       prefixIcon:
-                          Icon(Icons.search_rounded, size: iconSize),
+                          const Icon(Icons.search_rounded),
                       border: InputBorder.none,
                     ),
                   ),
@@ -6123,27 +6169,20 @@ String _searchAlias(Car car) {
                 icon: const Icon(
                   Icons.tune_rounded,
                   color: Colors.white,
-                  size: 18,
                 ),
                 label: Text(
                   widget.isArabic ? 'فلتر' : 'FILTER',
-                  style: const TextStyle(fontSize: 13),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  minimumSize: const Size(0, barHeight),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                  ),
+                  minimumSize: const Size(110, 48),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),
             ],
-              );
-            },
           ),
 
           const SizedBox(height: 14),
@@ -6596,118 +6635,6 @@ class _CreativeBookButtonState extends State<CreativeBookButton>
           },
         ),
       ),
-    );
-  }
-}
-
-// ============================================================
-// COMPARE CORNER BADGE — creative floating tab outside the card
-// Sits attached to the card's right edge like a bookmark tab,
-// half in / half out, completely separate from the brand logo,
-// the NEW/OFFER ribbon and the favorite heart. Turns into a
-// dark filled check when the car is added to comparison.
-// ============================================================
-class CompareCornerBadge extends StatelessWidget {
-  final int? carId;
-
-  const CompareCornerBadge({super.key, required this.carId});
-
-  @override
-  Widget build(BuildContext context) {
-    if (carId == null) return const SizedBox.shrink();
-
-    return ValueListenableBuilder<List<int>>(
-      valueListenable: compareCarIds,
-      builder: (context, list, _) {
-        final isSelected = list.contains(carId);
-
-        return HoverLift(
-          scale: 1.08,
-          borderRadius: const BorderRadius.horizontal(
-            right: Radius.circular(16),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: const BorderRadius.horizontal(
-                right: Radius.circular(16),
-              ),
-              onTap: () => toggleCompare(carId!),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.fromLTRB(7, 10, 11, 10),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isSelected
-                        ? const [
-                            Color(0xff1B1B1B),
-                            Color(0xff3B3B3B),
-                          ]
-                        : const [
-                            Colors.white,
-                            Color(0xfff5f5f5),
-                          ],
-                  ),
-                  borderRadius: const BorderRadius.horizontal(
-                    right: Radius.circular(16),
-                  ),
-                  border: Border(
-                    top: BorderSide(
-                      color: isSelected
-                          ? Colors.transparent
-                          : Colors.red.withValues(alpha: 0.4),
-                      width: 1.3,
-                    ),
-                    right: BorderSide(
-                      color: isSelected
-                          ? Colors.transparent
-                          : Colors.red.withValues(alpha: 0.4),
-                      width: 1.3,
-                    ),
-                    bottom: BorderSide(
-                      color: isSelected
-                          ? Colors.transparent
-                          : Colors.red.withValues(alpha: 0.4),
-                      width: 1.3,
-                    ),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 12,
-                      offset: const Offset(3, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isSelected
-                          ? Icons.check_circle_rounded
-                          : Icons.compare_arrows_rounded,
-                      size: 17,
-                      color: isSelected ? Colors.white : Colors.red,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'قارن',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: isSelected ? Colors.white : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -9199,36 +9126,8 @@ Container(
             );
           }
 
-          Widget specColumn(
-            String title,
-            List<Widget> cards, {
-            bool twoPerRow = false,
-          }) {
+          Widget specColumn(String title, List<Widget> cards) {
             if (cards.isEmpty) return const SizedBox.shrink();
-
-            List<Widget> body;
-            if (twoPerRow) {
-              body = [];
-              for (int i = 0; i < cards.length; i += 2) {
-                if (i + 1 < cards.length) {
-                  body.add(
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: cards[i]),
-                        const SizedBox(width: 12),
-                        Expanded(child: cards[i + 1]),
-                      ],
-                    ),
-                  );
-                } else {
-                  body.add(cards[i]);
-                }
-              }
-            } else {
-              body = cards;
-            }
-
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -9241,7 +9140,7 @@ Container(
                   ),
                 ),
                 const SizedBox(height: 12),
-                ...body,
+                ...cards,
               ],
             );
           }
@@ -9387,25 +9286,26 @@ Container(
               ),
           ];
 
+          final columns = [
+            specColumn(
+              isArabic ? 'القيادة' : 'DRIVING',
+              drivingCards,
+            ),
+            specColumn(
+              isArabic ? 'التجهيزات والمزايا' : 'FEATURES',
+              featureCards,
+            ),
+            specColumn(
+              isArabic ? 'الأبعاد' : 'DIMENSIONS',
+              dimensionCards,
+            ),
+            specColumn(
+              isArabic ? 'الأمان' : 'SAFETY',
+              safetyCards,
+            ),
+          ];
+
           if (wide) {
-            final columns = [
-              specColumn(
-                isArabic ? 'القيادة' : 'DRIVING',
-                drivingCards,
-              ),
-              specColumn(
-                isArabic ? 'التجهيزات والمزايا' : 'FEATURES',
-                featureCards,
-              ),
-              specColumn(
-                isArabic ? 'الأبعاد' : 'DIMENSIONS',
-                dimensionCards,
-              ),
-              specColumn(
-                isArabic ? 'الأمان' : 'SAFETY',
-                safetyCards,
-              ),
-            ];
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -9420,38 +9320,15 @@ Container(
             );
           }
 
-          final mobileColumns = [
-            specColumn(
-              isArabic ? 'القيادة' : 'DRIVING',
-              drivingCards,
-              twoPerRow: true,
-            ),
-            specColumn(
-              isArabic ? 'التجهيزات والمزايا' : 'FEATURES',
-              featureCards,
-              twoPerRow: true,
-            ),
-            specColumn(
-              isArabic ? 'الأبعاد' : 'DIMENSIONS',
-              dimensionCards,
-              twoPerRow: true,
-            ),
-            specColumn(
-              isArabic ? 'الأمان' : 'SAFETY',
-              safetyCards,
-              twoPerRow: true,
-            ),
-          ];
-
           return Column(
             children: [
-              mobileColumns[0],
+              columns[0],
               const SizedBox(height: 20),
-              mobileColumns[1],
+              columns[1],
               const SizedBox(height: 20),
-              mobileColumns[2],
+              columns[2],
               const SizedBox(height: 20),
-              mobileColumns[3],
+              columns[3],
             ],
           );
         },
