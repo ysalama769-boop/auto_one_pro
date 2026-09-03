@@ -2699,7 +2699,10 @@ class FeaturedCarCard extends StatelessWidget {
 Widget build(BuildContext context) {
   final logo = _brandLogo();
 
-  return HoverLift(
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+  HoverLift(
     borderRadius: BorderRadius.circular(22),
     child: Material(
   color: Colors.white,
@@ -2829,13 +2832,6 @@ Widget build(BuildContext context) {
                 bottom: 10,
                 left: 10,
                 child: FavoriteButton(carId: car.id),
-              ),
-
-              // COMPARE BUTTON
-              Positioned(
-                bottom: 10,
-                left: 54,
-                child: CompareButton(carId: car.id),
               ),
             ],
           ),
@@ -3125,6 +3121,17 @@ backgroundColor: const Color(0xff25D366),
     ),
     ),
   ),
+  ),
+
+  // =====================================================
+  // COMPARE BADGE — floating outside the card, top corner
+  // =====================================================
+  Positioned(
+    top: -14,
+    right: 14,
+    child: CompareCornerBadge(carId: car.id),
+  ),
+  ],
   );
 }
 
@@ -6562,6 +6569,100 @@ class _CreativeBookButtonState extends State<CreativeBookButton>
           },
         ),
       ),
+    );
+  }
+}
+
+// ============================================================
+// COMPARE CORNER BADGE — creative floating tag outside the card
+// A rotated ribbon-style tag that "hangs" off the card's top
+// corner, like a price tag. Turns into a dark filled check when
+// the car is added to comparison.
+// ============================================================
+class CompareCornerBadge extends StatelessWidget {
+  final int? carId;
+
+  const CompareCornerBadge({super.key, required this.carId});
+
+  @override
+  Widget build(BuildContext context) {
+    if (carId == null) return const SizedBox.shrink();
+
+    return ValueListenableBuilder<List<int>>(
+      valueListenable: compareCarIds,
+      builder: (context, list, _) {
+        final isSelected = list.contains(carId);
+
+        return Transform.rotate(
+          angle: -0.30,
+          child: HoverLift(
+            scale: 1.14,
+            borderRadius: BorderRadius.circular(14),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => toggleCompare(carId!),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  padding: const EdgeInsets.fromLTRB(9, 12, 9, 7),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isSelected
+                          ? const [
+                              Color(0xff1B1B1B),
+                              Color(0xff3B3B3B),
+                            ]
+                          : const [
+                              Colors.white,
+                              Color(0xfff5f5f5),
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected
+                          ? Colors.transparent
+                          : Colors.red.withValues(alpha: 0.4),
+                      width: 1.3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.22),
+                        blurRadius: 14,
+                        offset: const Offset(0, 7),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isSelected
+                            ? Icons.check_circle_rounded
+                            : Icons.compare_arrows_rounded,
+                        size: 17,
+                        color: isSelected ? Colors.white : Colors.red,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'قارن',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: isSelected ? Colors.white : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
