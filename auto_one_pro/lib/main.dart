@@ -8285,117 +8285,6 @@ class _CarGalleryState extends State<CarGallery> {
     );
   }
 }
-// ============================================================
-// إرسال طلب عميل (تمويل / تجربة قيادة) لجدول customer_requests
-// ============================================================
-Future<void> _submitCustomerRequest(
-  BuildContext context,
-  Car car,
-  bool isArabic,
-  String requestType,
-) async {
-  final nameCtrl = TextEditingController();
-  final phoneCtrl = TextEditingController();
-  final notesCtrl = TextEditingController();
-
-  final title = requestType == 'financing'
-      ? (isArabic ? 'طلب تمويل' : 'Financing request')
-      : (isArabic ? 'حجز تجربة قيادة' : 'Book a test drive');
-
-  final submitted = await showDialog<bool>(
-    context: context,
-    builder: (context) => Directionality(
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-      child: AlertDialog(
-        title: Text(title),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: InputDecoration(
-                  labelText: isArabic ? 'الاسم' : 'Name',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: phoneCtrl,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: isArabic ? 'رقم الجوال' : 'Phone',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: notesCtrl,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  labelText: isArabic ? 'ملاحظات (اختياري)' : 'Notes (optional)',
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameCtrl.text.trim().isEmpty ||
-                  phoneCtrl.text.trim().isEmpty) {
-                return;
-              }
-              Navigator.of(context).pop(true);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(isArabic ? 'إرسال' : 'Send'),
-          ),
-        ],
-      ),
-    ),
-  );
-
-  if (submitted != true) return;
-
-  try {
-    await Supabase.instance.client.from('customer_requests').insert({
-      'customer_name': nameCtrl.text.trim(),
-      'phone': phoneCtrl.text.trim(),
-      'car_id': car.id,
-      'car_name': car.name,
-      'car_brand': car.brand,
-      'request_type': requestType,
-      'status': 'new',
-      'notes': notesCtrl.text.trim(),
-    });
-
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isArabic
-              ? 'تم إرسال طلبك، هيتم التواصل معاك قريبًا'
-              : 'Your request has been sent, we will contact you soon',
-        ),
-      ),
-    );
-  } catch (e) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isArabic ? 'حصلت مشكلة، حاول تاني' : 'Something went wrong',
-        ),
-      ),
-    );
-  }
-}
 
 // ============================================================
 // طلب تمويل — فورم مخصص بحقول تفصيلية + رسائل كريتيف للتحقق
@@ -8446,6 +8335,7 @@ class _FinancingRequestDialogState extends State<_FinancingRequestDialog> {
   bool? hasObligations;
   bool obligationsError = false;
   bool isSending = false;
+  String? selectedColorId;
 
   bool get isArabic => widget.isArabic;
 
@@ -8570,6 +8460,18 @@ class _FinancingRequestDialogState extends State<_FinancingRequestDialog> {
     if (!_validateAndFocus()) return;
 
     setState(() => isSending = true);
+
+    final colorList = carColorsCache[widget.car.id] ?? const <CarColor>[];
+    String? selectedColorName;
+    if (selectedColorId != null) {
+      for (final c in colorList) {
+        if (c.id == selectedColorId) {
+          selectedColorName = isArabic ? c.nameAr : c.nameEn;
+          break;
+        }
+      }
+    }
+
     try {
       await Supabase.instance.client.from('customer_requests').insert({
         'customer_name': nameCtrl.text.trim(),
@@ -8585,6 +8487,7 @@ class _FinancingRequestDialogState extends State<_FinancingRequestDialog> {
         'obligations_type':
             hasObligations == true ? obligationsTypeCtrl.text.trim() : '',
         'employer': employerCtrl.text.trim(),
+        'selected_color': selectedColorName ?? '',
       });
 
       if (!mounted) return;
@@ -8624,6 +8527,53 @@ class _FinancingRequestDialogState extends State<_FinancingRequestDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if ((carColorsCache[widget.car.id] ?? const <CarColor>[])
+                  .isNotEmpty) ...[
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    isArabic ? 'اللون المطلوب (اختياري)' : 'Preferred color (optional)',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children:
+                      (carColorsCache[widget.car.id] ?? const <CarColor>[])
+                          .map((color) {
+                    final isSelected = selectedColorId == color.id;
+                    return GestureDetector(
+                      onTap: () => setState(() => selectedColorId = color.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: isSelected ? 36 : 30,
+                        height: isSelected ? 36 : 30,
+                        decoration: BoxDecoration(
+                          color: Color(color.colorValue),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? Colors.red : Colors.black12,
+                            width: isSelected ? 3 : 1,
+                          ),
+                        ),
+                        child: isSelected
+                            ? const Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              )
+                            : null,
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 14),
+              ],
               TextField(
                 controller: nameCtrl,
                 focusNode: nameFocus,
@@ -9668,58 +9618,26 @@ Column(
 
     const SizedBox(height: 10),
 
-    IntrinsicWidth(
-      child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 110,
-          child: OutlinedButton.icon(
-            onPressed: () =>
-                _submitFinancingRequest(context, car, isArabic),
-            icon: const Icon(
-              Icons.account_balance_wallet_outlined,
-              size: 16,
-            ),
-            label: Text(
-              isArabic ? 'طلب تمويل' : 'Financing',
-              style: const TextStyle(fontSize: 12),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black87,
-              side: const BorderSide(color: Colors.black26),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
+    SizedBox(
+      width: 228,
+      child: OutlinedButton.icon(
+        onPressed: () => _submitFinancingRequest(context, car, isArabic),
+        icon: const Icon(
+          Icons.account_balance_wallet_outlined,
+          size: 16,
+        ),
+        label: Text(
+          isArabic ? 'طلب تمويل' : 'Financing',
+          style: const TextStyle(fontSize: 12),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.black87,
+          side: const BorderSide(color: Colors.black26),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
         ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 110,
-          child: OutlinedButton.icon(
-            onPressed: () =>
-                _submitCustomerRequest(context, car, isArabic, 'test_drive'),
-            icon: const Icon(
-              Icons.time_to_leave_outlined,
-              size: 16,
-            ),
-            label: Text(
-              isArabic ? 'تجربة قيادة' : 'Test drive',
-              style: const TextStyle(fontSize: 12),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black87,
-              side: const BorderSide(color: Colors.black26),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ),
-      ],
       ),
     ),
   ],
@@ -11078,6 +10996,24 @@ onPressed: () async {
 // ملحوظة: ده حماية على مستوى الواجهة بس، مش نظام تسجيل دخول أمني كامل.
 const String kAdminPassword = 'autoone2026';
 
+// ============================================================
+// المستخدم الحالي المسجّل دخوله في لوحة التحكم + سجل التعديلات
+// ============================================================
+final ValueNotifier<Map<String, dynamic>?> currentAdminUser =
+    ValueNotifier(null);
+
+Future<void> logActivity(String action) async {
+  final userName = currentAdminUser.value?['name'] ?? 'غير معروف';
+  try {
+    await Supabase.instance.client.from('activity_log').insert({
+      'user_name': userName,
+      'action': action,
+    });
+  } catch (e) {
+    // تسجيل النشاط مش لازم يوقف العملية الأساسية لو فشل
+  }
+}
+
 class AdminGate extends StatefulWidget {
   final bool isArabic;
 
@@ -11088,28 +11024,81 @@ class AdminGate extends StatefulWidget {
 }
 
 class _AdminGateState extends State<AdminGate> {
+  final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   String? errorText;
   bool obscure = true;
+  bool isSubmitting = false;
 
   bool get isArabic => widget.isArabic;
 
   @override
   void dispose() {
+    usernameController.dispose();
     passwordController.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    if (passwordController.text.trim() == kAdminPassword) {
+  Future<void> _submit() async {
+    final username = usernameController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      setState(() {
+        errorText = isArabic
+            ? 'اكتب اسم المستخدم وكلمة السر'
+            : 'Enter username and password';
+      });
+      return;
+    }
+
+    setState(() {
+      isSubmitting = true;
+      errorText = null;
+    });
+
+    try {
+      final response = await Supabase.instance.client
+          .from('admin_users')
+          .select()
+          .eq('username', username)
+          .eq('password', password)
+          .maybeSingle();
+
+      if (response == null) {
+        setState(() {
+          isSubmitting = false;
+          errorText = isArabic
+              ? 'اسم المستخدم أو كلمة السر غلط'
+              : 'Wrong username or password';
+        });
+        return;
+      }
+
+      currentAdminUser.value = response;
+
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         smoothRoute(AdminDashboard(isArabic: isArabic)),
       );
-    } else {
+    } catch (e) {
+      // فallback: لو قاعدة بيانات المستخدمين لسه متعملتلهاش SQL،
+      // نسمح بالدخول بالرقم السري القديم كـ Admin مؤقتًا
+      if (password == kAdminPassword) {
+        currentAdminUser.value = {
+          'name': isArabic ? 'المدير' : 'Admin',
+          'role': 'admin',
+        };
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          smoothRoute(AdminDashboard(isArabic: isArabic)),
+        );
+        return;
+      }
       setState(() {
-        errorText = isArabic
-            ? 'الرقم السري غلط، حاولي تاني'
-            : 'Wrong password, try again';
+        isSubmitting = false;
+        errorText =
+            isArabic ? 'حصلت مشكلة في الاتصال' : 'Connection problem';
       });
     }
   }
@@ -11144,9 +11133,24 @@ class _AdminGateState extends State<AdminGate> {
                   ),
                   const SizedBox(height: 24),
                   TextField(
+                    controller: usernameController,
+                    autofocus: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: isArabic ? 'اسم المستخدم' : 'Username',
+                      hintStyle: const TextStyle(color: Colors.white38),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
                     controller: passwordController,
                     obscureText: obscure,
-                    autofocus: true,
                     style: const TextStyle(color: Colors.white),
                     onSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
@@ -11178,7 +11182,7 @@ class _AdminGateState extends State<AdminGate> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _submit,
+                      onPressed: isSubmitting ? null : _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
@@ -11187,10 +11191,20 @@ class _AdminGateState extends State<AdminGate> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
-                        isArabic ? 'دخول' : 'Enter',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
+                      child: isSubmitting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              isArabic ? 'دخول' : 'Enter',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -11744,6 +11758,22 @@ class _AdminBookingsBodyState extends State<AdminBookingsBody> {
 // ============================================================
 // ADMIN DASHBOARD (TABS: BOOKINGS + INVENTORY)
 // ============================================================
+class _AdminTabDef {
+  final String label;
+  final IconData icon;
+  final double width;
+  final Widget page;
+  final List<String> roles;
+
+  _AdminTabDef({
+    required this.label,
+    required this.icon,
+    required this.width,
+    required this.page,
+    required this.roles,
+  });
+}
+
 class AdminDashboard extends StatefulWidget {
   final bool isArabic;
 
@@ -11761,6 +11791,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
   int pendingBookings = 0;
   int totalCars = 0;
   String? bestSellingCar;
+  int totalRequests = 0;
+  int newRequests = 0;
+  String? topRequestedCar;
 
   bool get isArabic => widget.isArabic;
 
@@ -11777,9 +11810,33 @@ class _AdminDashboardState extends State<AdminDashboard> {
           .select('status, car_name, car_brand');
       final carsResponse =
           await Supabase.instance.client.from('cars').select('id');
+      final requestsResponse = await Supabase.instance.client
+          .from('customer_requests')
+          .select('status, car_name, car_brand');
 
       final bookingsList =
           List<Map<String, dynamic>>.from(bookingsResponse as List);
+      final requestsList =
+          List<Map<String, dynamic>>.from(requestsResponse as List);
+
+      final newReqs =
+          requestsList.where((r) => (r['status'] ?? 'new') == 'new');
+
+      final Map<String, int> requestedCarCounts = {};
+      for (final r in requestsList) {
+        final label =
+            '${r['car_brand'] ?? ''} ${r['car_name'] ?? ''}'.trim();
+        if (label.isEmpty) continue;
+        requestedCarCounts[label] = (requestedCarCounts[label] ?? 0) + 1;
+      }
+      String? topRequested;
+      int topRequestedCount = 0;
+      requestedCarCounts.forEach((label, count) {
+        if (count > topRequestedCount) {
+          topRequestedCount = count;
+          topRequested = label;
+        }
+      });
 
       final pending =
           bookingsList.where((b) => (b['status'] ?? 'pending') == 'pending');
@@ -11807,6 +11864,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
         pendingBookings = pending.length;
         totalCars = (carsResponse as List).length;
         bestSellingCar = topCar;
+        totalRequests = requestsList.length;
+        newRequests = newReqs.length;
+        topRequestedCar = topRequested;
         isLoadingStats = false;
       });
     } catch (e) {
@@ -11935,6 +11995,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             (isArabic ? 'لا يوجد بعد' : 'None yet'),
                         color: Colors.purple,
                       ),
+                      const SizedBox(width: 10),
+                      _statCard(
+                        icon: Icons.support_agent_rounded,
+                        label: isArabic ? 'طلبات العملاء' : 'Customer Requests',
+                        value: '$totalRequests',
+                        color: Colors.teal,
+                      ),
+                      const SizedBox(width: 10),
+                      _statCard(
+                        icon: Icons.fiber_new_rounded,
+                        label: isArabic ? 'طلبات جديدة' : 'New Requests',
+                        value: '$newRequests',
+                        color: Colors.redAccent,
+                      ),
+                      const SizedBox(width: 10),
+                      _statCard(
+                        icon: Icons.trending_up_rounded,
+                        label: isArabic
+                            ? 'الأكتر طلب تمويل'
+                            : 'Most Requested',
+                        value: topRequestedCar ??
+                            (isArabic ? 'لا يوجد بعد' : 'None yet'),
+                        color: Colors.indigo,
+                      ),
                     ],
                   ),
                 ),
@@ -11950,48 +12034,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    SizedBox(
-                      width: 130,
-                      child: _adminTabButton(
-                        label: isArabic ? 'الحجوزات' : 'Bookings',
-                        icon: Icons.event_note_rounded,
-                        selected: currentTab == 0,
-                        onTap: () => setState(() => currentTab = 0),
-                        badgeCount: pendingBookings,
+                    for (var i = 0; i < _visibleTabs().length; i++) ...[
+                      if (i > 0) const SizedBox(width: 10),
+                      SizedBox(
+                        width: _visibleTabs()[i].width,
+                        child: _adminTabButton(
+                          label: _visibleTabs()[i].label,
+                          icon: _visibleTabs()[i].icon,
+                          selected: currentTab == i,
+                          onTap: () => setState(() => currentTab = i),
+                          badgeCount:
+                              _visibleTabs()[i].label ==
+                                      (isArabic ? 'الحجوزات' : 'Bookings')
+                                  ? pendingBookings
+                                  : 0,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      width: 130,
-                      child: _adminTabButton(
-                        label: isArabic ? 'المخزون' : 'Inventory',
-                        icon: Icons.directions_car_filled_rounded,
-                        selected: currentTab == 1,
-                        onTap: () => setState(() => currentTab = 1),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      width: 140,
-                      child: _adminTabButton(
-                        label: isArabic ? 'طلبات العملاء' : 'Requests',
-                        icon: Icons.support_agent_rounded,
-                        selected: currentTab == 2,
-                        onTap: () => setState(() => currentTab = 2),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      width: 160,
-                      child: _adminTabButton(
-                        label: isArabic
-                            ? 'الماركات والفئات'
-                            : 'Brands & Categories',
-                        icon: Icons.category_rounded,
-                        selected: currentTab == 3,
-                        onTap: () => setState(() => currentTab = 3),
-                      ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -11999,18 +12058,65 @@ class _AdminDashboardState extends State<AdminDashboard> {
             Expanded(
               child: IndexedStack(
                 index: currentTab,
-                children: [
-                  AdminBookingsBody(isArabic: isArabic),
-                  AdminCarsPage(isArabic: isArabic),
-                  AdminRequestsPage(isArabic: isArabic),
-                  AdminBrandsCategoriesPage(isArabic: isArabic),
-                ],
+                children:
+                    _visibleTabs().map((t) => t.page).toList(),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  List<_AdminTabDef> _visibleTabs() {
+    final role = (currentAdminUser.value?['role'] ?? 'admin') as String;
+
+    final all = <_AdminTabDef>[
+      _AdminTabDef(
+        label: isArabic ? 'الحجوزات' : 'Bookings',
+        icon: Icons.event_note_rounded,
+        width: 130,
+        page: AdminBookingsBody(isArabic: isArabic),
+        roles: const ['admin', 'sales'],
+      ),
+      _AdminTabDef(
+        label: isArabic ? 'المخزون' : 'Inventory',
+        icon: Icons.directions_car_filled_rounded,
+        width: 130,
+        page: AdminCarsPage(isArabic: isArabic),
+        roles: const ['admin', 'inventory', 'editor'],
+      ),
+      _AdminTabDef(
+        label: isArabic ? 'طلبات العملاء' : 'Requests',
+        icon: Icons.support_agent_rounded,
+        width: 140,
+        page: AdminRequestsPage(isArabic: isArabic),
+        roles: const ['admin', 'sales'],
+      ),
+      _AdminTabDef(
+        label: isArabic ? 'الماركات والفئات' : 'Brands & Categories',
+        icon: Icons.category_rounded,
+        width: 160,
+        page: AdminBrandsCategoriesPage(isArabic: isArabic),
+        roles: const ['admin', 'editor'],
+      ),
+      _AdminTabDef(
+        label: isArabic ? 'المستخدمين' : 'Users',
+        icon: Icons.admin_panel_settings_outlined,
+        width: 140,
+        page: AdminUsersPage(isArabic: isArabic),
+        roles: const ['admin'],
+      ),
+      _AdminTabDef(
+        label: isArabic ? 'سجل التعديلات' : 'Activity Log',
+        icon: Icons.history_rounded,
+        width: 150,
+        page: AdminActivityLogPage(isArabic: isArabic),
+        roles: const ['admin'],
+      ),
+    ];
+
+    return all.where((t) => t.roles.contains(role)).toList();
   }
 
   Widget _adminTabButton({
@@ -12132,6 +12238,11 @@ class _AdminRequestsPageState extends State<AdminRequestsPage> {
       await Supabase.instance.client
           .from('customer_requests')
           .update({'status': newStatus}).eq('id', id);
+      await logActivity(
+        isArabic
+            ? 'غيّر حالة طلب رقم $id إلى ${_statusLabel(newStatus)}'
+            : 'Changed request #$id status to ${_statusLabel(newStatus)}',
+      );
       _loadRequests();
     } catch (e) {
       if (!mounted) return;
@@ -12328,6 +12439,11 @@ class _AdminRequestsPageState extends State<AdminRequestsPage> {
                         if (((r['employer'] ?? '') as String).isNotEmpty)
                           Text(
                             '${isArabic ? 'جهة العمل' : 'Employer'}: ${r['employer']}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        if (((r['selected_color'] ?? '') as String).isNotEmpty)
+                          Text(
+                            '${isArabic ? 'اللون المطلوب' : 'Preferred color'}: ${r['selected_color']}',
                             style: const TextStyle(fontSize: 12),
                           ),
                       ],
@@ -12703,6 +12819,464 @@ class _AdminBrandsCategoriesPageState
 }
 
 // ============================================================
+// ADMIN USERS & ROLES
+// ============================================================
+class AdminUsersPage extends StatefulWidget {
+  final bool isArabic;
+  const AdminUsersPage({super.key, required this.isArabic});
+
+  @override
+  State<AdminUsersPage> createState() => _AdminUsersPageState();
+}
+
+class _AdminUsersPageState extends State<AdminUsersPage> {
+  List<Map<String, dynamic>> users = [];
+  bool isLoading = true;
+
+  bool get isArabic => widget.isArabic;
+
+  static const roles = ['admin', 'sales', 'inventory', 'editor'];
+
+  String _roleLabel(String role) {
+    switch (role) {
+      case 'sales':
+        return isArabic ? 'مبيعات' : 'Sales';
+      case 'inventory':
+        return isArabic ? 'مخزون' : 'Inventory';
+      case 'editor':
+        return isArabic ? 'محرر' : 'Editor';
+      default:
+        return isArabic ? 'مدير' : 'Admin';
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => isLoading = true);
+    try {
+      final response = await Supabase.instance.client
+          .from('admin_users')
+          .select()
+          .order('created_at');
+      setState(() {
+        users = List<Map<String, dynamic>>.from(response as List);
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _openForm({Map<String, dynamic>? existing}) async {
+    final nameCtrl =
+        TextEditingController(text: existing?['name']?.toString() ?? '');
+    final usernameCtrl =
+        TextEditingController(text: existing?['username']?.toString() ?? '');
+    final passwordCtrl =
+        TextEditingController(text: existing?['password']?.toString() ?? '');
+    String role = (existing?['role'] ?? 'sales') as String;
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(
+            existing == null
+                ? (isArabic ? 'مستخدم جديد' : 'New user')
+                : (isArabic ? 'تعديل مستخدم' : 'Edit user'),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'الاسم' : 'Name',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: usernameCtrl,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'اسم المستخدم' : 'Username',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: passwordCtrl,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'كلمة السر' : 'Password',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: role,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'الدور' : 'Role',
+                  ),
+                  items: roles
+                      .map((r) => DropdownMenuItem(
+                            value: r,
+                            child: Text(_roleLabel(r)),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => role = value);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(isArabic ? 'حفظ' : 'Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved != true) return;
+    if (nameCtrl.text.trim().isEmpty ||
+        usernameCtrl.text.trim().isEmpty ||
+        passwordCtrl.text.trim().isEmpty) {
+      return;
+    }
+
+    final payload = {
+      'name': nameCtrl.text.trim(),
+      'username': usernameCtrl.text.trim(),
+      'password': passwordCtrl.text.trim(),
+      'role': role,
+    };
+
+    try {
+      if (existing == null) {
+        await Supabase.instance.client.from('admin_users').insert(payload);
+        await logActivity(
+          isArabic
+              ? 'أضاف مستخدم جديد: ${nameCtrl.text.trim()} (${_roleLabel(role)})'
+              : 'Added new user: ${nameCtrl.text.trim()} (${_roleLabel(role)})',
+        );
+      } else {
+        await Supabase.instance.client
+            .from('admin_users')
+            .update(payload)
+            .eq('id', existing['id'] as int);
+        await logActivity(
+          isArabic
+              ? 'عدّل بيانات المستخدم: ${nameCtrl.text.trim()}'
+              : 'Updated user: ${nameCtrl.text.trim()}',
+        );
+      }
+      _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic
+                ? 'حصلت مشكلة (يمكن اسم المستخدم مستخدم قبل كده)'
+                : 'Something went wrong (username might be taken)',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _delete(Map<String, dynamic> user) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isArabic ? 'تأكيد الحذف' : 'Confirm delete'),
+        content: Text(
+          isArabic
+              ? 'متأكد إنك عايز تمسح المستخدم ده؟'
+              : 'Delete this user?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              isArabic ? 'حذف' : 'Delete',
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await Supabase.instance.client
+          .from('admin_users')
+          .delete()
+          .eq('id', user['id'] as int);
+      await logActivity(
+        isArabic
+            ? 'حذف المستخدم: ${user['name']}'
+            : 'Deleted user: ${user['name']}',
+      );
+      _load();
+    } catch (e) {
+      // silent
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xfff5f5f5),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'adminUsersFAB',
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+        onPressed: () => _openForm(),
+        icon: const Icon(Icons.person_add_alt_1_rounded),
+        label: Text(isArabic ? 'مستخدم جديد' : 'New user'),
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.red))
+          : users.isEmpty
+              ? Center(
+                  child: Text(
+                    isArabic ? 'لا يوجد مستخدمين بعد' : 'No users yet',
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 90),
+                  itemCount: users.length,
+                  itemBuilder: (context, index) {
+                    final user = users[index];
+                    final role = (user['role'] ?? 'sales') as String;
+                    final isCurrentUser =
+                        currentAdminUser.value?['id'] == user['id'];
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black12, blurRadius: 6),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: Colors.red.withValues(alpha: 0.1),
+                            child: Text(
+                              ((user['name'] ?? '?') as String).isNotEmpty
+                                  ? (user['name'] as String)[0]
+                                  : '?',
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      (user['name'] ?? '').toString(),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    if (isCurrentUser) ...[
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        isArabic ? '(إنت)' : '(you)',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                Text(
+                                  '@${user['username'] ?? ''} · ${_roleLabel(role)}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => _openForm(existing: user),
+                            icon: const Icon(Icons.edit_outlined),
+                          ),
+                          IconButton(
+                            onPressed:
+                                isCurrentUser ? null : () => _delete(user),
+                            icon: Icon(
+                              Icons.delete_outline_rounded,
+                              color: isCurrentUser
+                                  ? Colors.black26
+                                  : Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+    );
+  }
+}
+
+// ============================================================
+// ADMIN ACTIVITY LOG
+// ============================================================
+class AdminActivityLogPage extends StatefulWidget {
+  final bool isArabic;
+  const AdminActivityLogPage({super.key, required this.isArabic});
+
+  @override
+  State<AdminActivityLogPage> createState() => _AdminActivityLogPageState();
+}
+
+class _AdminActivityLogPageState extends State<AdminActivityLogPage> {
+  List<Map<String, dynamic>> logs = [];
+  bool isLoading = true;
+
+  bool get isArabic => widget.isArabic;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => isLoading = true);
+    try {
+      final response = await Supabase.instance.client
+          .from('activity_log')
+          .select()
+          .order('created_at', ascending: false)
+          .limit(200);
+      setState(() {
+        logs = List<Map<String, dynamic>>.from(response as List);
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  String _formatDate(String? raw) {
+    if (raw == null) return '';
+    final date = DateTime.tryParse(raw);
+    if (date == null) return raw;
+    final local = date.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(local.day)}/${two(local.month)}/${local.year} '
+        '${two(local.hour)}:${two(local.minute)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xfff5f5f5),
+      body: RefreshIndicator(
+        onRefresh: _load,
+        child: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.red))
+            : logs.isEmpty
+                ? Center(
+                    child: Text(
+                      isArabic ? 'لا يوجد تعديلات مسجّلة بعد' : 'No activity yet',
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(14),
+                    itemCount: logs.length,
+                    itemBuilder: (context, index) {
+                      final log = logs[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black12, blurRadius: 4),
+                          ],
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.history_rounded,
+                              size: 18,
+                              color: Colors.red,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    (log['action'] ?? '').toString(),
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    '${log['user_name'] ?? ''} · '
+                                    '${_formatDate(log['created_at']?.toString())}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+      ),
+    );
+  }
+}
+
+// ============================================================
 // ADMIN INVENTORY (CARS CRUD)
 // ============================================================
 class AdminCarsPage extends StatefulWidget {
@@ -12782,6 +13356,11 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
 
     try {
       await Supabase.instance.client.from('cars').delete().eq('id', id);
+      await logActivity(
+        isArabic
+            ? 'حذف السيارة: ${carName ?? id}'
+            : 'Deleted car: ${carName ?? id}',
+      );
       _loadCars();
     } catch (e) {
       if (!mounted) return;
@@ -13267,6 +13846,215 @@ class _CarFormPageState extends State<CarFormPage> {
     super.dispose();
   }
 
+  Future<void> _openColorsDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              title: Text(isArabic ? 'إدارة الألوان' : 'Manage colors'),
+              content: SizedBox(
+                width: 380,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isArabic
+                            ? 'دوسي على أي لون عشان تحدديه كمتاح لهذه السيارة'
+                            : 'Tap a color to mark it available for this car',
+                        style: const TextStyle(
+                          color: Colors.black45,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (isLoadingExtras)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.red,
+                            ),
+                          ),
+                        )
+                      else if (allColors.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text(
+                            isArabic
+                                ? 'مفيش ألوان مسجلة في جدول colors لسه'
+                                : 'No colors registered in the colors table yet',
+                            style: const TextStyle(color: Colors.black45),
+                          ),
+                        )
+                      else
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: allColors.map((color) {
+                            final colorId = color['id'] as int;
+                            final isSelected =
+                                selectedColorIds.contains(colorId);
+                            final rawValue =
+                                (color['color_value'] as int?) ?? 0xFFFFFF;
+                            final displayColor = Color(0xFF000000 | rawValue);
+                            final name = isArabic
+                                ? (color['name_ar'] ?? '') as String
+                                : (color['name_en'] ?? '') as String;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setDialogState(() {
+                                  setState(() {
+                                    if (isSelected) {
+                                      selectedColorIds.remove(colorId);
+                                      colorImageControllers[colorId]
+                                          ?.dispose();
+                                      colorImageControllers.remove(colorId);
+                                    } else {
+                                      selectedColorIds.add(colorId);
+                                      colorImageControllers.putIfAbsent(
+                                        colorId,
+                                        () => TextEditingController(),
+                                      );
+                                    }
+                                  });
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Colors.red.withValues(alpha: 0.08)
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Colors.red
+                                        : Colors.transparent,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: displayColor,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.black12,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      name,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    if (isSelected) ...[
+                                      const SizedBox(width: 4),
+                                      const Icon(
+                                        Icons.check_circle_rounded,
+                                        size: 15,
+                                        color: Colors.red,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      if (selectedColorIds.isNotEmpty) ...[
+                        const SizedBox(height: 14),
+                        ...selectedColorIds.map((colorId) {
+                          final colorData = allColors.firstWhere(
+                            (c) => c['id'] == colorId,
+                            orElse: () => {},
+                          );
+                          final rawValue =
+                              (colorData['color_value'] as int?) ?? 0xFFFFFF;
+                          final displayColor = Color(0xFF000000 | rawValue);
+                          final name = isArabic
+                              ? (colorData['name_ar'] ?? '') as String
+                              : (colorData['name_en'] ?? '') as String;
+
+                          final controller = colorImageControllers
+                              .putIfAbsent(colorId, () => TextEditingController());
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 16,
+                                  height: 16,
+                                  margin: const EdgeInsets.only(
+                                    left: 8,
+                                    right: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: displayColor,
+                                    shape: BoxShape.circle,
+                                    border:
+                                        Border.all(color: Colors.black12),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: TextField(
+                                    controller: controller,
+                                    decoration: InputDecoration(
+                                      hintText: isArabic
+                                          ? 'رابط صورة اللون $name (اختياري)'
+                                          : 'Image link for $name (optional)',
+                                      isDense: true,
+                                      filled: true,
+                                      fillColor: Colors.grey.shade100,
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(isArabic ? 'تم' : 'Done'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    // نحدّث الفورم الرئيسي عشان يعرض ملخص الألوان الجديد
+    setState(() {});
+  }
+
   Future<void> _save() async {
     if (!formKey.currentState!.validate()) return;
 
@@ -13379,6 +14167,34 @@ class _CarFormPageState extends State<CarFormPage> {
                   .map((url) => {'car_id': carId, 'image': url})
                   .toList(),
             );
+      }
+
+      if (!mounted) return;
+
+      // تسجيل النشاط: لو السعر اتغيّر، سجّل القديم والجديد بالتحديد
+      if (isEditing) {
+        final oldPrice =
+            (widget.existingCar?['price'] ?? '').toString().trim();
+        final newPrice = priceCtrl.text.trim();
+        if (oldPrice.isNotEmpty && oldPrice != newPrice) {
+          await logActivity(
+            isArabic
+                ? 'عدّل سعر ${nameCtrl.text.trim()}: من $oldPrice إلى $newPrice'
+                : 'Changed price of ${nameCtrl.text.trim()}: from $oldPrice to $newPrice',
+          );
+        } else {
+          await logActivity(
+            isArabic
+                ? 'عدّل بيانات السيارة: ${nameCtrl.text.trim()}'
+                : 'Edited car: ${nameCtrl.text.trim()}',
+          );
+        }
+      } else {
+        await logActivity(
+          isArabic
+              ? 'أضاف سيارة جديدة: ${nameCtrl.text.trim()}'
+              : 'Added new car: ${nameCtrl.text.trim()}',
+        );
       }
 
       if (!mounted) return;
@@ -13731,192 +14547,108 @@ class _CarFormPageState extends State<CarFormPage> {
               const SizedBox(height: 8),
 
               // ==========================================
-              // COLORS SECTION
+              // COLORS — زرار صغير يفتح نافذة إدارة الألوان
               // ==========================================
-              Text(
-                isArabic ? 'الألوان المتاحة' : 'Available colors',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                isArabic
-                    ? 'دوسي على أي لون عشان تحدديه كمتاح لهذه السيارة'
-                    : 'Tap a color to mark it available for this car',
-                style: const TextStyle(
-                  color: Colors.black45,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (isLoadingExtras)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: List.generate(
-                      4,
-                      (i) => ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: const SizedBox(
-                          width: 90,
-                          height: 36,
-                          child: ShimmerBox(),
-                        ),
+              InkWell(
+                onTap: _openColorsDialog,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.palette_outlined,
+                        color: Colors.red,
+                        size: 20,
                       ),
-                    ),
-                  ),
-                )
-              else if (allColors.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    isArabic
-                        ? 'مفيش ألوان مسجلة في جدول colors لسه'
-                        : 'No colors registered in the colors table yet',
-                    style: const TextStyle(color: Colors.black45),
-                  ),
-                )
-              else
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: allColors.map((color) {
-                    final colorId = color['id'] as int;
-                    final isSelected = selectedColorIds.contains(colorId);
-                    final rawValue = (color['color_value'] as int?) ?? 0xFFFFFF;
-                    final displayColor = Color(0xFF000000 | rawValue);
-                    final name = isArabic
-                        ? (color['name_ar'] ?? '') as String
-                        : (color['name_en'] ?? '') as String;
-
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            selectedColorIds.remove(colorId);
-                            colorImageControllers[colorId]?.dispose();
-                            colorImageControllers.remove(colorId);
-                          } else {
-                            selectedColorIds.add(colorId);
-                            colorImageControllers.putIfAbsent(
-                              colorId,
-                              () => TextEditingController(),
-                            );
-                          }
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.red.withValues(alpha: 0.08)
-                              : Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color:
-                                isSelected ? Colors.red : Colors.transparent,
-                            width: 1.5,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isArabic ? 'إدارة الألوان' : 'Manage colors',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: displayColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.black12,
+                      ),
+                      if (selectedColorIds.isNotEmpty) ...[
+                        SizedBox(
+                          height: 22,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: selectedColorIds.take(5).map((id) {
+                              final c = allColors.firstWhere(
+                                (e) => e['id'] == id,
+                                orElse: () => {},
+                              );
+                              final rawValue =
+                                  (c['color_value'] as int?) ?? 0xFFFFFF;
+                              return Padding(
+                                padding: const EdgeInsetsDirectional.only(
+                                  start: 4,
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              name,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            if (isSelected) ...[
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.check_circle_rounded,
-                                size: 15,
-                                color: Colors.red,
-                              ),
-                            ],
-                          ],
+                                child: Container(
+                                  width: 18,
+                                  height: 18,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF000000 | rawValue),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
                         ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-              // روابط صور خاصة بكل لون متحدد
-              if (selectedColorIds.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                ...selectedColorIds.map((colorId) {
-                  final colorData = allColors.firstWhere(
-                    (c) => c['id'] == colorId,
-                    orElse: () => {},
-                  );
-                  final rawValue =
-                      (colorData['color_value'] as int?) ?? 0xFFFFFF;
-                  final displayColor = Color(0xFF000000 | rawValue);
-                  final name = isArabic
-                      ? (colorData['name_ar'] ?? '') as String
-                      : (colorData['name_en'] ?? '') as String;
-
-                  final controller = colorImageControllers.putIfAbsent(
-                    colorId,
-                    () => TextEditingController(),
-                  );
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      children: [
+                        const SizedBox(width: 8),
                         Container(
-                          width: 16,
-                          height: 16,
-                          margin: const EdgeInsets.only(left: 8, right: 8),
-                          decoration: BoxDecoration(
-                            color: displayColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.black12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
                           ),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: controller,
-                            decoration: InputDecoration(
-                              hintText: isArabic
-                                  ? 'رابط صورة اللون $name (اختياري)'
-                                  : 'Image link for $name (optional)',
-                              isDense: true,
-                              filled: true,
-                              fillColor: Colors.grey.shade100,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${selectedColorIds.length}',
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
+                      ] else
+                        Text(
+                          isArabic ? 'مفيش ألوان' : 'None',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.chevron_left_rounded,
+                        color: Colors.black38,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
               Divider(color: Colors.grey.shade300),
               const SizedBox(height: 8),
 
