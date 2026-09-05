@@ -8749,6 +8749,198 @@ class _FinancingRequestDialogState extends State<_FinancingRequestDialog> {
   }
 }
 
+// ============================================================
+// FINANCING CALCULATOR — تقدير تقريبي للقسط الشهري
+// ============================================================
+class FinancingCalculatorCard extends StatefulWidget {
+  final String price;
+  final bool isArabic;
+
+  const FinancingCalculatorCard({
+    super.key,
+    required this.price,
+    required this.isArabic,
+  });
+
+  @override
+  State<FinancingCalculatorCard> createState() =>
+      _FinancingCalculatorCardState();
+}
+
+class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
+  double downPaymentPercent = 20;
+  int months = 36;
+
+  static const List<int> monthOptions = [12, 24, 36, 48, 60];
+
+  double get _carPrice {
+    final digitsOnly = widget.price.replaceAll(RegExp(r'[^0-9.]'), '');
+    return double.tryParse(digitsOnly) ?? 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isArabic = widget.isArabic;
+    final price = _carPrice;
+    final downPayment = price * (downPaymentPercent / 100);
+    final financedAmount = price - downPayment;
+
+    // نسبة تمويل تقديرية بسيطة (مش عرض بنكي حقيقي)
+    const yearlyRate = 0.0399;
+    final years = months / 12;
+    final totalWithProfit = financedAmount * (1 + (yearlyRate * years));
+    final monthlyInstallment = months > 0 ? totalWithProfit / months : 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151515),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.calculate_outlined,
+                color: Colors.red,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isArabic ? 'حاسبة التمويل' : 'FINANCING CALCULATOR',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // المقدم
+          Row(
+            children: [
+              Text(
+                isArabic ? 'المقدم' : 'Down payment',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const Spacer(),
+              Text(
+                '${downPaymentPercent.round()}%  ·  '
+                '${downPayment.toStringAsFixed(0)} '
+                '${isArabic ? 'ريال' : 'SAR'}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: Colors.red,
+              thumbColor: Colors.red,
+              inactiveTrackColor: Colors.white24,
+              overlayColor: Colors.red.withValues(alpha: 0.2),
+            ),
+            child: Slider(
+              value: downPaymentPercent,
+              min: 0,
+              max: 80,
+              divisions: 16,
+              onChanged: (value) {
+                setState(() => downPaymentPercent = value);
+              },
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // مدة التمويل
+          Text(
+            isArabic ? 'مدة التمويل' : 'Financing duration',
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: monthOptions.map((m) {
+              final selected = m == months;
+              return ChoiceChip(
+                label: Text(
+                  isArabic ? '$m شهر' : '$m mo',
+                  style: TextStyle(
+                    color: selected ? Colors.white : Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+                selected: selected,
+                selectedColor: Colors.red,
+                backgroundColor: Colors.white.withValues(alpha: 0.08),
+                onSelected: (_) => setState(() => months = m),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 16),
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    isArabic
+                        ? 'القسط الشهري التقريبي'
+                        : 'Estimated monthly installment',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${monthlyInstallment.toStringAsFixed(0)} '
+                  '${isArabic ? 'ريال' : 'SAR'}',
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 8),
+          Text(
+            isArabic
+                ? 'ده تقدير تقريبي مش عرض تمويل رسمي، السعر النهائي بيحدده البنك أو جهة التمويل.'
+                : 'This is a rough estimate, not an official offer — the final rate is set by the bank/financing provider.',
+            style: const TextStyle(color: Colors.white38, fontSize: 10.5),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class CarDetailsPage extends StatefulWidget {
   final Car car;
   final bool isArabic;
@@ -10026,6 +10218,15 @@ Container(
           ),
         ),
       ],
+
+      // ============================================================
+      // FINANCING CALCULATOR (تقدير تقريبي للقسط الشهري)
+      // ============================================================
+      const SizedBox(height: 24),
+      FinancingCalculatorCard(
+        price: car.price,
+        isArabic: isArabic,
+      ),
     ],
   ),
 ),
