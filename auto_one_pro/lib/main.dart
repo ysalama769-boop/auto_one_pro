@@ -405,65 +405,145 @@ class _AutoOneShellState extends State<AutoOneShell> {
             ),
           ],
         ),
-      
       bottomNavigationBar: ValueListenableBuilder<List<int>>(
         valueListenable: compareCarIds,
         builder: (context, list, _) {
           if (list.length < 2) return const SizedBox.shrink();
 
           return Material(
-            color: Colors.black,
+            color: Colors.transparent,
             child: SafeArea(
               top: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF1A1A1A),
+                      Color(0xFF000000),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFFD4AF37).withValues(alpha: 0.35),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.compare_arrows_rounded,
-                        color: Colors.white, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        widget.isArabic
-                            ? 'محددة ${list.length} سيارات للمقارنة'
-                            : '${list.length} cars selected to compare',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        compareCarIds.value = [];
-                      },
-                      child: Text(
-                        widget.isArabic ? 'مسح' : 'Clear',
-                        style: const TextStyle(color: Colors.white54),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          smoothRoute(
-                            ComparisonPage(isArabic: widget.isArabic),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD4AF37)
+                                .withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          child: const Icon(
+                            Icons.compare_arrows_rounded,
+                            color: Color(0xFFD4AF37),
+                            size: 18,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        widget.isArabic ? 'قارني الآن' : 'Compare now',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            widget.isArabic
+                                ? '${list.length} سيارات محددة للمقارنة'
+                                : '${list.length} cars selected',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            compareCarIds.value = [];
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: Colors.white38,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    HoverLift(
+                      scale: 1.02,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              smoothRoute(
+                                ComparisonPage(isArabic: widget.isArabic),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 13),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFD4AF37),
+                                  Color(0xFFB8860B),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  widget.isArabic
+                                      ? 'قارني الآن'
+                                      : 'Compare Now',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Icon(
+                                  widget.isArabic
+                                      ? Icons.arrow_back_rounded
+                                      : Icons.arrow_forward_rounded,
+                                  color: Colors.black,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -473,7 +553,7 @@ class _AutoOneShellState extends State<AutoOneShell> {
           );
         },
       ),
-      ),
+    ),
     );
   }
 }
@@ -1288,7 +1368,11 @@ BrandStrip(
   },
 ),
 
-const SizedBox(height: 45),
+Container(
+  color: Colors.white,
+  width: double.infinity,
+  height: 20,
+),
 
           // ====================================================
           // FEATURES
@@ -1432,7 +1516,7 @@ return GridView.builder(
     crossAxisCount: columns,
     crossAxisSpacing: 16,
     mainAxisSpacing: 20,
-    childAspectRatio: 0.70,
+    childAspectRatio: 0.66,
   ),
 
   itemBuilder: (context, index) {
@@ -2395,7 +2479,7 @@ Container(
 // BRAND STRIP
 // ============================================================
 
-class BrandStrip extends StatelessWidget {
+class BrandStrip extends StatefulWidget {
   final bool isArabic;
   final ValueChanged<String> onBrandTap;
 
@@ -2406,24 +2490,98 @@ class BrandStrip extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final Map<String, String> brandLogos = {
-      'Toyota': 'assets/brands/logo-toyota1.jpg',
-      'Kia': 'assets/brands/logo-kia1.jpg',
-      'Jetour': 'assets/brands/logo-jetour1.png',
-      'Nissan': 'assets/brands/logo-nissan1.jpg',
-      'Ford': 'assets/brands/logo-ford1.jpg',
-      'BAIC': 'assets/brands/logo-baic1.jpg',
-      'BYD': 'assets/brands/logo-byd1.png',
-      'MG': 'assets/brands/logo-mg1.jpg',
-      'Chery': 'assets/brands/logo-chery1.png',
-      'Hyundai': 'assets/brands/logo-hyundai1.jpg',
-      'Geely': 'assets/brands/logo-geely1.jpg',
-      'RELY': 'assets/brands/logo-rely1.jpg',
-      'JAC': 'assets/brands/logo-jac1.png',
-    };
+  State<BrandStrip> createState() => _BrandStripState();
+}
 
-    final brands = brandLogos.keys.toList();
+class _BrandStripState extends State<BrandStrip> {
+  // القايمة الثابتة القديمة، بتستخدم كـ fallback بس لو حصلت مشكلة
+  // في تحميل الماركات من قاعدة البيانات (زي مشكلة في الشبكة)
+  static const Map<String, String> _fallbackBrandLogos = {
+    'Toyota': 'assets/brands/logo-toyota1.jpg',
+    'Kia': 'assets/brands/logo-kia1.jpg',
+    'Jetour': 'assets/brands/logo-jetour1.png',
+    'Nissan': 'assets/brands/logo-nissan1.jpg',
+    'Ford': 'assets/brands/logo-ford1.jpg',
+    'BAIC': 'assets/brands/logo-baic1.jpg',
+    'BYD': 'assets/brands/logo-byd1.png',
+    'MG': 'assets/brands/logo-mg1.jpg',
+    'Chery': 'assets/brands/logo-chery1.png',
+    'Hyundai': 'assets/brands/logo-hyundai1.jpg',
+    'Geely': 'assets/brands/logo-geely1.jpg',
+    'RELY': 'assets/brands/logo-rely1.jpg',
+    'JAC': 'assets/brands/logo-jac1.png',
+  };
+
+  List<Map<String, String>> brandItems = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBrands();
+  }
+
+  Future<void> _loadBrands() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('brands')
+          .select()
+          .eq('is_active', true)
+          .order('name_ar');
+
+      final rows = List<Map<String, dynamic>>.from(response as List);
+
+      if (rows.isEmpty) {
+        _useFallback();
+        return;
+      }
+
+      setState(() {
+        brandItems = rows.map((row) {
+          final label = widget.isArabic
+              ? ((row['name_ar'] ?? row['name_en'] ?? '').toString())
+              : ((row['name_en'] ?? row['name_ar'] ?? '').toString());
+          final matchKey =
+              (row['name_en'] ?? row['name_ar'] ?? '').toString();
+          return {
+            'label': label,
+            'matchKey': matchKey,
+            'logo': (row['logo'] ?? '').toString(),
+          };
+        }).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      _useFallback();
+    }
+  }
+
+  void _useFallback() {
+    if (!mounted) return;
+    setState(() {
+      brandItems = _fallbackBrandLogos.entries
+          .map((e) => {
+                'label': e.key,
+                'matchKey': e.key,
+                'logo': e.value,
+              })
+          .toList();
+      isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isArabic = widget.isArabic;
+
+    if (isLoading) {
+      return const SizedBox(
+        height: 260,
+        child: Center(
+          child: CircularProgressIndicator(color: Colors.red),
+        ),
+      );
+    }
 
     return Container(
       width: double.infinity,
@@ -2464,8 +2622,10 @@ class BrandStrip extends StatelessWidget {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: brands.map((brand) {
-                final logo = brandLogos[brand]!;
+              children: brandItems.map((item) {
+                final label = item['label']!;
+                final matchKey = item['matchKey']!;
+                final logo = item['logo']!;
 
                 return Padding(
                   padding: const EdgeInsetsDirectional.only(
@@ -2474,7 +2634,7 @@ class BrandStrip extends StatelessWidget {
                   child: HoverLift(
                     borderRadius: BorderRadius.circular(18),
                     child: InkWell(
-                    onTap: () => onBrandTap(brand),
+                    onTap: () => widget.onBrandTap(matchKey),
                     borderRadius: BorderRadius.circular(18),
                     child: Container(
                       width: 145,
@@ -2501,26 +2661,33 @@ class BrandStrip extends StatelessWidget {
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.all(8),
-                              child: Image.asset(
-                                logo,
-                                fit: BoxFit.contain,
-                                errorBuilder:
-                                    (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons
-                                        .directions_car_filled_rounded,
-                                    size: 40,
-                                    color: Colors.red,
-                                  );
-                                },
-                              ),
+                              child: logo.isEmpty
+                                  ? const Icon(
+                                      Icons.directions_car_filled_rounded,
+                                      size: 40,
+                                      color: Colors.red,
+                                    )
+                                  : carImageAdaptive(
+                                      logo,
+                                      fit: BoxFit.contain,
+                                      showWatermark: false,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Icon(
+                                          Icons
+                                              .directions_car_filled_rounded,
+                                          size: 40,
+                                          color: Colors.red,
+                                        );
+                                      },
+                                    ),
                             ),
                           ),
 
                           const SizedBox(height: 8),
 
                           Text(
-                            brand,
+                            label,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 14,
@@ -2662,14 +2829,12 @@ class FeaturedCarCard extends StatelessWidget {
   final Car car;
   final bool isArabic;
   final VoidCallback? onDetails;
-  final bool compact;
 
   const FeaturedCarCard({
     super.key,
     required this.car,
     required this.isArabic,
     this.onDetails,
-    this.compact = false,
   });
   String _brandLogo() {
     return getBrandLogo(car.brand);
@@ -2699,10 +2864,7 @@ class FeaturedCarCard extends StatelessWidget {
 Widget build(BuildContext context) {
   final logo = _brandLogo();
 
-  return Stack(
-    clipBehavior: Clip.none,
-    children: [
-  HoverLift(
+  return HoverLift(
     borderRadius: BorderRadius.circular(22),
     child: Material(
   color: Colors.white,
@@ -2728,7 +2890,7 @@ Widget build(BuildContext context) {
         // =====================================================
 
         SizedBox(
-          height: compact ? 120 : 195,
+          height: 195,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -2739,10 +2901,10 @@ Widget build(BuildContext context) {
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey.shade200,
-                    child: Center(
+                    child: const Center(
                       child: Icon(
                         Icons.directions_car_filled_rounded,
-                        size: compact ? 44 : 75,
+                        size: 75,
                         color: Colors.black26,
                       ),
                     ),
@@ -2782,8 +2944,8 @@ Widget build(BuildContext context) {
                   top: 12,
                   right: 12,
                   child: Container(
-                    width: compact ? 38 : 54,
-                    height: compact ? 38 : 54,
+                    width: 54,
+                    height: 54,
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -2833,6 +2995,13 @@ Widget build(BuildContext context) {
                 left: 10,
                 child: FavoriteButton(carId: car.id),
               ),
+
+              // COMPARE BUTTON
+              Positioned(
+                bottom: 10,
+                left: 54,
+                child: CompareButton(carId: car.id),
+              ),
             ],
           ),
         ),
@@ -2842,9 +3011,7 @@ Widget build(BuildContext context) {
         // =====================================================
 
         Padding(
-        padding: compact
-            ? const EdgeInsets.fromLTRB(10, 9, 10, 9)
-            : const EdgeInsets.fromLTRB(13, 11, 13, 12),
+        padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
           child: Directionality(
             textDirection: TextDirection.rtl,
             child: Column(
@@ -2865,19 +3032,19 @@ Widget build(BuildContext context) {
  
    Text(
     car.name,
-    maxLines: compact ? 1 : 2,
+    maxLines: 2,
     overflow: TextOverflow.ellipsis,
     textAlign: TextAlign.right,
-    style: TextStyle(
+    style: const TextStyle(
       color: Colors.black,
-      fontSize: compact ? 12.5 : 15,
+      fontSize: 15,
       fontWeight: FontWeight.w900,
       height: 1.15,
     ),
   ),
 
 
-                          SizedBox(height: compact ? 4 : 7),
+                          const SizedBox(height: 7),
 
                           Row(
                             children: [
@@ -2886,9 +3053,9 @@ Text(
   car.brand,
   maxLines: 1,
   overflow: TextOverflow.ellipsis,
-  style: TextStyle(
+  style: const TextStyle(
     color: Colors.red,
-    fontSize: compact ? 10 : 11,
+    fontSize: 11,
     fontWeight: FontWeight.w900,
   ),
 ),
@@ -2905,9 +3072,9 @@ Text(
 
                               Text(
                                 car.year,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.black45,
-                                  fontSize: compact ? 10 : 11,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -2924,11 +3091,11 @@ Text(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
 
-                        Text(
+                        const Text(
                           'السعر',
                           style: TextStyle(
                             color: Colors.red,
-                            fontSize: compact ? 10 : 12,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -2938,9 +3105,9 @@ Text(
                         if (car.isOffer && car.oldPrice.isNotEmpty)
                           Text(
                             car.oldPrice,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.black38,
-                              fontSize: compact ? 9 : 11,
+                              fontSize: 11,
                               decoration: TextDecoration.lineThrough,
                             ),
                           ),
@@ -2949,9 +3116,9 @@ Text(
                           car.price,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.red,
-                            fontSize: compact ? 12.5 : 15,
+                            fontSize: 15,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -2960,7 +3127,6 @@ Text(
                   ],
                 ),
 
-                if (!compact) ...[
                 const SizedBox(height: 10),
 
                 // =================================================
@@ -3023,9 +3189,8 @@ Text(
                     ],
                   ),
                 ),
-                ],
 
-                SizedBox(height: compact ? 8 : 5),
+                const SizedBox(height: 5),
 
                 // =================================================
                 // BUTTONS
@@ -3037,37 +3202,35 @@ Text(
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: _openWhatsApp,
-                        icon: FaIcon(
+                        icon: const FaIcon(
                           FontAwesomeIcons.whatsapp,
-                          size: compact ? 12 : 15,
+                          size: 15,
                         ),
                         label: Text(
-                          compact
-                              ? ''
-                              : (isArabic
-                                  ? 'واتساب'
-                                  : 'WHATSAPP'),
+                          isArabic
+                              ? 'واتساب'
+                              : 'WHATSAPP',
                         ),
                         style: ElevatedButton.styleFrom(
 backgroundColor: const Color(0xff25D366),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(
-                            vertical: compact ? 8 : 11,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 11,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius:
                                 BorderRadius.circular(11),
                           ),
-                          textStyle: TextStyle(
-                            fontSize: compact ? 10 : 12,
+                          textStyle: const TextStyle(
+                            fontSize: 12,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
                     ),
 
-                    SizedBox(width: compact ? 6 : 9),
+                    const SizedBox(width: 9),
 
                     Expanded(
                       child: ElevatedButton.icon(
@@ -3083,29 +3246,27 @@ backgroundColor: const Color(0xff25D366),
                                 ),
                               );
                             },
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.description_outlined,
-                          size: compact ? 12 : 15,
+                          size: 15,
                         ),
                         label: Text(
-                          compact
-                              ? ''
-                              : (isArabic
-                                  ? 'التفاصيل'
-                                  : 'DETAILS'),
+                          isArabic
+                              ? 'التفاصيل'
+                              : 'DETAILS',
                         ),
                       style: ElevatedButton.styleFrom(
   backgroundColor: const Color(0xff0B0B0B),
   foregroundColor: Colors.white,
   elevation: 0,
-  padding: EdgeInsets.symmetric(
-    vertical: compact ? 6 : 9,
+  padding: const EdgeInsets.symmetric(
+    vertical: 9,
   ),
   shape: RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(11),
   ),
-  textStyle: TextStyle(
-    fontSize: compact ? 10 : 12,
+  textStyle: const TextStyle(
+    fontSize: 12,
     fontWeight: FontWeight.w800,
   ),
 ),
@@ -3121,23 +3282,8 @@ backgroundColor: const Color(0xff25D366),
     ),
     ),
   ),
-  ),
-
-  // =====================================================
-  // COMPARE BADGE — a tab jutting out from the right edge,
-  // sitting right on the seam between photo and details so
-  // it never touches the brand logo, the NEW/OFFER ribbon,
-  // or the favorite heart.
-  // =====================================================
-  Positioned(
-    top: (compact ? 120 : 195) - 22,
-    right: -13,
-    child: CompareCornerBadge(carId: car.id),
-  ),
-  ],
   );
 }
-
 
 
 Widget _lightspecDivider() {
@@ -3536,6 +3682,21 @@ class Car {
   final bool isOffer;
   final String oldPrice;
 
+  // ==========================================================
+  // EXTRA SPECS (flexible key → value, e.g. "ACC": "نعم")
+  // ==========================================================
+  final Map<String, String> extraSpecs;
+
+  // ==========================================================
+  // STATUS + INVENTORY
+  // ==========================================================
+  final String carStatus; // available | reserved | sold
+  final String vin;
+  final String plateNumber;
+  final String location;
+  final String arrivalDate;
+  final String conditionStatus; // new | used
+
   const Car({
      this.id,
     required this.name,
@@ -3593,6 +3754,17 @@ class Car {
     // Offer
     this.isOffer = false,
     this.oldPrice = '',
+
+    // Extra specs
+    this.extraSpecs = const {},
+
+    // Status + inventory
+    this.carStatus = 'available',
+    this.vin = '',
+    this.plateNumber = '',
+    this.location = '',
+    this.arrivalDate = '',
+    this.conditionStatus = 'new',
   });
 
   // ==========================================================
@@ -3631,6 +3803,19 @@ class Car {
       absSystem: (map['abs_system'] ?? '') as String,
       isOffer: (map['is_offer'] ?? false) as bool,
       oldPrice: (map['old_price'] ?? '') as String,
+      extraSpecs: (map['extra_specs'] is Map)
+          ? Map<String, String>.from(
+              (map['extra_specs'] as Map).map(
+                (key, value) => MapEntry(key.toString(), value.toString()),
+              ),
+            )
+          : const {},
+      carStatus: (map['car_status'] ?? 'available') as String,
+      vin: (map['vin'] ?? '') as String,
+      plateNumber: (map['plate_number'] ?? '') as String,
+      location: (map['location'] ?? '') as String,
+      arrivalDate: (map['arrival_date'] ?? '') as String,
+      conditionStatus: (map['condition_status'] ?? 'new') as String,
     );
   }
 }
@@ -5389,10 +5574,7 @@ String _searchAlias(Car car) {
 
       final matchesSearch =
           query.isEmpty ||
-          query
-              .split(' ')
-              .where((w) => w.trim().isNotEmpty)
-              .every((word) => searchableText.contains(word));
+          searchableText.contains(query);
 
       final matchesBrand =
           selectedBrand == 'ALL' ||
@@ -6063,28 +6245,20 @@ String _searchAlias(Car car) {
 
           const SizedBox(height: 30),
 
-          LayoutBuilder(
-            builder: (context, searchConstraints) {
-              const barHeight = 42.0;
-              const fontSize = 13.0;
-              const iconSize = 20.0;
-
-              return Row(
+          Row(
             children: [
-              Expanded(
+              SizedBox(
+             width: 360,
               child: Container(
-                 height: barHeight,
+                 height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.black.withValues(alpha: 0.06),
-                    ),
+                    borderRadius: BorderRadius.circular(14),
                     boxShadow: const [
                       BoxShadow(
                         color: Colors.black12,
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
                       ),
                     ],
                   ),
@@ -6098,18 +6272,12 @@ String _searchAlias(Car car) {
                     textAlign: widget.isArabic
                         ? TextAlign.right
                         : TextAlign.left,
-                    style: const TextStyle(fontSize: fontSize),
                     decoration: InputDecoration(
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                      ),
                       hintText: widget.isArabic
                           ? 'ابحث عن سيارة...'
                           : 'Search for a car...',
-                      hintStyle: TextStyle(fontSize: fontSize),
                       prefixIcon:
-                          Icon(Icons.search_rounded, size: iconSize),
+                          const Icon(Icons.search_rounded),
                       border: InputBorder.none,
                     ),
                   ),
@@ -6123,27 +6291,20 @@ String _searchAlias(Car car) {
                 icon: const Icon(
                   Icons.tune_rounded,
                   color: Colors.white,
-                  size: 18,
                 ),
                 label: Text(
                   widget.isArabic ? 'فلتر' : 'FILTER',
-                  style: const TextStyle(fontSize: 13),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  minimumSize: const Size(0, barHeight),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                  ),
+                  minimumSize: const Size(110, 48),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),
             ],
-              );
-            },
           ),
 
           const SizedBox(height: 14),
@@ -6376,7 +6537,7 @@ String _searchAlias(Car car) {
                   crossAxisCount: columns,
                   crossAxisSpacing: 20,
                   mainAxisSpacing: 20,
-                  childAspectRatio: 0.72,
+                  childAspectRatio: 0.66,
                 ),
                 itemBuilder: (context, index) {
                   final car = filteredCars[index];
@@ -6596,118 +6757,6 @@ class _CreativeBookButtonState extends State<CreativeBookButton>
           },
         ),
       ),
-    );
-  }
-}
-
-// ============================================================
-// COMPARE CORNER BADGE — creative floating tab outside the card
-// Sits attached to the card's right edge like a bookmark tab,
-// half in / half out, completely separate from the brand logo,
-// the NEW/OFFER ribbon and the favorite heart. Turns into a
-// dark filled check when the car is added to comparison.
-// ============================================================
-class CompareCornerBadge extends StatelessWidget {
-  final int? carId;
-
-  const CompareCornerBadge({super.key, required this.carId});
-
-  @override
-  Widget build(BuildContext context) {
-    if (carId == null) return const SizedBox.shrink();
-
-    return ValueListenableBuilder<List<int>>(
-      valueListenable: compareCarIds,
-      builder: (context, list, _) {
-        final isSelected = list.contains(carId);
-
-        return HoverLift(
-          scale: 1.08,
-          borderRadius: const BorderRadius.horizontal(
-            right: Radius.circular(16),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: const BorderRadius.horizontal(
-                right: Radius.circular(16),
-              ),
-              onTap: () => toggleCompare(carId!),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.fromLTRB(7, 10, 11, 10),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isSelected
-                        ? const [
-                            Color(0xff1B1B1B),
-                            Color(0xff3B3B3B),
-                          ]
-                        : const [
-                            Colors.white,
-                            Color(0xfff5f5f5),
-                          ],
-                  ),
-                  borderRadius: const BorderRadius.horizontal(
-                    right: Radius.circular(16),
-                  ),
-                  border: Border(
-                    top: BorderSide(
-                      color: isSelected
-                          ? Colors.transparent
-                          : Colors.red.withValues(alpha: 0.4),
-                      width: 1.3,
-                    ),
-                    right: BorderSide(
-                      color: isSelected
-                          ? Colors.transparent
-                          : Colors.red.withValues(alpha: 0.4),
-                      width: 1.3,
-                    ),
-                    bottom: BorderSide(
-                      color: isSelected
-                          ? Colors.transparent
-                          : Colors.red.withValues(alpha: 0.4),
-                      width: 1.3,
-                    ),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 12,
-                      offset: const Offset(3, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isSelected
-                          ? Icons.check_circle_rounded
-                          : Icons.compare_arrows_rounded,
-                      size: 17,
-                      color: isSelected ? Colors.white : Colors.red,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'قارن',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: isSelected ? Colors.white : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -8236,6 +8285,470 @@ class _CarGalleryState extends State<CarGallery> {
     );
   }
 }
+// ============================================================
+// إرسال طلب عميل (تمويل / تجربة قيادة) لجدول customer_requests
+// ============================================================
+Future<void> _submitCustomerRequest(
+  BuildContext context,
+  Car car,
+  bool isArabic,
+  String requestType,
+) async {
+  final nameCtrl = TextEditingController();
+  final phoneCtrl = TextEditingController();
+  final notesCtrl = TextEditingController();
+
+  final title = requestType == 'financing'
+      ? (isArabic ? 'طلب تمويل' : 'Financing request')
+      : (isArabic ? 'حجز تجربة قيادة' : 'Book a test drive');
+
+  final submitted = await showDialog<bool>(
+    context: context,
+    builder: (context) => Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: InputDecoration(
+                  labelText: isArabic ? 'الاسم' : 'Name',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: isArabic ? 'رقم الجوال' : 'Phone',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: notesCtrl,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: isArabic ? 'ملاحظات (اختياري)' : 'Notes (optional)',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameCtrl.text.trim().isEmpty ||
+                  phoneCtrl.text.trim().isEmpty) {
+                return;
+              }
+              Navigator.of(context).pop(true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isArabic ? 'إرسال' : 'Send'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  if (submitted != true) return;
+
+  try {
+    await Supabase.instance.client.from('customer_requests').insert({
+      'customer_name': nameCtrl.text.trim(),
+      'phone': phoneCtrl.text.trim(),
+      'car_id': car.id,
+      'car_name': car.name,
+      'car_brand': car.brand,
+      'request_type': requestType,
+      'status': 'new',
+      'notes': notesCtrl.text.trim(),
+    });
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isArabic
+              ? 'تم إرسال طلبك، هيتم التواصل معاك قريبًا'
+              : 'Your request has been sent, we will contact you soon',
+        ),
+      ),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isArabic ? 'حصلت مشكلة، حاول تاني' : 'Something went wrong',
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// طلب تمويل — فورم مخصص بحقول تفصيلية + رسائل كريتيف للتحقق
+// ============================================================
+Future<void> _submitFinancingRequest(
+  BuildContext context,
+  Car car,
+  bool isArabic,
+) async {
+  await showDialog<void>(
+    context: context,
+    builder: (context) => Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: _FinancingRequestDialog(car: car, isArabic: isArabic),
+    ),
+  );
+}
+
+class _FinancingRequestDialog extends StatefulWidget {
+  final Car car;
+  final bool isArabic;
+  const _FinancingRequestDialog({
+    required this.car,
+    required this.isArabic,
+  });
+
+  @override
+  State<_FinancingRequestDialog> createState() =>
+      _FinancingRequestDialogState();
+}
+
+class _FinancingRequestDialogState extends State<_FinancingRequestDialog> {
+  final nameCtrl = TextEditingController();
+  final phoneCtrl = TextEditingController();
+  final salaryCtrl = TextEditingController();
+  final bankCtrl = TextEditingController();
+  final obligationsTypeCtrl = TextEditingController();
+  final employerCtrl = TextEditingController();
+
+  final nameFocus = FocusNode();
+  final phoneFocus = FocusNode();
+  final salaryFocus = FocusNode();
+  final bankFocus = FocusNode();
+  final obligationsTypeFocus = FocusNode();
+  final employerFocus = FocusNode();
+
+  final obligationsKey = GlobalKey();
+  bool? hasObligations;
+  bool obligationsError = false;
+  bool isSending = false;
+
+  bool get isArabic => widget.isArabic;
+
+  @override
+  void dispose() {
+    nameCtrl.dispose();
+    phoneCtrl.dispose();
+    salaryCtrl.dispose();
+    bankCtrl.dispose();
+    obligationsTypeCtrl.dispose();
+    employerCtrl.dispose();
+    nameFocus.dispose();
+    phoneFocus.dispose();
+    salaryFocus.dispose();
+    bankFocus.dispose();
+    obligationsTypeFocus.dispose();
+    employerFocus.dispose();
+    super.dispose();
+  }
+
+  void _showNudge(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.black87,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        content: Row(
+          children: [
+            const Text('👋', style: TextStyle(fontSize: 18)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _focusAndScroll(FocusNode node) async {
+    node.requestFocus();
+  }
+
+  bool _validateAndFocus() {
+    if (nameCtrl.text.trim().isEmpty) {
+      _focusAndScroll(nameFocus);
+      _showNudge(
+        isArabic
+            ? 'يا هلا! اسمك إيه؟ محتاجينه الأول 😊'
+            : "Hey! What's your name? We need it first 😊",
+      );
+      return false;
+    }
+    if (phoneCtrl.text.trim().isEmpty) {
+      _focusAndScroll(phoneFocus);
+      _showNudge(
+        isArabic
+            ? 'رقم جوالك ناقص! إزاي هنكلمك من غيره؟ 📱'
+            : "Missing your phone number! How will we reach you? 📱",
+      );
+      return false;
+    }
+    if (salaryCtrl.text.trim().isEmpty) {
+      _focusAndScroll(salaryFocus);
+      _showNudge(
+        isArabic
+            ? 'الراتب فين؟ محتاجينه عشان نحسبلك أنسب تمويل 💰'
+            : "What's your salary? We need it to work out your financing 💰",
+      );
+      return false;
+    }
+    if (bankCtrl.text.trim().isEmpty) {
+      _focusAndScroll(bankFocus);
+      _showNudge(
+        isArabic
+            ? 'راتبك بينزل على أي بنك؟ ماتنساش تقولنا 🏦'
+            : "Which bank does your salary go to? Don't forget 🏦",
+      );
+      return false;
+    }
+    if (hasObligations == null) {
+      setState(() => obligationsError = true);
+      Scrollable.ensureVisible(
+        obligationsKey.currentContext!,
+        duration: const Duration(milliseconds: 300),
+      );
+      _showNudge(
+        isArabic
+            ? 'محتاجين نعرف، عندك التزامات شهرية ولا لأ؟ اختار من فوق ✅'
+            : 'Do you have monthly obligations? Please choose above ✅',
+      );
+      return false;
+    }
+    if (hasObligations == true && obligationsTypeCtrl.text.trim().isEmpty) {
+      _focusAndScroll(obligationsTypeFocus);
+      _showNudge(
+        isArabic
+            ? 'قلت إن عندك التزامات، طيب نوعها إيه؟ ✍️'
+            : "You said you have obligations, what type? ✍️",
+      );
+      return false;
+    }
+    if (employerCtrl.text.trim().isEmpty) {
+      _focusAndScroll(employerFocus);
+      _showNudge(
+        isArabic
+            ? 'شغال فين؟ اسم جهة العمل ناقص 🏢'
+            : "Where do you work? Employer name is missing 🏢",
+      );
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _send() async {
+    if (!_validateAndFocus()) return;
+
+    setState(() => isSending = true);
+    try {
+      await Supabase.instance.client.from('customer_requests').insert({
+        'customer_name': nameCtrl.text.trim(),
+        'phone': phoneCtrl.text.trim(),
+        'car_id': widget.car.id,
+        'car_name': widget.car.name,
+        'car_brand': widget.car.brand,
+        'request_type': 'financing',
+        'status': 'new',
+        'salary': salaryCtrl.text.trim(),
+        'bank_name': bankCtrl.text.trim(),
+        'has_obligations': hasObligations,
+        'obligations_type':
+            hasObligations == true ? obligationsTypeCtrl.text.trim() : '',
+        'employer': employerCtrl.text.trim(),
+      });
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic
+                ? 'تم إرسال طلب التمويل، هيتم التواصل معاك قريبًا'
+                : 'Financing request sent, we will contact you soon',
+          ),
+        ),
+      );
+    } catch (e) {
+      setState(() => isSending = false);
+      if (!mounted) return;
+      _showNudge(
+        isArabic ? 'حصلت مشكلة، حاول تاني 🙏' : 'Something went wrong, try again 🙏',
+      );
+    }
+  }
+
+  InputDecoration _decoration(String label) => InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(isArabic ? 'طلب تمويل' : 'Financing request'),
+      content: SizedBox(
+        width: 360,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                focusNode: nameFocus,
+                decoration: _decoration(isArabic ? 'الاسم' : 'Name'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: phoneCtrl,
+                focusNode: phoneFocus,
+                keyboardType: TextInputType.phone,
+                decoration:
+                    _decoration(isArabic ? 'رقم الجوال' : 'Phone number'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: salaryCtrl,
+                focusNode: salaryFocus,
+                keyboardType: TextInputType.number,
+                decoration: _decoration(isArabic ? 'الراتب' : 'Salary'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: bankCtrl,
+                focusNode: bankFocus,
+                decoration: _decoration(
+                  isArabic ? 'الراتب على أي بنك' : 'Salary bank',
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                key: obligationsKey,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: obligationsError ? Colors.red : Colors.black26,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isArabic
+                          ? 'هل عندك التزامات شهرية؟'
+                          : 'Do you have monthly obligations?',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ChoiceChip(
+                            label: Text(isArabic ? 'أيوه' : 'Yes'),
+                            selected: hasObligations == true,
+                            onSelected: (_) => setState(() {
+                              hasObligations = true;
+                              obligationsError = false;
+                            }),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: Text(isArabic ? 'لأ' : 'No'),
+                            selected: hasObligations == false,
+                            onSelected: (_) => setState(() {
+                              hasObligations = false;
+                              obligationsError = false;
+                              obligationsTypeCtrl.clear();
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (hasObligations == true) ...[
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: obligationsTypeCtrl,
+                        focusNode: obligationsTypeFocus,
+                        decoration: _decoration(
+                          isArabic ? 'نوع الالتزامات' : 'Obligations type',
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: employerCtrl,
+                focusNode: employerFocus,
+                decoration:
+                    _decoration(isArabic ? 'جهة العمل' : 'Employer'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: isSending ? null : () => Navigator.of(context).pop(),
+          child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: isSending ? null : _send,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+          ),
+          child: isSending
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(isArabic ? 'إرسال' : 'Send'),
+        ),
+      ],
+    );
+  }
+}
+
 class CarDetailsPage extends StatefulWidget {
   final Car car;
   final bool isArabic;
@@ -8575,6 +9088,7 @@ Widget build(BuildContext context) {
   backgroundColor: const Color(0xfff6f6f8),
 
  floatingActionButton: FloatingActionButton(
+  heroTag: 'carDetailsWhatsAppFAB',
   onPressed: openWhatsApp,
   backgroundColor: Colors.green,
   shape: const CircleBorder(),
@@ -8959,6 +9473,63 @@ Column(
         );
       },
     ),
+
+    const SizedBox(height: 10),
+
+    IntrinsicWidth(
+      child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 110,
+          child: OutlinedButton.icon(
+            onPressed: () =>
+                _submitFinancingRequest(context, car, isArabic),
+            icon: const Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 16,
+            ),
+            label: Text(
+              isArabic ? 'طلب تمويل' : 'Financing',
+              style: const TextStyle(fontSize: 12),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black87,
+              side: const BorderSide(color: Colors.black26),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 110,
+          child: OutlinedButton.icon(
+            onPressed: () =>
+                _submitCustomerRequest(context, car, isArabic, 'test_drive'),
+            icon: const Icon(
+              Icons.time_to_leave_outlined,
+              size: 16,
+            ),
+            label: Text(
+              isArabic ? 'تجربة قيادة' : 'Test drive',
+              style: const TextStyle(fontSize: 12),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black87,
+              side: const BorderSide(color: Colors.black26),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+      ],
+      ),
+    ),
   ],
 ),
         ],
@@ -9199,36 +9770,8 @@ Container(
             );
           }
 
-          Widget specColumn(
-            String title,
-            List<Widget> cards, {
-            bool twoPerRow = false,
-          }) {
+          Widget specColumn(String title, List<Widget> cards) {
             if (cards.isEmpty) return const SizedBox.shrink();
-
-            List<Widget> body;
-            if (twoPerRow) {
-              body = [];
-              for (int i = 0; i < cards.length; i += 2) {
-                if (i + 1 < cards.length) {
-                  body.add(
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: cards[i]),
-                        const SizedBox(width: 12),
-                        Expanded(child: cards[i + 1]),
-                      ],
-                    ),
-                  );
-                } else {
-                  body.add(cards[i]);
-                }
-              }
-            } else {
-              body = cards;
-            }
-
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -9241,7 +9784,7 @@ Container(
                   ),
                 ),
                 const SizedBox(height: 12),
-                ...body,
+                ...cards,
               ],
             );
           }
@@ -9387,72 +9930,61 @@ Container(
               ),
           ];
 
-          if (wide) {
-            final columns = [
-              specColumn(
-                isArabic ? 'القيادة' : 'DRIVING',
-                drivingCards,
-              ),
-              specColumn(
-                isArabic ? 'التجهيزات والمزايا' : 'FEATURES',
-                featureCards,
-              ),
-              specColumn(
-                isArabic ? 'الأبعاد' : 'DIMENSIONS',
-                dimensionCards,
-              ),
-              specColumn(
-                isArabic ? 'الأمان' : 'SAFETY',
-                safetyCards,
-              ),
-            ];
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: columns[0]),
-                const SizedBox(width: 20),
-                Expanded(child: columns[1]),
-                const SizedBox(width: 20),
-                Expanded(child: columns[2]),
-                const SizedBox(width: 20),
-                Expanded(child: columns[3]),
-              ],
-            );
-          }
+          // ==================================================
+          // مواصفات إضافية (ديناميكية من لوحة التحكم)
+          // ==================================================
+          final extraCards = <Widget>[
+            for (final entry in car.extraSpecs.entries)
+              if (entry.value.trim().isNotEmpty)
+                specCard(
+                  icon: Icons.check_circle_outline_rounded,
+                  label: entry.key,
+                  value: entry.value,
+                ),
+          ];
 
-          final mobileColumns = [
+          final columns = [
             specColumn(
               isArabic ? 'القيادة' : 'DRIVING',
               drivingCards,
-              twoPerRow: true,
             ),
             specColumn(
               isArabic ? 'التجهيزات والمزايا' : 'FEATURES',
               featureCards,
-              twoPerRow: true,
             ),
             specColumn(
               isArabic ? 'الأبعاد' : 'DIMENSIONS',
               dimensionCards,
-              twoPerRow: true,
             ),
             specColumn(
               isArabic ? 'الأمان' : 'SAFETY',
               safetyCards,
-              twoPerRow: true,
             ),
-          ];
+            specColumn(
+              isArabic ? 'مواصفات إضافية' : 'MORE SPECS',
+              extraCards,
+            ),
+          ].where((c) => c is! SizedBox).toList();
 
+          if (wide) {
+            final rowChildren = <Widget>[];
+            for (var i = 0; i < columns.length; i++) {
+              if (i > 0) rowChildren.add(const SizedBox(width: 20));
+              rowChildren.add(Expanded(child: columns[i]));
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: rowChildren,
+            );
+          }
+
+          final colChildren = <Widget>[];
+          for (var i = 0; i < columns.length; i++) {
+            if (i > 0) colChildren.add(const SizedBox(height: 20));
+            colChildren.add(columns[i]);
+          }
           return Column(
-            children: [
-              mobileColumns[0],
-              const SizedBox(height: 20),
-              mobileColumns[1],
-              const SizedBox(height: 20),
-              mobileColumns[2],
-              const SizedBox(height: 20),
-              mobileColumns[3],
-            ],
+            children: colChildren,
           );
         },
       ),
@@ -11213,27 +11745,54 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 horizontal: 16,
                 vertical: 8,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _adminTabButton(
-                      label: isArabic ? 'الحجوزات' : 'Bookings',
-                      icon: Icons.event_note_rounded,
-                      selected: currentTab == 0,
-                      onTap: () => setState(() => currentTab = 0),
-                      badgeCount: pendingBookings,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 130,
+                      child: _adminTabButton(
+                        label: isArabic ? 'الحجوزات' : 'Bookings',
+                        icon: Icons.event_note_rounded,
+                        selected: currentTab == 0,
+                        onTap: () => setState(() => currentTab = 0),
+                        badgeCount: pendingBookings,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _adminTabButton(
-                      label: isArabic ? 'المخزون' : 'Inventory',
-                      icon: Icons.directions_car_filled_rounded,
-                      selected: currentTab == 1,
-                      onTap: () => setState(() => currentTab = 1),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 130,
+                      child: _adminTabButton(
+                        label: isArabic ? 'المخزون' : 'Inventory',
+                        icon: Icons.directions_car_filled_rounded,
+                        selected: currentTab == 1,
+                        onTap: () => setState(() => currentTab = 1),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 140,
+                      child: _adminTabButton(
+                        label: isArabic ? 'طلبات العملاء' : 'Requests',
+                        icon: Icons.support_agent_rounded,
+                        selected: currentTab == 2,
+                        onTap: () => setState(() => currentTab = 2),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 160,
+                      child: _adminTabButton(
+                        label: isArabic
+                            ? 'الماركات والفئات'
+                            : 'Brands & Categories',
+                        icon: Icons.category_rounded,
+                        selected: currentTab == 3,
+                        onTap: () => setState(() => currentTab = 3),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
@@ -11242,6 +11801,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 children: [
                   AdminBookingsBody(isArabic: isArabic),
                   AdminCarsPage(isArabic: isArabic),
+                  AdminRequestsPage(isArabic: isArabic),
+                  AdminBrandsCategoriesPage(isArabic: isArabic),
                 ],
               ),
             ),
@@ -11311,6 +11872,630 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// ADMIN CUSTOMER REQUESTS (تمويل / تجربة قيادة / استفسار)
+// ============================================================
+class AdminRequestsPage extends StatefulWidget {
+  final bool isArabic;
+  const AdminRequestsPage({super.key, required this.isArabic});
+
+  @override
+  State<AdminRequestsPage> createState() => _AdminRequestsPageState();
+}
+
+class _AdminRequestsPageState extends State<AdminRequestsPage> {
+  List<Map<String, dynamic>> requests = [];
+  bool isLoading = true;
+  String? errorMessage;
+
+  bool get isArabic => widget.isArabic;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRequests();
+  }
+
+  Future<void> _loadRequests() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+    try {
+      final response = await Supabase.instance.client
+          .from('customer_requests')
+          .select()
+          .order('created_at', ascending: false);
+
+      setState(() {
+        requests = List<Map<String, dynamic>>.from(response as List);
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = isArabic
+            ? 'تعذّر تحميل الطلبات'
+            : 'Failed to load requests';
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _updateStatus(int id, String newStatus) async {
+    try {
+      await Supabase.instance.client
+          .from('customer_requests')
+          .update({'status': newStatus}).eq('id', id);
+      _loadRequests();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic ? 'حصلت مشكلة' : 'Something went wrong'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteRequest(int id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isArabic ? 'تأكيد الحذف' : 'Confirm delete'),
+        content: Text(
+          isArabic ? 'متأكد إنك عايز تمسح الطلب ده؟' : 'Delete this request?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              isArabic ? 'حذف' : 'Delete',
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await Supabase.instance.client
+          .from('customer_requests')
+          .delete()
+          .eq('id', id);
+      _loadRequests();
+    } catch (e) {
+      // silent
+    }
+  }
+
+  String _typeLabel(String type) {
+    switch (type) {
+      case 'financing':
+        return isArabic ? 'تمويل' : 'Financing';
+      case 'test_drive':
+        return isArabic ? 'تجربة قيادة' : 'Test drive';
+      default:
+        return isArabic ? 'استفسار' : 'Inquiry';
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'contacted':
+        return Colors.blue;
+      case 'follow_up':
+        return Colors.orange;
+      case 'closed':
+        return Colors.grey;
+      default:
+        return Colors.green;
+    }
+  }
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'contacted':
+        return isArabic ? 'تم التواصل' : 'Contacted';
+      case 'follow_up':
+        return isArabic ? 'متابعة' : 'Follow up';
+      case 'closed':
+        return isArabic ? 'مغلق' : 'Closed';
+      default:
+        return isArabic ? 'جديد' : 'New';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.red));
+    }
+    if (errorMessage != null) {
+      return Center(child: Text(errorMessage!));
+    }
+    if (requests.isEmpty) {
+      return Center(
+        child: Text(
+          isArabic ? 'لا يوجد طلبات بعد' : 'No requests yet',
+          style: const TextStyle(color: Colors.black54),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadRequests,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(14),
+        itemCount: requests.length,
+        itemBuilder: (context, index) {
+          final r = requests[index];
+          final status = (r['status'] ?? 'new') as String;
+          final type = (r['request_type'] ?? 'inquiry') as String;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [
+                BoxShadow(color: Colors.black12, blurRadius: 6),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        (r['customer_name'] ?? '').toString(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _statusColor(status).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _statusLabel(status),
+                        style: TextStyle(
+                          color: _statusColor(status),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${(r['phone'] ?? '').toString()} · ${_typeLabel(type)}',
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                if (((r['car_name'] ?? '') as String).isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '${r['car_brand'] ?? ''} ${r['car_name'] ?? ''}'.trim(),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ],
+                if (type == 'financing') ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (((r['salary'] ?? '') as String).isNotEmpty)
+                          Text(
+                            '${isArabic ? 'الراتب' : 'Salary'}: ${r['salary']}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        if (((r['bank_name'] ?? '') as String).isNotEmpty)
+                          Text(
+                            '${isArabic ? 'البنك' : 'Bank'}: ${r['bank_name']}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        if (r['has_obligations'] != null)
+                          Text(
+                            '${isArabic ? 'التزامات' : 'Obligations'}: '
+                            '${r['has_obligations'] == true ? (isArabic ? 'أيوه (${r['obligations_type'] ?? ''})' : 'Yes (${r['obligations_type'] ?? ''})') : (isArabic ? 'لأ' : 'No')}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        if (((r['employer'] ?? '') as String).isNotEmpty)
+                          Text(
+                            '${isArabic ? 'جهة العمل' : 'Employer'}: ${r['employer']}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (((r['notes'] ?? '') as String).isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    r['notes'].toString(),
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  ),
+                ],
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: status,
+                            isExpanded: true,
+                            items: [
+                              DropdownMenuItem(
+                                value: 'new',
+                                child: Text(_statusLabel('new')),
+                              ),
+                              DropdownMenuItem(
+                                value: 'contacted',
+                                child: Text(_statusLabel('contacted')),
+                              ),
+                              DropdownMenuItem(
+                                value: 'follow_up',
+                                child: Text(_statusLabel('follow_up')),
+                              ),
+                              DropdownMenuItem(
+                                value: 'closed',
+                                child: Text(_statusLabel('closed')),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                _updateStatus(r['id'] as int, value);
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => _deleteRequest(r['id'] as int),
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ============================================================
+// ADMIN BRANDS & CATEGORIES
+// ============================================================
+class AdminBrandsCategoriesPage extends StatefulWidget {
+  final bool isArabic;
+  const AdminBrandsCategoriesPage({super.key, required this.isArabic});
+
+  @override
+  State<AdminBrandsCategoriesPage> createState() =>
+      _AdminBrandsCategoriesPageState();
+}
+
+class _AdminBrandsCategoriesPageState
+    extends State<AdminBrandsCategoriesPage> {
+  bool showBrands = true;
+  List<Map<String, dynamic>> brands = [];
+  List<Map<String, dynamic>> categories = [];
+  bool isLoading = true;
+
+  bool get isArabic => widget.isArabic;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAll();
+  }
+
+  Future<void> _loadAll() async {
+    setState(() => isLoading = true);
+    try {
+      final b = await Supabase.instance.client
+          .from('brands')
+          .select()
+          .order('name_ar');
+      final c = await Supabase.instance.client
+          .from('categories')
+          .select()
+          .order('name_ar');
+      setState(() {
+        brands = List<Map<String, dynamic>>.from(b as List);
+        categories = List<Map<String, dynamic>>.from(c as List);
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _toggleActive(Map<String, dynamic> item, bool value) async {
+    final table = showBrands ? 'brands' : 'categories';
+    setState(() {
+      item['is_active'] = value;
+    });
+    try {
+      await Supabase.instance.client
+          .from(table)
+          .update({'is_active': value}).eq('id', item['id'] as int);
+    } catch (e) {
+      setState(() {
+        item['is_active'] = !value;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic ? 'حصلت مشكلة' : 'Something went wrong'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openForm({Map<String, dynamic>? existing}) async {
+    final nameArCtrl =
+        TextEditingController(text: existing?['name_ar']?.toString() ?? '');
+    final nameEnCtrl =
+        TextEditingController(text: existing?['name_en']?.toString() ?? '');
+    final logoCtrl = TextEditingController(
+      text: showBrands ? (existing?['logo']?.toString() ?? '') : '',
+    );
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          existing == null
+              ? (isArabic ? 'إضافة' : 'Add')
+              : (isArabic ? 'تعديل' : 'Edit'),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameArCtrl,
+                decoration: InputDecoration(
+                  labelText: isArabic ? 'الاسم بالعربي' : 'Name (Arabic)',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: nameEnCtrl,
+                decoration: InputDecoration(
+                  labelText: isArabic ? 'الاسم بالإنجليزي' : 'Name (English)',
+                  helperText: showBrands
+                      ? (isArabic
+                          ? 'لازم يطابق بالظبط اسم الماركة المكتوب في بيانات السيارات (مثال: Toyota)'
+                          : 'Must match the brand name exactly as used on car records')
+                      : null,
+                  helperMaxLines: 2,
+                ),
+              ),
+              if (showBrands) ...[
+                const SizedBox(height: 10),
+                TextField(
+                  controller: logoCtrl,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'رابط اللوجو' : 'Logo URL',
+                    hintText: isArabic
+                        ? 'الصق رابط صورة اللوجو (يبدأ بـ https://)'
+                        : 'Paste the logo image URL (starts with https://)',
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(isArabic ? 'حفظ' : 'Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (saved != true) return;
+
+    final table = showBrands ? 'brands' : 'categories';
+    final payload = {
+      'name_ar': nameArCtrl.text.trim(),
+      'name_en': nameEnCtrl.text.trim(),
+      if (showBrands) 'logo': logoCtrl.text.trim(),
+    };
+
+    try {
+      if (existing == null) {
+        await Supabase.instance.client.from(table).insert(payload);
+      } else {
+        await Supabase.instance.client
+            .from(table)
+            .update(payload)
+            .eq('id', existing['id'] as int);
+      }
+      _loadAll();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isArabic ? 'حصلت مشكلة' : 'Something went wrong')),
+      );
+    }
+  }
+
+  Future<void> _delete(int id) async {
+    final table = showBrands ? 'brands' : 'categories';
+    try {
+      await Supabase.instance.client.from(table).delete().eq('id', id);
+      _loadAll();
+    } catch (e) {
+      // silent
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final list = showBrands ? brands : categories;
+
+    return Scaffold(
+      backgroundColor: const Color(0xfff5f5f5),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'adminBrandsCategoriesFAB',
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+        onPressed: () => _openForm(),
+        icon: const Icon(Icons.add_rounded),
+        label: Text(
+          showBrands
+              ? (isArabic ? 'ماركة جديدة' : 'New brand')
+              : (isArabic ? 'فئة جديدة' : 'New category'),
+        ),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => showBrands = true),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: showBrands ? Colors.red : null,
+                      foregroundColor: showBrands ? Colors.white : Colors.black,
+                    ),
+                    child: Text(isArabic ? 'الماركات' : 'Brands'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => showBrands = false),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: !showBrands ? Colors.red : null,
+                      foregroundColor: !showBrands ? Colors.white : Colors.black,
+                    ),
+                    child: Text(isArabic ? 'الفئات' : 'Categories'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.red))
+                : list.isEmpty
+                    ? Center(
+                        child: Text(
+                          isArabic ? 'لا يوجد عناصر بعد' : 'No items yet',
+                          style: const TextStyle(color: Colors.black54),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 90),
+                        itemCount: list.length,
+                        itemBuilder: (context, index) {
+                          final item = list[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black12, blurRadius: 6),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        (item['name_ar'] ?? '').toString(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      Text(
+                                        (item['name_en'] ?? '').toString(),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Switch(
+                                  value: (item['is_active'] ?? true) as bool,
+                                  activeColor: Colors.red,
+                                  onChanged: (value) =>
+                                      _toggleActive(item, value),
+                                ),
+                                IconButton(
+                                  onPressed: () => _openForm(existing: item),
+                                  icon: const Icon(Icons.edit_outlined),
+                                ),
+                                IconButton(
+                                  onPressed: () =>
+                                      _delete(item['id'] as int),
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
       ),
     );
   }
@@ -11429,6 +12614,7 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
     return Scaffold(
       backgroundColor: const Color(0xfff5f5f5),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'adminCarsPageFAB',
         backgroundColor: Colors.red,
         foregroundColor: Colors.white,
         onPressed: () => _openForm(),
@@ -11506,7 +12692,11 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
                                         ),
                                       ),
                                       const SizedBox(height: 6),
-                                      Container(
+                                      Wrap(
+                                        spacing: 6,
+                                        runSpacing: 6,
+                                        children: [
+                                        Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 8,
                                           vertical: 3,
@@ -11535,6 +12725,50 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
                                                 : Colors.black54,
                                           ),
                                         ),
+                                      ),
+                                      Builder(builder: (context) {
+                                        final status =
+                                            (carData['car_status'] ??
+                                                    'available')
+                                                as String;
+                                        final statusColor = status == 'sold'
+                                            ? Colors.red
+                                            : status == 'reserved'
+                                                ? Colors.orange
+                                                : Colors.blue;
+                                        final statusLabel = status == 'sold'
+                                            ? (isArabic ? 'مباعة' : 'Sold')
+                                            : status == 'reserved'
+                                                ? (isArabic
+                                                    ? 'محجوزة'
+                                                    : 'Reserved')
+                                                : (isArabic
+                                                    ? 'بالمخزون'
+                                                    : 'In stock');
+                                        return Container(
+                                          padding:
+                                              const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 3,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: statusColor.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            statusLabel,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              color: statusColor,
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -11627,6 +12861,18 @@ class _CarFormPageState extends State<CarFormPage> {
   late final TextEditingController oldPriceCtrl;
   bool isSaving = false;
 
+  // حالة السيارة + بيانات المخزون
+  late String carStatusValue; // available | reserved | sold
+  late String conditionStatusValue; // new | used
+  late final TextEditingController vinCtrl;
+  late final TextEditingController plateNumberCtrl;
+  late final TextEditingController locationCtrl;
+  late final TextEditingController arrivalDateCtrl;
+
+  // مواصفات إضافية مرنة (Key : Value)
+  List<MapEntry<TextEditingController, TextEditingController>>
+      extraSpecControllers = [];
+
   // الألوان المتاحة في المتجر كله، وإيه اللي متحدد للسيارة دي
   List<Map<String, dynamic>> allColors = [];
   Set<int> selectedColorIds = {};
@@ -11700,6 +12946,28 @@ class _CarFormPageState extends State<CarFormPage> {
     isOffer = (car?['is_offer'] ?? false) as bool;
     oldPriceCtrl =
         TextEditingController(text: car?['old_price']?.toString() ?? '');
+
+    carStatusValue = (car?['car_status'] ?? 'available') as String;
+    conditionStatusValue = (car?['condition_status'] ?? 'new') as String;
+    vinCtrl = TextEditingController(text: car?['vin']?.toString() ?? '');
+    plateNumberCtrl =
+        TextEditingController(text: car?['plate_number']?.toString() ?? '');
+    locationCtrl =
+        TextEditingController(text: car?['location']?.toString() ?? '');
+    arrivalDateCtrl =
+        TextEditingController(text: car?['arrival_date']?.toString() ?? '');
+
+    final rawExtraSpecs = car?['extra_specs'];
+    if (rawExtraSpecs is Map) {
+      rawExtraSpecs.forEach((key, value) {
+        extraSpecControllers.add(
+          MapEntry(
+            TextEditingController(text: key.toString()),
+            TextEditingController(text: value.toString()),
+          ),
+        );
+      });
+    }
 
     _loadExtras();
   }
@@ -11781,6 +13049,14 @@ class _CarFormPageState extends State<CarFormPage> {
     airbagsCtrl.dispose();
     absSystemCtrl.dispose();
     oldPriceCtrl.dispose();
+    vinCtrl.dispose();
+    plateNumberCtrl.dispose();
+    locationCtrl.dispose();
+    arrivalDateCtrl.dispose();
+    for (final entry in extraSpecControllers) {
+      entry.key.dispose();
+      entry.value.dispose();
+    }
     for (final controller in extraImageControllers) {
       controller.dispose();
     }
@@ -11826,6 +13102,23 @@ class _CarFormPageState extends State<CarFormPage> {
       'is_offer': isOffer,
       'old_price': oldPriceCtrl.text.trim(),
       'is_available': isAvailable,
+
+      // حالة السيارة + المخزون
+      'car_status': carStatusValue,
+      'condition_status': conditionStatusValue,
+      'vin': vinCtrl.text.trim(),
+      'plate_number': plateNumberCtrl.text.trim(),
+      'location': locationCtrl.text.trim(),
+      'arrival_date': arrivalDateCtrl.text.trim().isEmpty
+          ? null
+          : arrivalDateCtrl.text.trim(),
+
+      // مواصفات إضافية مرنة
+      'extra_specs': {
+        for (final entry in extraSpecControllers)
+          if (entry.key.text.trim().isNotEmpty)
+            entry.key.text.trim(): entry.value.text.trim(),
+      },
     };
 
     try {
@@ -12563,6 +13856,181 @@ class _CarFormPageState extends State<CarFormPage> {
               ],
 
               const SizedBox(height: 24),
+              Text(
+                isArabic ? 'الحالة والمخزون' : 'Status & Inventory',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: DropdownButtonFormField<String>(
+                  value: carStatusValue,
+                  decoration: const InputDecoration(border: InputBorder.none),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'available',
+                      child: Text(isArabic ? 'متاحة' : 'Available'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'reserved',
+                      child: Text(isArabic ? 'محجوزة' : 'Reserved'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'sold',
+                      child: Text(isArabic ? 'مباعة' : 'Sold'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => carStatusValue = value);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: DropdownButtonFormField<String>(
+                  value: conditionStatusValue,
+                  decoration: const InputDecoration(border: InputBorder.none),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'new',
+                      child: Text(isArabic ? 'جديدة' : 'New'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'used',
+                      child: Text(isArabic ? 'مستعملة' : 'Used'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => conditionStatusValue = value);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              _field(
+                controller: vinCtrl,
+                label: isArabic ? 'رقم الشاصي (VIN)' : 'VIN',
+              ),
+              _field(
+                controller: plateNumberCtrl,
+                label: isArabic ? 'رقم اللوحة' : 'Plate number',
+              ),
+              _field(
+                controller: locationCtrl,
+                label: isArabic ? 'الموقع / المدينة' : 'Location',
+              ),
+              _field(
+                controller: arrivalDateCtrl,
+                label: isArabic
+                    ? 'تاريخ الوصول (مثال 2026-09-04)'
+                    : 'Arrival date (e.g. 2026-09-04)',
+              ),
+
+              const SizedBox(height: 10),
+              Text(
+                isArabic ? 'مواصفات إضافية' : 'Extra specs',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isArabic
+                    ? 'ضيف أي مواصفة عايزها (زي ACC، تسخين المقاعد...) بالاسم والقيمة'
+                    : 'Add any spec (e.g. ACC, Seat heating...) with a name and value',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 10),
+
+              for (var i = 0; i < extraSpecControllers.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: TextFormField(
+                          controller: extraSpecControllers[i].key,
+                          decoration: InputDecoration(
+                            hintText: isArabic ? 'اسم المواصفة' : 'Spec name',
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 4,
+                        child: TextFormField(
+                          controller: extraSpecControllers[i].value,
+                          decoration: InputDecoration(
+                            hintText: isArabic ? 'القيمة' : 'Value',
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            extraSpecControllers.removeAt(i);
+                          });
+                        },
+                        icon: const Icon(
+                          Icons.remove_circle_outline_rounded,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              OutlinedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    extraSpecControllers.add(
+                      MapEntry(
+                        TextEditingController(),
+                        TextEditingController(),
+                      ),
+                    );
+                  });
+                },
+                icon: const Icon(Icons.add_rounded),
+                label: Text(
+                  isArabic ? 'إضافة مواصفة' : 'Add spec',
+                ),
+              ),
+
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -12876,7 +14344,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 gridDelegate:
                     const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 340,
-                  mainAxisExtent: 360,
+                  mainAxisExtent: 420,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                 ),
