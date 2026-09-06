@@ -222,6 +222,7 @@ class _SplashScreenState extends State<SplashScreen>
     // تظهر ثانيتين على الأقل حتى لو النت سريع
     await Future.wait([
       loadCarsFromSupabase(),
+      loadHomepageSettings(),
       Future.delayed(const Duration(milliseconds: 2200)),
     ]);
 
@@ -3031,7 +3032,7 @@ Widget build(BuildContext context) {
                         
  
    Text(
-    car.name,
+    car.displayName(isArabic),
     maxLines: 2,
     overflow: TextOverflow.ellipsis,
     textAlign: TextAlign.right,
@@ -3611,6 +3612,17 @@ class Car {
   final String image;
   final List<String> images;
   final String description;
+  final String nameEn;
+  final String descriptionEn;
+
+  // اسم/وصف السيارة بالمظهر المناسب للغة الحالية
+  // (لو الإنجليزي فاضي، بيرجع النسخة العربية بدلاً منه)
+  String displayName(bool isArabic) =>
+      (!isArabic && nameEn.trim().isNotEmpty) ? nameEn : name;
+  String displayDescription(bool isArabic) =>
+      (!isArabic && descriptionEn.trim().isNotEmpty)
+          ? descriptionEn
+          : description;
 
   // ==========================================================
   // BASIC SPECIFICATIONS
@@ -3723,6 +3735,8 @@ class Car {
     required this.image,
     this.images = const [],
     required this.description,
+    this.nameEn = '',
+    this.descriptionEn = '',
 
     // Basic specifications
     this.engine = '1.5L',
@@ -3798,6 +3812,8 @@ class Car {
       price: (map['price'] ?? '') as String,
       image: (map['image'] ?? '') as String,
       description: (map['description'] ?? '') as String,
+      nameEn: (map['name_en'] ?? '') as String,
+      descriptionEn: (map['description_en'] ?? '') as String,
       engine: (map['engine'] ?? '1.5L') as String,
       transmission: (map['transmission'] ?? 'أوتوماتيك') as String,
       fuel: (map['fuel'] ?? 'بنزين') as String,
@@ -5155,10 +5171,12 @@ String _searchAlias(Car car) {
   final text = _normalize(
     [
       car.name,
+      car.nameEn,
       car.brand,
       car.category,
       car.year,
       car.description,
+      car.descriptionEn,
       _carType(car),
       _carCategory(car),
     ].join(' '),
@@ -6238,14 +6256,51 @@ String _searchAlias(Car car) {
    }
      @override
   Widget build(BuildContext context) {
+    final hs = homepageSettings.value;
+    final heroTitle = widget.isArabic
+        ? ((hs?['hero_title_ar'] as String?)?.trim().isNotEmpty == true
+            ? hs!['hero_title_ar'] as String
+            : 'سيارات المعرض')
+        : ((hs?['hero_title_en'] as String?)?.trim().isNotEmpty == true
+            ? hs!['hero_title_en'] as String
+            : 'OUR CARS');
+    final heroSubtitle = widget.isArabic
+        ? ((hs?['hero_subtitle_ar'] as String?)?.trim().isNotEmpty == true
+            ? hs!['hero_subtitle_ar'] as String
+            : 'ابحث عن سيارتك واختر السيارة المناسبة')
+        : ((hs?['hero_subtitle_en'] as String?)?.trim().isNotEmpty == true
+            ? hs!['hero_subtitle_en'] as String
+            : 'SEARCH AND FIND YOUR PERFECT CAR');
+    final bannerImages = (hs?['banner_images'] is List)
+        ? List<String>.from(
+            (hs!['banner_images'] as List).map((e) => e.toString()))
+        : <String>[];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(30),
       child: Column(
         children: [
+          if (bannerImages.isNotEmpty) ...[
+            SizedBox(
+              height: 160,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: PageView.builder(
+                  itemCount: bannerImages.length,
+                  itemBuilder: (context, index) {
+                    return carImageAdaptive(
+                      bannerImages[index],
+                      fit: BoxFit.cover,
+                      showWatermark: false,
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           Text(
-            widget.isArabic
-                ? 'سيارات المعرض'
-                : 'OUR CARS',
+            heroTitle,
             style: const TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w900,
@@ -6255,9 +6310,7 @@ String _searchAlias(Car car) {
           const SizedBox(height: 10),
 
           Text(
-            widget.isArabic
-                ? 'ابحث عن سيارتك واختر السيارة المناسبة'
-                : 'SEARCH AND FIND YOUR PERFECT CAR',
+            heroSubtitle,
             style: const TextStyle(
               color: Colors.grey,
             ),
@@ -7511,7 +7564,7 @@ class CarCard extends StatelessWidget {
 
                 children: [
                   Text(
-                    car.name,
+                    car.displayName(isArabic),
 
                     style:
                         const TextStyle(
@@ -9573,7 +9626,7 @@ Container(
               children: [
 
                 Text(
-                  car.name,
+                  car.displayName(isArabic),
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 24,
@@ -10145,7 +10198,7 @@ Container(
               ),
               const SizedBox(height: 8),
               Text(
-                car.description,
+                car.displayDescription(isArabic),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -10552,7 +10605,7 @@ class _CarBookingPageState extends State<CarBookingPage> {
                             children: [
 
                               Text(
-                                car.name,
+                                car.displayName(isArabic),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight:
@@ -11031,6 +11084,25 @@ Future<void> logActivity(String action) async {
     });
   } catch (e) {
     // تسجيل النشاط مش لازم يوقف العملية الأساسية لو فشل
+  }
+}
+
+// ============================================================
+// إعدادات الصفحة الرئيسية (بانر + نصوص) — تحميل مرة واحدة
+// ============================================================
+final ValueNotifier<Map<String, dynamic>?> homepageSettings =
+    ValueNotifier(null);
+
+Future<void> loadHomepageSettings() async {
+  try {
+    final response = await Supabase.instance.client
+        .from('homepage_settings')
+        .select()
+        .eq('id', 1)
+        .maybeSingle();
+    homepageSettings.value = response;
+  } catch (e) {
+    // لو حصلت مشكلة، النصوص الثابتة الاحتياطية هتفضل شغالة
   }
 }
 
@@ -12118,6 +12190,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
         icon: Icons.category_rounded,
         width: 160,
         page: AdminBrandsCategoriesPage(isArabic: isArabic),
+        roles: const ['admin', 'editor'],
+      ),
+      _AdminTabDef(
+        label: isArabic ? 'الصفحة الرئيسية' : 'Homepage',
+        icon: Icons.home_outlined,
+        width: 150,
+        page: AdminHomepagePage(isArabic: isArabic),
         roles: const ['admin', 'editor'],
       ),
       _AdminTabDef(
@@ -13297,6 +13376,265 @@ class _AdminActivityLogPageState extends State<AdminActivityLogPage> {
 }
 
 // ============================================================
+// ADMIN HOMEPAGE SETTINGS (بانر + نصوص)
+// ============================================================
+class AdminHomepagePage extends StatefulWidget {
+  final bool isArabic;
+  const AdminHomepagePage({super.key, required this.isArabic});
+
+  @override
+  State<AdminHomepagePage> createState() => _AdminHomepagePageState();
+}
+
+class _AdminHomepagePageState extends State<AdminHomepagePage> {
+  bool isLoading = true;
+  bool isSaving = false;
+
+  final heroTitleArCtrl = TextEditingController();
+  final heroTitleEnCtrl = TextEditingController();
+  final heroSubtitleArCtrl = TextEditingController();
+  final heroSubtitleEnCtrl = TextEditingController();
+  List<TextEditingController> bannerControllers = [];
+
+  bool get isArabic => widget.isArabic;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    heroTitleArCtrl.dispose();
+    heroTitleEnCtrl.dispose();
+    heroSubtitleArCtrl.dispose();
+    heroSubtitleEnCtrl.dispose();
+    for (final c in bannerControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() => isLoading = true);
+    try {
+      final response = await Supabase.instance.client
+          .from('homepage_settings')
+          .select()
+          .eq('id', 1)
+          .maybeSingle();
+
+      heroTitleArCtrl.text = (response?['hero_title_ar'] ?? '').toString();
+      heroTitleEnCtrl.text = (response?['hero_title_en'] ?? '').toString();
+      heroSubtitleArCtrl.text =
+          (response?['hero_subtitle_ar'] ?? '').toString();
+      heroSubtitleEnCtrl.text =
+          (response?['hero_subtitle_en'] ?? '').toString();
+
+      final banners = (response?['banner_images'] is List)
+          ? List<String>.from(
+              (response!['banner_images'] as List).map((e) => e.toString()))
+          : <String>[];
+      bannerControllers =
+          banners.map((url) => TextEditingController(text: url)).toList();
+
+      setState(() => isLoading = false);
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _save() async {
+    setState(() => isSaving = true);
+    try {
+      final banners = bannerControllers
+          .map((c) => c.text.trim())
+          .where((url) => url.isNotEmpty)
+          .toList();
+
+      await Supabase.instance.client.from('homepage_settings').update({
+        'hero_title_ar': heroTitleArCtrl.text.trim(),
+        'hero_title_en': heroTitleEnCtrl.text.trim(),
+        'hero_subtitle_ar': heroSubtitleArCtrl.text.trim(),
+        'hero_subtitle_en': heroSubtitleEnCtrl.text.trim(),
+        'banner_images': banners,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', 1);
+
+      await logActivity(
+        isArabic
+            ? 'عدّل إعدادات الصفحة الرئيسية'
+            : 'Updated homepage settings',
+      );
+
+      // نحدّث النسخة المحمّلة في الذاكرة عشان الصفحة الرئيسية تتغيّر فورًا
+      await loadHomepageSettings();
+
+      if (!mounted) return;
+      setState(() => isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic ? 'تم الحفظ بنجاح' : 'Saved successfully'),
+        ),
+      );
+    } catch (e) {
+      setState(() => isSaving = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic ? 'حصلت مشكلة' : 'Something went wrong'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.red));
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xfff5f5f5),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'adminHomepageSaveFAB',
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+        onPressed: isSaving ? null : _save,
+        icon: isSaving
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.save_outlined),
+        label: Text(isArabic ? 'حفظ' : 'Save'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+        children: [
+          Text(
+            isArabic ? 'النصوص الرئيسية' : 'Hero texts',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: heroTitleArCtrl,
+            decoration: InputDecoration(
+              labelText: isArabic ? 'العنوان (عربي)' : 'Title (Arabic)',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: heroTitleEnCtrl,
+            decoration: InputDecoration(
+              labelText: isArabic ? 'العنوان (إنجليزي)' : 'Title (English)',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: heroSubtitleArCtrl,
+            decoration: InputDecoration(
+              labelText: isArabic ? 'العنوان الفرعي (عربي)' : 'Subtitle (Arabic)',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: heroSubtitleEnCtrl,
+            decoration: InputDecoration(
+              labelText:
+                  isArabic ? 'العنوان الفرعي (إنجليزي)' : 'Subtitle (English)',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  isArabic ? 'صور البانر (سلايدر)' : 'Banner images (slider)',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    bannerControllers.add(TextEditingController());
+                  });
+                },
+                icon: const Icon(Icons.add_rounded),
+                label: Text(isArabic ? 'إضافة صورة' : 'Add image'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            isArabic
+                ? 'لو مفيش صور، السلايدر مش هيظهر خالص في الصفحة الرئيسية.'
+                : 'If empty, no slider will show on the homepage.',
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 10),
+          for (var i = 0; i < bannerControllers.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: bannerControllers[i],
+                      decoration: InputDecoration(
+                        hintText: isArabic
+                            ? 'رابط صورة البانر'
+                            : 'Banner image URL',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        bannerControllers[i].dispose();
+                        bannerControllers.removeAt(i);
+                      });
+                    },
+                    icon: const Icon(
+                      Icons.remove_circle_outline_rounded,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
 // ADMIN INVENTORY (CARS CRUD)
 // ============================================================
 class AdminCarsPage extends StatefulWidget {
@@ -13629,11 +13967,13 @@ class _CarFormPageState extends State<CarFormPage> {
   final formKey = GlobalKey<FormState>();
 
   late final TextEditingController nameCtrl;
+  late final TextEditingController nameEnCtrl;
   late final TextEditingController brandCtrl;
   late final TextEditingController categoryCtrl;
   late final TextEditingController yearCtrl;
   late final TextEditingController priceCtrl;
   late final TextEditingController descriptionCtrl;
+  late final TextEditingController descriptionEnCtrl;
   late final TextEditingController imageCtrl;
   late final TextEditingController seatsCtrl;
   late final TextEditingController engineCtrl;
@@ -13695,6 +14035,8 @@ class _CarFormPageState extends State<CarFormPage> {
     final car = widget.existingCar;
 
     nameCtrl = TextEditingController(text: car?['name']?.toString() ?? '');
+    nameEnCtrl =
+        TextEditingController(text: car?['name_en']?.toString() ?? '');
     brandCtrl = TextEditingController(text: car?['brand']?.toString() ?? '');
     categoryCtrl =
         TextEditingController(text: car?['category']?.toString() ?? '');
@@ -13702,6 +14044,8 @@ class _CarFormPageState extends State<CarFormPage> {
     priceCtrl = TextEditingController(text: car?['price']?.toString() ?? '');
     descriptionCtrl =
         TextEditingController(text: car?['description']?.toString() ?? '');
+    descriptionEnCtrl = TextEditingController(
+        text: car?['description_en']?.toString() ?? '');
     imageCtrl = TextEditingController(text: car?['image']?.toString() ?? '');
     seatsCtrl = TextEditingController(text: car?['seats']?.toString() ?? '5');
     engineCtrl =
@@ -13831,11 +14175,13 @@ class _CarFormPageState extends State<CarFormPage> {
   @override
   void dispose() {
     nameCtrl.dispose();
+    nameEnCtrl.dispose();
     brandCtrl.dispose();
     categoryCtrl.dispose();
     yearCtrl.dispose();
     priceCtrl.dispose();
     descriptionCtrl.dispose();
+    descriptionEnCtrl.dispose();
     imageCtrl.dispose();
     seatsCtrl.dispose();
     engineCtrl.dispose();
@@ -14094,11 +14440,13 @@ class _CarFormPageState extends State<CarFormPage> {
 
     final data = {
       'name': nameCtrl.text.trim(),
+      'name_en': nameEnCtrl.text.trim(),
       'brand': brandCtrl.text.trim(),
       'category': categoryCtrl.text.trim(),
       'year': yearCtrl.text.trim(),
       'price': priceCtrl.text.trim(),
       'description': descriptionCtrl.text.trim(),
+      'description_en': descriptionEnCtrl.text.trim(),
       'image': imageCtrl.text.trim(),
       'seats': seatsCtrl.text.trim(),
       'engine': engineCtrl.text.trim(),
@@ -14315,6 +14663,12 @@ class _CarFormPageState extends State<CarFormPage> {
                 required: true,
               ),
               _field(
+                controller: nameEnCtrl,
+                label: isArabic
+                    ? 'اسم السيارة بالإنجليزي (اختياري)'
+                    : 'Car name in English (optional)',
+              ),
+              _field(
                 controller: brandCtrl,
                 label: isArabic ? 'الماركة' : 'Brand',
                 required: true,
@@ -14368,6 +14722,13 @@ class _CarFormPageState extends State<CarFormPage> {
               _field(
                 controller: descriptionCtrl,
                 label: isArabic ? 'الوصف' : 'Description',
+                maxLines: 3,
+              ),
+              _field(
+                controller: descriptionEnCtrl,
+                label: isArabic
+                    ? 'الوصف بالإنجليزي (اختياري)'
+                    : 'Description in English (optional)',
                 maxLines: 3,
               ),
               Row(
@@ -15472,7 +15833,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    '${car.brand} ${car.name}',
+                                    '${car.brand} ${car.displayName(isArabic)}',
                                     textAlign: TextAlign.center,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
