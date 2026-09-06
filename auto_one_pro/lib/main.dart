@@ -2922,11 +2922,11 @@ Widget build(BuildContext context) {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: car.isOffer ? Colors.orange.shade800 : Colors.red,
+                    color: car.isOfferActive ? Colors.orange.shade800 : Colors.red,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    car.isOffer
+                    car.isOfferActive
                         ? (isArabic ? 'عرض خاص' : 'OFFER')
                         : (isArabic ? 'جديد' : 'NEW'),
                     style: const TextStyle(
@@ -3102,7 +3102,7 @@ Text(
 
                         const SizedBox(height: 4),
 
-                        if (car.isOffer && car.oldPrice.isNotEmpty)
+                        if (car.isOfferActive && car.oldPrice.isNotEmpty)
                           Text(
                             car.oldPrice,
                             style: const TextStyle(
@@ -3681,6 +3681,20 @@ class Car {
 
   final bool isOffer;
   final String oldPrice;
+  final String discountPercent;
+  final String offerStartDate;
+  final String offerEndDate;
+
+  // العرض يعتبر شغال لو isOffer=true وتاريخ النهاية (لو موجود) لسه ماجاش
+  bool get isOfferActive {
+    if (!isOffer) return false;
+    if (offerEndDate.trim().isEmpty) return true;
+    final end = DateTime.tryParse(offerEndDate.trim());
+    if (end == null) return true;
+    final today = DateTime.now();
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    return !today.isAfter(endOfDay);
+  }
 
   // ==========================================================
   // EXTRA SPECS (flexible key → value, e.g. "ACC": "نعم")
@@ -3754,6 +3768,9 @@ class Car {
     // Offer
     this.isOffer = false,
     this.oldPrice = '',
+    this.discountPercent = '',
+    this.offerStartDate = '',
+    this.offerEndDate = '',
 
     // Extra specs
     this.extraSpecs = const {},
@@ -3803,6 +3820,9 @@ class Car {
       absSystem: (map['abs_system'] ?? '') as String,
       isOffer: (map['is_offer'] ?? false) as bool,
       oldPrice: (map['old_price'] ?? '') as String,
+      discountPercent: (map['discount_percent'] ?? '') as String,
+      offerStartDate: (map['offer_start_date'] ?? '').toString(),
+      offerEndDate: (map['offer_end_date'] ?? '').toString(),
       extraSpecs: (map['extra_specs'] is Map)
           ? Map<String, String>.from(
               (map['extra_specs'] as Map).map(
@@ -5592,7 +5612,7 @@ String _searchAlias(Car car) {
           selectedModel == 'ALL' ||
           car.year == selectedModel;
           final matchesOffer =
-    !showOffers || car.isOffer;
+    !showOffers || car.isOfferActive;
 
       final price = _parsePrice(car.price);
       final matchesMinPrice = minPrice == null || price >= minPrice!;
@@ -11764,6 +11784,7 @@ class _AdminTabDef {
   final double width;
   final Widget page;
   final List<String> roles;
+  final int badgeCount;
 
   _AdminTabDef({
     required this.label,
@@ -11771,6 +11792,7 @@ class _AdminTabDef {
     required this.width,
     required this.page,
     required this.roles,
+    this.badgeCount = 0,
   });
 }
 
@@ -12043,11 +12065,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           icon: _visibleTabs()[i].icon,
                           selected: currentTab == i,
                           onTap: () => setState(() => currentTab = i),
-                          badgeCount:
-                              _visibleTabs()[i].label ==
-                                      (isArabic ? 'الحجوزات' : 'Bookings')
-                                  ? pendingBookings
-                                  : 0,
+                          badgeCount: _visibleTabs()[i].badgeCount,
                         ),
                       ),
                     ],
@@ -12078,6 +12096,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         width: 130,
         page: AdminBookingsBody(isArabic: isArabic),
         roles: const ['admin', 'sales'],
+        badgeCount: pendingBookings,
       ),
       _AdminTabDef(
         label: isArabic ? 'المخزون' : 'Inventory',
@@ -12092,6 +12111,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         width: 140,
         page: AdminRequestsPage(isArabic: isArabic),
         roles: const ['admin', 'sales'],
+        badgeCount: newRequests,
       ),
       _AdminTabDef(
         label: isArabic ? 'الماركات والفئات' : 'Brands & Categories',
@@ -13639,6 +13659,9 @@ class _CarFormPageState extends State<CarFormPage> {
   late bool isAvailable;
   late bool isOffer;
   late final TextEditingController oldPriceCtrl;
+  late final TextEditingController discountPercentCtrl;
+  late final TextEditingController offerStartDateCtrl;
+  late final TextEditingController offerEndDateCtrl;
   bool isSaving = false;
 
   // حالة السيارة + بيانات المخزون
@@ -13726,6 +13749,12 @@ class _CarFormPageState extends State<CarFormPage> {
     isOffer = (car?['is_offer'] ?? false) as bool;
     oldPriceCtrl =
         TextEditingController(text: car?['old_price']?.toString() ?? '');
+    discountPercentCtrl = TextEditingController(
+        text: car?['discount_percent']?.toString() ?? '');
+    offerStartDateCtrl = TextEditingController(
+        text: car?['offer_start_date']?.toString() ?? '');
+    offerEndDateCtrl = TextEditingController(
+        text: car?['offer_end_date']?.toString() ?? '');
 
     carStatusValue = (car?['car_status'] ?? 'available') as String;
     conditionStatusValue = (car?['condition_status'] ?? 'new') as String;
@@ -13829,6 +13858,9 @@ class _CarFormPageState extends State<CarFormPage> {
     airbagsCtrl.dispose();
     absSystemCtrl.dispose();
     oldPriceCtrl.dispose();
+    discountPercentCtrl.dispose();
+    offerStartDateCtrl.dispose();
+    offerEndDateCtrl.dispose();
     vinCtrl.dispose();
     plateNumberCtrl.dispose();
     locationCtrl.dispose();
@@ -14090,6 +14122,13 @@ class _CarFormPageState extends State<CarFormPage> {
       'abs_system': absSystemCtrl.text.trim(),
       'is_offer': isOffer,
       'old_price': oldPriceCtrl.text.trim(),
+      'discount_percent': discountPercentCtrl.text.trim(),
+      'offer_start_date': offerStartDateCtrl.text.trim().isEmpty
+          ? null
+          : offerStartDateCtrl.text.trim(),
+      'offer_end_date': offerEndDateCtrl.text.trim().isEmpty
+          ? null
+          : offerEndDateCtrl.text.trim(),
       'is_available': isAvailable,
 
       // حالة السيارة + المخزون
@@ -14159,13 +14198,16 @@ class _CarFormPageState extends State<CarFormPage> {
       final extraImageUrls = extraImageControllers
           .map((c) => c.text.trim())
           .where((url) => url.isNotEmpty)
+          .toSet() // يشيل أي تكرار في نفس القايمة قبل الحفظ
           .toList();
 
       if (extraImageUrls.isNotEmpty) {
-        await Supabase.instance.client.from('car_images').insert(
+        await Supabase.instance.client.from('car_images').upsert(
               extraImageUrls
                   .map((url) => {'car_id': carId, 'image': url})
                   .toList(),
+              onConflict: 'car_id,image',
+              ignoreDuplicates: true,
             );
       }
 
@@ -14730,52 +14772,40 @@ class _CarFormPageState extends State<CarFormPage> {
 
               const SizedBox(height: 12),
 
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+              SwitchListTile(
+                tileColor: Colors.grey.shade100,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    isArabic ? 'متاحة للعرض' : 'Available',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  value: isAvailable,
-                  activeColor: Colors.green,
-                  onChanged: (value) {
-                    setState(() => isAvailable = value);
-                  },
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                title: Text(
+                  isArabic ? 'متاحة للعرض' : 'Available',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
+                value: isAvailable,
+                activeColor: Colors.green,
+                onChanged: (value) {
+                  setState(() => isAvailable = value);
+                },
               ),
 
               const SizedBox(height: 10),
 
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+              SwitchListTile(
+                tileColor: Colors.grey.shade100,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    isArabic ? 'عرض خاص / خصم' : 'Special Offer',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  value: isOffer,
-                  activeColor: Colors.red,
-                  onChanged: (value) {
-                    setState(() => isOffer = value);
-                  },
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                title: Text(
+                  isArabic ? 'عرض خاص / خصم' : 'Special Offer',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
+                value: isOffer,
+                activeColor: Colors.red,
+                onChanged: (value) {
+                  setState(() => isOffer = value);
+                },
               ),
 
               if (isOffer) ...[
@@ -14785,6 +14815,39 @@ class _CarFormPageState extends State<CarFormPage> {
                   label: isArabic
                       ? 'السعر القديم (قبل الخصم)'
                       : 'Old price (before discount)',
+                ),
+                _field(
+                  controller: discountPercentCtrl,
+                  label: isArabic
+                      ? 'نسبة الخصم % (اختياري)'
+                      : 'Discount % (optional)',
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _field(
+                        controller: offerStartDateCtrl,
+                        label: isArabic
+                            ? 'بداية العرض (2026-09-01)'
+                            : 'Start (2026-09-01)',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _field(
+                        controller: offerEndDateCtrl,
+                        label: isArabic
+                            ? 'نهاية العرض (2026-09-30)'
+                            : 'End (2026-09-30)',
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  isArabic
+                      ? 'لو حددت تاريخ نهاية، العرض هيختفي أوتوماتيك من الموقع بعد التاريخ ده من غير ما تعمل حاجة.'
+                      : 'If you set an end date, the offer disappears from the site automatically after that date.',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
               ],
 
