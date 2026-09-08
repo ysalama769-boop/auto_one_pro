@@ -1475,23 +1475,12 @@ Container(
       LayoutBuilder(
   builder: (context, constraints) {
 
-   final List<Car> featuredCars = [];
+   final List<Car> featuredCars = cars.where((c) => c.isFeatured).toList();
 
-final featuredNames = [
-  'باترول بلاتينيوم',
-  'G700 Flagship',
-  'سيلتوس 1.5 استاندر',
-  'النترا 2.0 كمفورت',
-  'K8 1.5 استاندر GL',
-];
-
-for (final keyword in featuredNames) {
-  for (final car in cars) {
-    if (car.name.contains(keyword)) {
-      featuredCars.add(car);
-      break;
-    }
-  }
+// لو لسه محدش حدد أي سيارة كمميزة من لوحة التحكم، نعرض آخر السيارات
+// كإجراء احتياطي عشان القسم ميفضلش فاضي
+if (featuredCars.isEmpty && cars.isNotEmpty) {
+  featuredCars.addAll(cars.take(5));
 }
 
     int columns = 1;
@@ -3696,6 +3685,8 @@ class Car {
   final String discountPercent;
   final String offerStartDate;
   final String offerEndDate;
+  final bool isFeatured;
+  final int viewCount;
 
   // العرض يعتبر شغال لو isOffer=true وتاريخ النهاية (لو موجود) لسه ماجاش
   bool get isOfferActive {
@@ -3785,6 +3776,8 @@ class Car {
     this.discountPercent = '',
     this.offerStartDate = '',
     this.offerEndDate = '',
+    this.isFeatured = false,
+    this.viewCount = 0,
 
     // Extra specs
     this.extraSpecs = const {},
@@ -3839,6 +3832,8 @@ class Car {
       discountPercent: (map['discount_percent'] ?? '') as String,
       offerStartDate: (map['offer_start_date'] ?? '').toString(),
       offerEndDate: (map['offer_end_date'] ?? '').toString(),
+      isFeatured: (map['is_featured'] ?? false) as bool,
+      viewCount: (map['view_count'] ?? 0) as int,
       extraSpecs: (map['extra_specs'] is Map)
           ? Map<String, String>.from(
               (map['extra_specs'] as Map).map(
@@ -3866,7 +3861,8 @@ Future<void> loadCarsFromSupabase() async {
     final response = await Supabase.instance.client
         .from('cars')
         .select()
-        .eq('is_available', true);
+        .eq('is_available', true)
+        .order('sort_order', nullsFirst: false);
 
     debugPrint('AUTO_ONE_DEBUG: raw response = $response');
 
@@ -7931,6 +7927,11 @@ Widget carImageAdaptive(
           width: width,
           height: height,
           alignment: alignment,
+          // بنحدّ أقصى حجم يتفك بيه الصورة في الذاكرة، عشان صور
+          // السيارات الكبيرة متبطئش التطبيق حتى لو بتتعرض صغيرة
+          cacheWidth: width != null && width > 0
+              ? (width * 2).clamp(50, 1200).round()
+              : 1000,
           errorBuilder: effectiveErrorBuilder,
           loadingBuilder: (context, child, progress) {
             if (progress == null) return child;
@@ -9003,6 +9004,23 @@ class CarDetailsPage extends StatefulWidget {
 
   Car get car => widget.car;
   bool get isArabic => widget.isArabic;
+
+  @override
+  void initState() {
+    super.initState();
+    _trackView();
+  }
+
+  // بيزوّد عداد المشاهدات مرة واحدة كل ما حد يفتح تفاصيل السيارة
+  Future<void> _trackView() async {
+    if (car.id == null) return;
+    try {
+      await Supabase.instance.client
+          .rpc('increment_car_views', params: {'car_id_input': car.id});
+    } catch (e) {
+      // مش لازم يوقف عرض الصفحة لو فشل تسجيل المشاهدة
+    }
+  }
 
   // بندمج صورة السيارة الأساسية مع صور المعرض الإضافية من Supabase
   // (مع إزالة أي تكرار)، ولو مفيش صور من Supabase بنرجع للقايمة الثابتة
@@ -11888,6 +11906,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   int totalRequests = 0;
   int newRequests = 0;
   String? topRequestedCar;
+  String? mostViewedCar;
 
   bool get isArabic => widget.isArabic;
 
@@ -11902,8 +11921,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
       final bookingsResponse = await Supabase.instance.client
           .from('bookings')
           .select('status, car_name, car_brand');
-      final carsResponse =
-          await Supabase.instance.client.from('cars').select('id');
+      final carsResponse = await Supabase.instance.client
+          .from('cars')
+          .select('id, name, brand, view_count');
       final requestsResponse = await Supabase.instance.client
           .from('customer_requests')
           .select('status, car_name, car_brand');
@@ -11952,15 +11972,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
         }
       });
 
+      // نحسب السيارة الأكتر مشاهدة
+      final carsList = List<Map<String, dynamic>>.from(carsResponse as List);
+      String? mostViewed;
+      int mostViews = 0;
+      for (final c in carsList) {
+        final views = (c['view_count'] ?? 0) as int;
+        if (views > mostViews) {
+          mostViews = views;
+          mostViewed = '${c['brand'] ?? ''} ${c['name'] ?? ''}'.trim();
+        }
+      }
+
       if (!mounted) return;
       setState(() {
         totalBookings = bookingsList.length;
         pendingBookings = pending.length;
-        totalCars = (carsResponse as List).length;
+        totalCars = carsList.length;
         bestSellingCar = topCar;
         totalRequests = requestsList.length;
         newRequests = newReqs.length;
         topRequestedCar = topRequested;
+        mostViewedCar = mostViewed;
         isLoadingStats = false;
       });
     } catch (e) {
@@ -12112,6 +12145,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         value: topRequestedCar ??
                             (isArabic ? 'لا يوجد بعد' : 'None yet'),
                         color: Colors.indigo,
+                      ),
+                      const SizedBox(width: 10),
+                      _statCard(
+                        icon: Icons.visibility_outlined,
+                        label: isArabic ? 'الأكتر مشاهدة' : 'Most Viewed',
+                        value: mostViewedCar ??
+                            (isArabic ? 'لا يوجد بعد' : 'None yet'),
+                        color: Colors.teal,
                       ),
                     ],
                   ),
@@ -13669,6 +13710,7 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
       final response = await Supabase.instance.client
           .from('cars')
           .select()
+          .order('sort_order', nullsFirst: false)
           .order('id', ascending: false);
 
       setState(() {
@@ -13681,6 +13723,108 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
             isArabic ? 'تعذّر تحميل السيارات' : 'Failed to load cars';
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _moveCar(int index, int direction) async {
+    final targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= inventoryCars.length) return;
+
+    final updated = List<Map<String, dynamic>>.from(inventoryCars);
+    final temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+
+    setState(() => inventoryCars = updated);
+
+    final payload = [
+      for (var i = 0; i < updated.length; i++)
+        {'id': updated[i]['id'], 'sort_order': i},
+    ];
+
+    try {
+      await Supabase.instance.client.from('cars').upsert(payload);
+    } catch (e) {
+      // لو فشل، نرجع نحمّل القايمة الأصلية من قاعدة البيانات
+      _loadCars();
+    }
+  }
+
+  Future<void> _duplicateCar(Map<String, dynamic> car) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isArabic ? 'نسخ السيارة' : 'Duplicate car'),
+        content: Text(
+          isArabic
+              ? 'هيتعمل نسخة جديدة من "${car['name'] ?? ''}" تقدري تعدّلي فيها.'
+              : 'A new copy of "${car['name'] ?? ''}" will be created for you to edit.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isArabic ? 'نسخ' : 'Duplicate'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      final newCarData = Map<String, dynamic>.from(car);
+      final oldId = newCarData.remove('id');
+      newCarData.remove('created_at');
+      newCarData['name'] =
+          '${newCarData['name'] ?? ''} ${isArabic ? "(نسخة)" : "(Copy)"}';
+      newCarData['sort_order'] = null;
+
+      final inserted = await Supabase.instance.client
+          .from('cars')
+          .insert(newCarData)
+          .select()
+          .single();
+      final newId = inserted['id'];
+
+      // ننسخ الصور الإضافية كمان لو موجودة
+      try {
+        final images = await Supabase.instance.client
+            .from('car_images')
+            .select('image')
+            .eq('car_id', oldId);
+        final imagesList = List<Map<String, dynamic>>.from(images as List);
+        if (imagesList.isNotEmpty) {
+          await Supabase.instance.client.from('car_images').insert(
+                imagesList
+                    .map((row) => {'car_id': newId, 'image': row['image']})
+                    .toList(),
+              );
+        }
+      } catch (e) {
+        // لو فشل نسخ الصور، السيارة نفسها اتنسخت وده الأهم
+      }
+
+      await logActivity(
+        isArabic
+            ? 'نسخ سيارة: ${car['name']} (نسخة جديدة)'
+            : 'Duplicated car: ${car['name']} (new copy)',
+      );
+
+      _loadCars();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic ? 'حصلت مشكلة' : 'Something went wrong'),
+        ),
+      );
     }
   }
 
@@ -13914,6 +14058,41 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
                                 Column(
                                   children: [
                                     IconButton(
+                                      onPressed: index == 0
+                                          ? null
+                                          : () => _moveCar(index, -1),
+                                      icon: Icon(
+                                        Icons.keyboard_arrow_up_rounded,
+                                        color: index == 0
+                                            ? Colors.black26
+                                            : Colors.black87,
+                                      ),
+                                      tooltip: isArabic ? 'لأعلى' : 'Move up',
+                                    ),
+                                    IconButton(
+                                      onPressed:
+                                          index == inventoryCars.length - 1
+                                              ? null
+                                              : () => _moveCar(index, 1),
+                                      icon: Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: index ==
+                                                inventoryCars.length - 1
+                                            ? Colors.black26
+                                            : Colors.black87,
+                                      ),
+                                      tooltip:
+                                          isArabic ? 'لأسفل' : 'Move down',
+                                    ),
+                                    IconButton(
+                                      onPressed: () => _duplicateCar(carData),
+                                      icon: const Icon(
+                                        Icons.copy_rounded,
+                                        color: Colors.orange,
+                                      ),
+                                      tooltip: isArabic ? 'نسخ' : 'Duplicate',
+                                    ),
+                                    IconButton(
                                       onPressed: () => _openForm(
                                         existingCar: carData,
                                       ),
@@ -13998,6 +14177,7 @@ class _CarFormPageState extends State<CarFormPage> {
 
   late bool isAvailable;
   late bool isOffer;
+  late bool isFeatured;
   late final TextEditingController oldPriceCtrl;
   late final TextEditingController discountPercentCtrl;
   late final TextEditingController offerStartDateCtrl;
@@ -14091,6 +14271,7 @@ class _CarFormPageState extends State<CarFormPage> {
 
     isAvailable = (car?['is_available'] ?? true) as bool;
     isOffer = (car?['is_offer'] ?? false) as bool;
+    isFeatured = (car?['is_featured'] ?? false) as bool;
     oldPriceCtrl =
         TextEditingController(text: car?['old_price']?.toString() ?? '');
     discountPercentCtrl = TextEditingController(
@@ -14469,6 +14650,7 @@ class _CarFormPageState extends State<CarFormPage> {
       'airbags': airbagsCtrl.text.trim(),
       'abs_system': absSystemCtrl.text.trim(),
       'is_offer': isOffer,
+      'is_featured': isFeatured,
       'old_price': oldPriceCtrl.text.trim(),
       'discount_percent': discountPercentCtrl.text.trim(),
       'offer_start_date': offerStartDateCtrl.text.trim().isEmpty
@@ -14601,6 +14783,44 @@ class _CarFormPageState extends State<CarFormPage> {
         ),
       );
     }
+  }
+
+  // حقل تاريخ بتقويم بدل الكتابة اليدوية، عشان نضمن الصيغة الصحيحة
+  // اللي قاعدة البيانات محتاجاها دايمًا (YYYY-MM-DD)
+  Widget _dateField({
+    required TextEditingController controller,
+    required String label,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: TextField(
+        controller: controller,
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        onTap: () async {
+          final initial =
+              DateTime.tryParse(controller.text.trim()) ?? DateTime.now();
+          final picked = await showDatePicker(
+            context: context,
+            initialDate: initial,
+            firstDate: DateTime(2020),
+            lastDate: DateTime(2100),
+          );
+          if (picked != null) {
+            final y = picked.year.toString().padLeft(4, '0');
+            final m = picked.month.toString().padLeft(2, '0');
+            final d = picked.day.toString().padLeft(2, '0');
+            controller.text = '$y-$m-$d';
+          }
+        },
+      ),
+    );
   }
 
   Widget _field({
@@ -15169,6 +15389,25 @@ class _CarFormPageState extends State<CarFormPage> {
                 },
               ),
 
+              const SizedBox(height: 10),
+
+              SwitchListTile(
+                tileColor: Colors.grey.shade100,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                title: Text(
+                  isArabic ? 'سيارة مميزة (Featured)' : 'Featured car',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                value: isFeatured,
+                activeColor: Colors.amber.shade800,
+                onChanged: (value) {
+                  setState(() => isFeatured = value);
+                },
+              ),
+
               if (isOffer) ...[
                 const SizedBox(height: 10),
                 _field(
@@ -15186,20 +15425,16 @@ class _CarFormPageState extends State<CarFormPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: _field(
+                      child: _dateField(
                         controller: offerStartDateCtrl,
-                        label: isArabic
-                            ? 'بداية العرض (2026-09-01)'
-                            : 'Start (2026-09-01)',
+                        label: isArabic ? 'بداية العرض' : 'Start date',
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: _field(
+                      child: _dateField(
                         controller: offerEndDateCtrl,
-                        label: isArabic
-                            ? 'نهاية العرض (2026-09-30)'
-                            : 'End (2026-09-30)',
+                        label: isArabic ? 'نهاية العرض' : 'End date',
                       ),
                     ),
                   ],
@@ -15294,11 +15529,9 @@ class _CarFormPageState extends State<CarFormPage> {
                 controller: locationCtrl,
                 label: isArabic ? 'الموقع / المدينة' : 'Location',
               ),
-              _field(
+              _dateField(
                 controller: arrivalDateCtrl,
-                label: isArabic
-                    ? 'تاريخ الوصول (مثال 2026-09-04)'
-                    : 'Arrival date (e.g. 2026-09-04)',
+                label: isArabic ? 'تاريخ الوصول' : 'Arrival date',
               ),
 
               const SizedBox(height: 10),
