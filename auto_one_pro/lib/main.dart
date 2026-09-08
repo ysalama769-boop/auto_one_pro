@@ -13730,9 +13730,14 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
     });
 
     try {
+      // القايمة محتاجة بس الأعمدة اللي بتتعرض فعليًا (مش كل تفاصيل
+      // السيارة الكاملة زي المواصفات والوصف)، وده بيقلل حجم البيانات
+      // اللي بتتحمّل بشكل كبير خصوصًا لو عندك عدد كبير من السيارات.
       final response = await Supabase.instance.client
           .from('cars')
-          .select()
+          .select(
+            'id, brand, name, price, year, image, is_available, car_status, sort_order',
+          )
           .order('sort_order', nullsFirst: false)
           .order('id', ascending: false);
 
@@ -13802,7 +13807,15 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
     if (confirmed != true) return;
 
     try {
-      final newCarData = Map<String, dynamic>.from(car);
+      // القائمة عندها بيانات مختصرة بس، فلازم نجيب صف السيارة كامل
+      // قبل ما نعمل نسخة منه (وإلا هتتعمل نسخة ناقصة مواصفات).
+      final fullCar = await Supabase.instance.client
+          .from('cars')
+          .select()
+          .eq('id', car['id'])
+          .single();
+
+      final newCarData = Map<String, dynamic>.from(fullCar);
       final oldId = newCarData.remove('id');
       newCarData.remove('created_at');
       newCarData['name'] =
@@ -13900,11 +13913,33 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
   }
 
   Future<void> _openForm({Map<String, dynamic>? existingCar}) async {
+    var fullCar = existingCar;
+
+    // القائمة عندها بيانات مختصرة بس (عشان السرعة)، فلو بنعدّل سيارة
+    // موجودة فعلاً، لازم نجيب بياناتها الكاملة الأول قبل ما نفتح الفورم.
+    if (existingCar != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      try {
+        fullCar = await Supabase.instance.client
+            .from('cars')
+            .select()
+            .eq('id', existingCar['id'])
+            .single();
+      } catch (e) {
+        fullCar = existingCar; // على الأقل نفتح بالبيانات المختصرة لو فشل
+      }
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+    }
+
     final saved = await Navigator.of(context).push<bool>(
       smoothRoute(
         CarFormPage(
           isArabic: isArabic,
-          existingCar: existingCar,
+          existingCar: fullCar,
         ),
       ),
     );
