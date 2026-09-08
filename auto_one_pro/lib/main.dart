@@ -5124,7 +5124,6 @@ class CarsPage extends StatefulWidget {
 class _CarsPageState extends State<CarsPage> {
   String search = '';
   bool showOffers = false;
-  int visibleCarsCount = 12;
 
  String selectedBrand = 'ALL';
 
@@ -5609,10 +5608,7 @@ String _searchAlias(Car car) {
 
       final matchesSearch =
           query.isEmpty ||
-          query
-              .split(' ')
-              .where((w) => w.trim().isNotEmpty)
-              .every((word) => searchableText.contains(word));
+          searchableText.contains(query);
 
       final matchesBrand =
           selectedBrand == 'ALL' ||
@@ -6320,20 +6316,18 @@ String _searchAlias(Car car) {
 
           Row(
             children: [
-              Expanded(
+              SizedBox(
+             width: 360,
               child: Container(
-                 height: 42,
+                 height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.black.withValues(alpha: 0.06),
-                    ),
+                    borderRadius: BorderRadius.circular(14),
                     boxShadow: const [
                       BoxShadow(
                         color: Colors.black12,
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
                       ),
                     ],
                   ),
@@ -6347,43 +6341,35 @@ String _searchAlias(Car car) {
                     textAlign: widget.isArabic
                         ? TextAlign.right
                         : TextAlign.left,
-                    style: const TextStyle(fontSize: 13),
                     decoration: InputDecoration(
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                      ),
                       hintText: widget.isArabic
                           ? 'ابحث عن سيارة...'
                           : 'Search for a car...',
                       prefixIcon:
-                          const Icon(Icons.search_rounded, size: 20),
+                          const Icon(Icons.search_rounded),
                       border: InputBorder.none,
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
 
               ElevatedButton.icon(
                 onPressed: () => _showFilters(context),
                 icon: const Icon(
                   Icons.tune_rounded,
                   color: Colors.white,
-                  size: 18,
                 ),
                 label: Text(
                   widget.isArabic ? 'فلتر' : 'FILTER',
-                  style: const TextStyle(fontSize: 13),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  minimumSize: const Size(0, 42),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  minimumSize: const Size(110, 48),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),
@@ -6610,61 +6596,29 @@ String _searchAlias(Car car) {
                 );
               }
 
-              final visibleCars = filteredCars.take(visibleCarsCount).toList();
+              return GridView.builder(
+                shrinkWrap: true,
+                physics:
+                    const NeverScrollableScrollPhysics(),
+                itemCount: filteredCars.length,
+                gridDelegate:
+                    SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  childAspectRatio: 0.66,
+                ),
+                itemBuilder: (context, index) {
+                  final car = filteredCars[index];
 
-              return Column(
-                children: [
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: visibleCars.length,
-                    gridDelegate:
-                        SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: columns,
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 20,
-                      childAspectRatio: 0.66,
-                    ),
-                    itemBuilder: (context, index) {
-                      final car = visibleCars[index];
-
-                     return FeaturedCarCard(
-      key: ValueKey(
-        '${car.name}-${car.year}',
-      ),
-      car: car,
-      isArabic: widget.isArabic,
-    );
-                    },
-                  ),
-                  if (visibleCarsCount < filteredCars.length) ...[
-                    const SizedBox(height: 24),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          visibleCarsCount += 12;
-                        });
-                      },
-                      icon: const Icon(Icons.expand_more_rounded),
-                      label: Text(
-                        widget.isArabic
-                            ? 'عرض المزيد (${filteredCars.length - visibleCarsCount} سيارة تانية)'
-                            : 'Show more (${filteredCars.length - visibleCarsCount} more)',
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+                 return FeaturedCarCard(
+  key: ValueKey(
+    '${car.name}-${car.year}',
+  ),
+  car: car,
+  isArabic: widget.isArabic,
+);
+                },
               );
             },
           ),
@@ -11918,7 +11872,7 @@ class _AdminTabDef {
   final String label;
   final IconData icon;
   final double width;
-  final Widget page;
+  final Widget Function() pageBuilder;
   final List<String> roles;
   final int badgeCount;
 
@@ -11926,7 +11880,7 @@ class _AdminTabDef {
     required this.label,
     required this.icon,
     required this.width,
-    required this.page,
+    required this.pageBuilder,
     required this.roles,
     this.badgeCount = 0,
   });
@@ -11943,6 +11897,7 @@ class AdminDashboard extends StatefulWidget {
 
 class _AdminDashboardState extends State<AdminDashboard> {
   int currentTab = 0;
+  final Map<int, Widget> _builtTabPages = {};
 
   bool isLoadingStats = true;
   int totalBookings = 0;
@@ -11964,15 +11919,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _loadStats() async {
     try {
-      final bookingsResponse = await Supabase.instance.client
-          .from('bookings')
-          .select('status, car_name, car_brand');
-      final carsResponse = await Supabase.instance.client
-          .from('cars')
-          .select('id, name, brand, view_count');
-      final requestsResponse = await Supabase.instance.client
-          .from('customer_requests')
-          .select('status, car_name, car_brand');
+      // بنبعت التلات طلبات مع بعض بالتوازي بدل ما ننتظر كل واحد
+      // يخلص قبل ما نبدأ اللي بعده — بيقلل وقت الانتظار لتلت المدة تقريبًا.
+      final results = await Future.wait([
+        Supabase.instance.client
+            .from('bookings')
+            .select('status, car_name, car_brand'),
+        Supabase.instance.client
+            .from('cars')
+            .select('id, name, brand, view_count'),
+        Supabase.instance.client
+            .from('customer_requests')
+            .select('status, car_name, car_brand'),
+      ]);
+      final bookingsResponse = results[0];
+      final carsResponse = results[1];
+      final requestsResponse = results[2];
 
       final bookingsList =
           List<Map<String, dynamic>>.from(bookingsResponse as List);
@@ -12233,10 +12195,25 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
             Expanded(
-              child: IndexedStack(
-                index: currentTab,
-                children:
-                    _visibleTabs().map((t) => t.page).toList(),
+              child: Builder(
+                builder: (context) {
+                  final tabs = _visibleTabs();
+                  // بنبني صفحة التاب بس أول مرة يتفتح، وبعدين بتفضل
+                  // محفوظة في الكاش عشان التنقل بين التابات يبقى فوري
+                  // من غير ما نعيد تحميل البيانات من Supabase تاني.
+                  if (currentTab < tabs.length &&
+                      !_builtTabPages.containsKey(currentTab)) {
+                    _builtTabPages[currentTab] =
+                        tabs[currentTab].pageBuilder();
+                  }
+                  return IndexedStack(
+                    index: currentTab,
+                    children: [
+                      for (var i = 0; i < tabs.length; i++)
+                        _builtTabPages[i] ?? const SizedBox.shrink(),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -12253,7 +12230,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         label: isArabic ? 'الحجوزات' : 'Bookings',
         icon: Icons.event_note_rounded,
         width: 130,
-        page: AdminBookingsBody(isArabic: isArabic),
+        pageBuilder: () => AdminBookingsBody(isArabic: isArabic),
         roles: const ['admin', 'sales'],
         badgeCount: pendingBookings,
       ),
@@ -12261,14 +12238,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
         label: isArabic ? 'المخزون' : 'Inventory',
         icon: Icons.directions_car_filled_rounded,
         width: 130,
-        page: AdminCarsPage(isArabic: isArabic),
+        pageBuilder: () => AdminCarsPage(isArabic: isArabic),
         roles: const ['admin', 'inventory', 'editor'],
       ),
       _AdminTabDef(
         label: isArabic ? 'طلبات العملاء' : 'Requests',
         icon: Icons.support_agent_rounded,
         width: 140,
-        page: AdminRequestsPage(isArabic: isArabic),
+        pageBuilder: () => AdminRequestsPage(isArabic: isArabic),
         roles: const ['admin', 'sales'],
         badgeCount: newRequests,
       ),
@@ -12276,28 +12253,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
         label: isArabic ? 'الماركات والفئات' : 'Brands & Categories',
         icon: Icons.category_rounded,
         width: 160,
-        page: AdminBrandsCategoriesPage(isArabic: isArabic),
+        pageBuilder: () => AdminBrandsCategoriesPage(isArabic: isArabic),
         roles: const ['admin', 'editor'],
       ),
       _AdminTabDef(
         label: isArabic ? 'الصفحة الرئيسية' : 'Homepage',
         icon: Icons.home_outlined,
         width: 150,
-        page: AdminHomepagePage(isArabic: isArabic),
+        pageBuilder: () => AdminHomepagePage(isArabic: isArabic),
         roles: const ['admin', 'editor'],
       ),
       _AdminTabDef(
         label: isArabic ? 'المستخدمين' : 'Users',
         icon: Icons.admin_panel_settings_outlined,
         width: 140,
-        page: AdminUsersPage(isArabic: isArabic),
+        pageBuilder: () => AdminUsersPage(isArabic: isArabic),
         roles: const ['admin'],
       ),
       _AdminTabDef(
         label: isArabic ? 'سجل التعديلات' : 'Activity Log',
         icon: Icons.history_rounded,
         width: 150,
-        page: AdminActivityLogPage(isArabic: isArabic),
+        pageBuilder: () => AdminActivityLogPage(isArabic: isArabic),
         roles: const ['admin'],
       ),
     ];
