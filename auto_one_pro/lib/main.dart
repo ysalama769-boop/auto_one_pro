@@ -11872,7 +11872,7 @@ class _AdminTabDef {
   final String label;
   final IconData icon;
   final double width;
-  final Widget page;
+  final Widget Function() pageBuilder;
   final List<String> roles;
   final int badgeCount;
 
@@ -11880,7 +11880,7 @@ class _AdminTabDef {
     required this.label,
     required this.icon,
     required this.width,
-    required this.page,
+    required this.pageBuilder,
     required this.roles,
     this.badgeCount = 0,
   });
@@ -11897,6 +11897,7 @@ class AdminDashboard extends StatefulWidget {
 
 class _AdminDashboardState extends State<AdminDashboard> {
   int currentTab = 0;
+  final Map<int, Widget> _builtTabPages = {};
 
   bool isLoadingStats = true;
   int totalBookings = 0;
@@ -11918,15 +11919,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _loadStats() async {
     try {
-      final bookingsResponse = await Supabase.instance.client
-          .from('bookings')
-          .select('status, car_name, car_brand');
-      final carsResponse = await Supabase.instance.client
-          .from('cars')
-          .select('id, name, brand, view_count');
-      final requestsResponse = await Supabase.instance.client
-          .from('customer_requests')
-          .select('status, car_name, car_brand');
+      // بنبعت التلات طلبات مع بعض بالتوازي بدل ما ننتظر كل واحد
+      // يخلص قبل ما نبدأ اللي بعده — بيقلل وقت الانتظار لتلت المدة تقريبًا.
+      final results = await Future.wait([
+        Supabase.instance.client
+            .from('bookings')
+            .select('status, car_name, car_brand'),
+        Supabase.instance.client
+            .from('cars')
+            .select('id, name, brand, view_count'),
+        Supabase.instance.client
+            .from('customer_requests')
+            .select('status, car_name, car_brand'),
+      ]);
+      final bookingsResponse = results[0];
+      final carsResponse = results[1];
+      final requestsResponse = results[2];
 
       final bookingsList =
           List<Map<String, dynamic>>.from(bookingsResponse as List);
@@ -12187,10 +12195,25 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
             Expanded(
-              child: IndexedStack(
-                index: currentTab,
-                children:
-                    _visibleTabs().map((t) => t.page).toList(),
+              child: Builder(
+                builder: (context) {
+                  final tabs = _visibleTabs();
+                  // بنبني صفحة التاب بس أول مرة يتفتح، وبعدين بتفضل
+                  // محفوظة في الكاش عشان التنقل بين التابات يبقى فوري
+                  // من غير ما نعيد تحميل البيانات من Supabase تاني.
+                  if (currentTab < tabs.length &&
+                      !_builtTabPages.containsKey(currentTab)) {
+                    _builtTabPages[currentTab] =
+                        tabs[currentTab].pageBuilder();
+                  }
+                  return IndexedStack(
+                    index: currentTab,
+                    children: [
+                      for (var i = 0; i < tabs.length; i++)
+                        _builtTabPages[i] ?? const SizedBox.shrink(),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -12207,7 +12230,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         label: isArabic ? 'الحجوزات' : 'Bookings',
         icon: Icons.event_note_rounded,
         width: 130,
-        page: AdminBookingsBody(isArabic: isArabic),
+        pageBuilder: () => AdminBookingsBody(isArabic: isArabic),
         roles: const ['admin', 'sales'],
         badgeCount: pendingBookings,
       ),
@@ -12215,14 +12238,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
         label: isArabic ? 'المخزون' : 'Inventory',
         icon: Icons.directions_car_filled_rounded,
         width: 130,
-        page: AdminCarsPage(isArabic: isArabic),
+        pageBuilder: () => AdminCarsPage(isArabic: isArabic),
         roles: const ['admin', 'inventory', 'editor'],
       ),
       _AdminTabDef(
         label: isArabic ? 'طلبات العملاء' : 'Requests',
         icon: Icons.support_agent_rounded,
         width: 140,
-        page: AdminRequestsPage(isArabic: isArabic),
+        pageBuilder: () => AdminRequestsPage(isArabic: isArabic),
         roles: const ['admin', 'sales'],
         badgeCount: newRequests,
       ),
@@ -12230,28 +12253,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
         label: isArabic ? 'الماركات والفئات' : 'Brands & Categories',
         icon: Icons.category_rounded,
         width: 160,
-        page: AdminBrandsCategoriesPage(isArabic: isArabic),
+        pageBuilder: () => AdminBrandsCategoriesPage(isArabic: isArabic),
         roles: const ['admin', 'editor'],
       ),
       _AdminTabDef(
         label: isArabic ? 'الصفحة الرئيسية' : 'Homepage',
         icon: Icons.home_outlined,
         width: 150,
-        page: AdminHomepagePage(isArabic: isArabic),
+        pageBuilder: () => AdminHomepagePage(isArabic: isArabic),
         roles: const ['admin', 'editor'],
       ),
       _AdminTabDef(
         label: isArabic ? 'المستخدمين' : 'Users',
         icon: Icons.admin_panel_settings_outlined,
         width: 140,
-        page: AdminUsersPage(isArabic: isArabic),
+        pageBuilder: () => AdminUsersPage(isArabic: isArabic),
         roles: const ['admin'],
       ),
       _AdminTabDef(
         label: isArabic ? 'سجل التعديلات' : 'Activity Log',
         icon: Icons.history_rounded,
         width: 150,
-        page: AdminActivityLogPage(isArabic: isArabic),
+        pageBuilder: () => AdminActivityLogPage(isArabic: isArabic),
         roles: const ['admin'],
       ),
     ];
