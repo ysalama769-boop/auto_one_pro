@@ -23,14 +23,13 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: '3.35.0'
 
       - name: Install dependencies
         run: flutter pub get
         working-directory: auto_one_pro
 
       - name: Build Flutter Web
-        run: flutter build web --release
+        run: flutter build web --release --web-renderer html
         working-directory: auto_one_pro
 
       - name: Upload artifact
