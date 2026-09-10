@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:html' as html;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/constants.dart';
@@ -512,6 +514,7 @@ class CarFormPage extends StatefulWidget {
 
 class _CarFormPageState extends State<CarFormPage> {
   final formKey = GlobalKey<FormState>();
+  bool _isUploadingImage = false;
 
   late final TextEditingController nameCtrl;
   late final TextEditingController nameEnCtrl;
@@ -719,6 +722,67 @@ class _CarFormPageState extends State<CarFormPage> {
     if (mounted) {
       setState(() => isLoadingExtras = false);
     }
+  }
+
+  // بيفتح نافذة اختيار ملف من جهاز المستخدم (بتشمل الديسكتوب وأي فولدر
+  // تاني)، وبعد الاختيار بيرفع الصورة على نفس مكان تخزين الصور في
+  // Supabase (bucket اسمه car_images) وبعدين يحط الرابط الناتج تلقائيًا
+  // في خانة رابط الصورة.
+  Future<void> _pickAndUploadImage() async {
+    final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
+    uploadInput.click();
+
+    uploadInput.onChange.listen((event) async {
+      final files = uploadInput.files;
+      if (files == null || files.isEmpty) return;
+      final file = files[0];
+
+      setState(() => _isUploadingImage = true);
+
+      try {
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(file);
+        await reader.onLoad.first;
+        final bytes = reader.result as Uint8List;
+
+        final brandFolder = brandCtrl.text.trim().isEmpty
+            ? 'other'
+            : brandCtrl.text.trim().toLowerCase();
+        final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
+        final path =
+            '$brandFolder/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+
+        await Supabase.instance.client.storage.from('car_images').uploadBinary(
+              path,
+              bytes,
+              fileOptions: const FileOptions(upsert: true),
+            );
+
+        final publicUrl = Supabase.instance.client.storage
+            .from('car_images')
+            .getPublicUrl(path);
+
+        if (mounted) {
+          setState(() {
+            imageCtrl.text = publicUrl;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isArabic
+                    ? 'فشل رفع الصورة: $e'
+                    : 'Failed to upload image: $e',
+              ),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isUploadingImage = false);
+      }
+    });
   }
 
   @override
@@ -1284,12 +1348,39 @@ class _CarFormPageState extends State<CarFormPage> {
                   ),
                 ],
               ),
-              _field(
-                controller: imageCtrl,
-                label: isArabic
-                    ? 'رابط الصورة الأساسية'
-                    : 'Main image link',
-                required: true,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: imageCtrl,
+                      label: isArabic
+                          ? 'رابط الصورة الأساسية'
+                          : 'Main image link',
+                      required: true,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: OutlinedButton.icon(
+                      onPressed:
+                          _isUploadingImage ? null : _pickAndUploadImage,
+                      icon: _isUploadingImage
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.upload_file),
+                      label: Text(
+                        isArabic ? 'اختيار من الجهاز' : 'Browse',
+                      ),
+                    ),
+                  ),
+                ],
               ),
               if (imageCtrl.text.trim().isNotEmpty)
                 Padding(
