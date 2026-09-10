@@ -727,8 +727,9 @@ class _CarFormPageState extends State<CarFormPage> {
   // بيفتح نافذة اختيار ملف من جهاز المستخدم (بتشمل الديسكتوب وأي فولدر
   // تاني)، وبعد الاختيار بيرفع الصورة على نفس مكان تخزين الصور في
   // Supabase (bucket اسمه car_images) وبعدين يحط الرابط الناتج تلقائيًا
-  // في خانة رابط الصورة.
-  Future<void> _pickAndUploadImage() async {
+  // في أي خانة رابط صورة تحددهالها (الصورة الأساسية، صورة إضافية،
+  // أو صورة لون معيّن).
+  Future<void> _pickAndUploadImage(TextEditingController targetCtrl) async {
     final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
     uploadInput.click();
 
@@ -764,7 +765,7 @@ class _CarFormPageState extends State<CarFormPage> {
 
         if (mounted) {
           setState(() {
-            imageCtrl.text = publicUrl;
+            targetCtrl.text = publicUrl;
           });
         }
       } catch (e) {
@@ -1017,6 +1018,14 @@ class _CarFormPageState extends State<CarFormPage> {
                                       ),
                                     ),
                                   ),
+                                ),
+                                IconButton(
+                                  onPressed: _isUploadingImage
+                                      ? null
+                                      : () => _pickAndUploadImage(controller),
+                                  icon: const Icon(Icons.upload_file),
+                                  tooltip:
+                                      isArabic ? 'اختيار من الجهاز' : 'Browse',
                                 ),
                               ],
                             ),
@@ -1365,7 +1374,9 @@ class _CarFormPageState extends State<CarFormPage> {
                     padding: const EdgeInsets.only(top: 8),
                     child: OutlinedButton.icon(
                       onPressed:
-                          _isUploadingImage ? null : _pickAndUploadImage,
+                          _isUploadingImage
+                              ? null
+                              : () => _pickAndUploadImage(imageCtrl),
                       icon: _isUploadingImage
                           ? const SizedBox(
                               width: 16,
@@ -1792,6 +1803,13 @@ class _CarFormPageState extends State<CarFormPage> {
                             ),
                           ),
                         ),
+                      ),
+                      IconButton(
+                        onPressed: _isUploadingImage
+                            ? null
+                            : () => _pickAndUploadImage(controller),
+                        icon: const Icon(Icons.upload_file),
+                        tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
                       ),
                       IconButton(
                         onPressed: () {
