@@ -28,6 +28,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
  int currentImage = 0;
+ final ScrollController _featuredCarsScrollController = ScrollController();
 
 int get safeImageIndex {
   if (images.isEmpty) return 0;
@@ -52,6 +53,7 @@ void initState() {
 @override
 void dispose() {
   _pageController.dispose();
+  _featuredCarsScrollController.dispose();
   super.dispose();
 }
 
@@ -584,22 +586,32 @@ if (featuredCars.isEmpty && cars.isNotEmpty) {
 }
 
     // بقت بتتسحب لجنب زي شريط الماركات، بدل ما تتلف على أكتر من صف.
-    // على الديسكتوب، Flutter بيظهر تلقائيًا شريط سحب (scrollbar) تحتها.
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: featuredCars.map((car) {
-          return Padding(
-            padding: const EdgeInsetsDirectional.only(end: 16),
-            child: SizedBox(
-              width: 260,
-              child: FeaturedCarCard(
-                car: car,
-                isArabic: widget.isArabic,
-              ),
-            ),
-          );
-        }).toList(),
+    // Scrollbar بمعرّف ظاهر دايمًا (thumbVisibility) عشان يبان شريط
+    // السحب بوضوح في نسخة الديسكتوب.
+    return Scrollbar(
+      controller: _featuredCarsScrollController,
+      thumbVisibility: true,
+      trackVisibility: true,
+      child: SingleChildScrollView(
+        controller: _featuredCarsScrollController,
+        scrollDirection: Axis.horizontal,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Row(
+            children: featuredCars.map((car) {
+              return Padding(
+                padding: const EdgeInsetsDirectional.only(end: 16),
+                child: SizedBox(
+                  width: 260,
+                  child: FeaturedCarCard(
+                    car: car,
+                    isArabic: widget.isArabic,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
         },
@@ -1592,11 +1604,18 @@ class _BrandStripState extends State<BrandStrip> {
 
   List<Map<String, String>> brandItems = [];
   bool isLoading = true;
+  final ScrollController _brandsScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadBrands();
+  }
+
+  @override
+  void dispose() {
+    _brandsScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadBrands() async {
@@ -1697,9 +1716,16 @@ class _BrandStripState extends State<BrandStrip> {
 
           const SizedBox(height: 28),
 
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+          Scrollbar(
+            controller: _brandsScrollController,
+            thumbVisibility: true,
+            trackVisibility: true,
+            child: SingleChildScrollView(
+              controller: _brandsScrollController,
+              scrollDirection: Axis.horizontal,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Row(
               children: brandItems.map((item) {
                 final label = item['label']!;
                 final matchKey = item['matchKey']!;
@@ -1780,6 +1806,8 @@ class _BrandStripState extends State<BrandStrip> {
                   ),
                 );
               }).toList(),
+                ),
+              ),
             ),
           ),
         ],
