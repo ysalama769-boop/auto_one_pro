@@ -86,7 +86,6 @@ void _scrollBy(ScrollController controller, double delta) {
   // ==========================================================
 
   final List<String> images = [
-    'assets/youssefcar1.jpg',
     'assets/youssefcar22.jpg',
     'assets/youssefcar3.jpg',
     'assets/youssefcar4.jpg',
@@ -94,10 +93,6 @@ void _scrollBy(ScrollController controller, double delta) {
   ];
   
 final List<Map<String, String>> slideTexts = [
-  {
-    'ar': 'أفضل السيارات الصينية بأفضل الأسعار',
-    'en': 'Best Chinese Cars at the Best Prices',
-  },
   {
     'ar': 'اختيارك المثالي يبدأ من AUTO ONE.',
     'en': 'Your Perfect Choice Starts at AUTO ONE.',
@@ -117,14 +112,9 @@ final List<Map<String, String>> slideTexts = [
 ];
 
 final List<Map<String, String>> slideDescriptions = [
-  
   {
     'ar': 'اختيارات مميزة، أسعار تنافسية، وتجربة شراء أسهل.',
     'en': 'Premium choices, competitive prices, and an easier buying experience.',
-  },
-  {
-    'ar': 'اختيارك المثالي يبدأ من AUTO ONE.',
-    'en': 'Your perfect choice starts at AUTO ONE.',
   },
   {
     'ar': 'فخامة وأناقة في كل تفصيلة.',
@@ -200,9 +190,7 @@ final List<Map<String, String>> slideButtons = [
           // CAROUSEL
           // ====================================================
 
-        Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 20),
-  child: LayoutBuilder(
+        LayoutBuilder(
     builder: (context, constraints) {
       final heroHeight = constraints.maxWidth < 850 ? 480.0 : 560.0;
 
@@ -215,9 +203,7 @@ final List<Map<String, String>> slideButtons = [
             previousImage();
           }
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: SizedBox(
+        child: SizedBox(
             width: double.infinity,
             height: heroHeight,
             child: Stack(
@@ -272,7 +258,21 @@ final List<Map<String, String>> slideButtons = [
                   ),
                 ),
 
-                // النص والشعار فوق الصورة مباشرة
+                // اللوجو صغير في مكان مميز (أعلى الصورة) بدل ما يكون
+                // كبير في نص الكارت
+                Positioned(
+                  top: 18,
+                  left: widget.isArabic ? null : 18,
+                  right: widget.isArabic ? 18 : null,
+                  child: Image.asset(
+                    'assets/logo-autoone.png',
+                    width: 70,
+                    height: 40,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+
+                // النص فوق الصورة مباشرة
                 Positioned(
                   left: 0,
                   right: 0,
@@ -282,24 +282,6 @@ final List<Map<String, String>> slideButtons = [
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Image.asset(
-                          'assets/logo-autoone.png',
-                          width: 120,
-                          height: 68,
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.isArabic ? 'معرض سيارات' : 'CAR DEALERSHIP',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
                         Text(
                           widget.isArabic
                               ? slideTexts[safeImageIndex]['ar']!
@@ -394,11 +376,9 @@ final List<Map<String, String>> slideButtons = [
               ],
             ),
           ),
-        ),
       );
     },
   ),
-),
 
 BrandStrip(
   isArabic: widget.isArabic,
