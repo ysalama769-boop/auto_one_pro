@@ -1053,14 +1053,37 @@ class CarDetailsPage extends StatefulWidget {
 
   class _CarDetailsPageState extends State<CarDetailsPage> {
   String? selectedImage;
+  // بنعرض بيانات السيارة المختصرة فورًا (زي ما بتوصل من القائمة)،
+  // وبعدين نجيب باقي المواصفات التفصيلية (الأبعاد، الحصان، المزايا...)
+  // في الخلفية من غير ما نأخر ظهور الصفحة.
+  late Car _car = widget.car;
 
-  Car get car => widget.car;
+  Car get car => _car;
   bool get isArabic => widget.isArabic;
 
   @override
   void initState() {
     super.initState();
     _trackView();
+    _loadFullDetails();
+  }
+
+  Future<void> _loadFullDetails() async {
+    if (widget.car.id == null) return;
+    try {
+      final response = await Supabase.instance.client
+          .from('cars')
+          .select()
+          .eq('id', widget.car.id as Object)
+          .single();
+      final fullCar = Car.fromMap(response);
+      if (mounted) {
+        setState(() => _car = fullCar);
+      }
+    } catch (e) {
+      // لو الجلب فشل، هنفضل عارضين البيانات المختصرة اللي وصلت
+      // من القائمة، وده أحسن من إن الصفحة تفضل فاضية أو توقف.
+    }
   }
 
   // بيزوّد عداد المشاهدات مرة واحدة كل ما حد يفتح تفاصيل السيارة

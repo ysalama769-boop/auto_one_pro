@@ -220,9 +220,21 @@ const List<CarColor> carColorLibrary = [
 // لو حصل أي خطأ (زي مفيش إنترنت)، القايمة الثابتة تحت بتفضل شغالة كـ احتياطي
 Future<void> loadCarsFromSupabase() async {
   try {
+    // بنجيب بس الأعمدة اللي محتاجينها لعرض كروت السيارات في الصفحة
+    // الرئيسية وقائمة السيارات (مش كل تفاصيل السيارة زي الأبعاد
+    // والمواصفات الكاملة)، وده بيقلل حجم البيانات اللي بتتحمّل بشكل
+    // كبير خصوصًا مع عدد كبير من السيارات. التفاصيل الكاملة بتتحمّل
+    // بعدين لما حد يفتح صفحة سيارة معيّنة (CarDetailsPage).
     final response = await Supabase.instance.client
         .from('cars')
-        .select()
+        .select(
+          'id, brand, name, name_en, category, year, price, image, '
+          'description, description_en, engine, fuel, seats, transmission, '
+          'drive, horsepower, airbags, '
+          'is_offer, old_price, discount_percent, offer_start_date, '
+          'offer_end_date, is_featured, is_available, sort_order, '
+          'view_count, car_status, condition_status',
+        )
         .eq('is_available', true)
         .order('sort_order', nullsFirst: false);
 
