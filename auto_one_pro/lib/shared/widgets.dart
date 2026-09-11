@@ -1225,6 +1225,33 @@ class _ShimmerBoxState extends State<ShimmerBox>
 }
 
 
+// شريط سحب أفقي بشكل مميز (رفيع، حواف مدوّرة، بلون العلامة الأحمر)
+// بيتلف حوالين أي عنصر بيتسحب لجنب زي شريط الماركات وسيارات مميزة.
+Widget styledHorizontalScrollbar({
+  required ScrollController controller,
+  required Widget child,
+}) {
+  return ScrollbarTheme(
+    data: ScrollbarThemeData(
+      thumbColor: WidgetStateProperty.all(
+        Colors.redAccent.withValues(alpha: 0.85),
+      ),
+      trackColor: WidgetStateProperty.all(Colors.black12),
+      trackBorderColor: WidgetStateProperty.all(Colors.transparent),
+      thickness: WidgetStateProperty.all(6),
+      radius: const Radius.circular(20),
+      crossAxisMargin: 0,
+      mainAxisMargin: 2,
+    ),
+    child: Scrollbar(
+      controller: controller,
+      thumbVisibility: true,
+      trackVisibility: true,
+      child: child,
+    ),
+  );
+}
+
 Widget carImageAdaptive(
   String path, {
   BoxFit fit = BoxFit.cover,
