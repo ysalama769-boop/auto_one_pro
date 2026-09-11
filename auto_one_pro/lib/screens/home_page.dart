@@ -587,30 +587,7 @@ Container(
         ),
       ),
 
-      const SizedBox(height: 20),
-
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Transform.scale(
-            scale: 0.7,
-            child: CarouselArrow(
-              icon: Icons.arrow_back_ios_new,
-              onTap: () => _scrollBy(_featuredCarsScrollController, -320),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Transform.scale(
-            scale: 0.7,
-            child: CarouselArrow(
-              icon: Icons.arrow_forward_ios,
-              onTap: () => _scrollBy(_featuredCarsScrollController, 320),
-            ),
-          ),
-        ],
-      ),
-
-      const SizedBox(height: 15),
+      const SizedBox(height: 35),
 
       LayoutBuilder(
   builder: (context, constraints) {
@@ -624,29 +601,56 @@ if (featuredCars.isEmpty && cars.isNotEmpty) {
 }
 
     // بقت بتتسحب لجنب زي شريط الماركات، بدل ما تتلف على أكتر من صف.
-    return styledHorizontalScrollbar(
-      controller: _featuredCarsScrollController,
-      child: SingleChildScrollView(
-        controller: _featuredCarsScrollController,
-        scrollDirection: Axis.horizontal,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: Row(
-            children: featuredCars.map((car) {
-              return Padding(
-                padding: const EdgeInsetsDirectional.only(end: 16),
-                child: SizedBox(
-                  width: 260,
-                  child: FeaturedCarCard(
-                    car: car,
-                    isArabic: widget.isArabic,
-                  ),
-                ),
-              );
-            }).toList(),
+    // السهمين متحطين فوق الشريط نفسه (Stack) على الحافة اليمين
+    // والشمال، مش قسم منفصل فوقه.
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        styledHorizontalScrollbar(
+          controller: _featuredCarsScrollController,
+          child: SingleChildScrollView(
+            controller: _featuredCarsScrollController,
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                children: featuredCars.map((car) {
+                  return Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 16),
+                    child: SizedBox(
+                      width: 260,
+                      child: FeaturedCarCard(
+                        car: car,
+                        isArabic: widget.isArabic,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
           ),
         ),
-      ),
+        Positioned(
+          right: 0,
+          child: Transform.scale(
+            scale: 0.7,
+            child: CarouselArrow(
+              icon: Icons.arrow_forward_ios,
+              onTap: () => _scrollBy(_featuredCarsScrollController, 320),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          child: Transform.scale(
+            scale: 0.7,
+            child: CarouselArrow(
+              icon: Icons.arrow_back_ios_new,
+              onTap: () => _scrollBy(_featuredCarsScrollController, -320),
+            ),
+          ),
+        ),
+      ],
     );
         },
       ),
@@ -1761,32 +1765,12 @@ class _BrandStripState extends State<BrandStrip> {
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 28),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Stack(
+            alignment: Alignment.center,
             children: [
-              Transform.scale(
-                scale: 0.7,
-                child: CarouselArrow(
-                  icon: Icons.arrow_back_ios_new,
-                  onTap: () => _scrollBy(_brandsScrollController, -320),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Transform.scale(
-                scale: 0.7,
-                child: CarouselArrow(
-                  icon: Icons.arrow_forward_ios,
-                  onTap: () => _scrollBy(_brandsScrollController, 320),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 15),
-
-          styledHorizontalScrollbar(
+              styledHorizontalScrollbar(
             controller: _brandsScrollController,
             child: SingleChildScrollView(
               controller: _brandsScrollController,
@@ -1877,6 +1861,28 @@ class _BrandStripState extends State<BrandStrip> {
                 ),
               ),
             ),
+              ),
+              Positioned(
+                right: 0,
+                child: Transform.scale(
+                  scale: 0.7,
+                  child: CarouselArrow(
+                    icon: Icons.arrow_forward_ios,
+                    onTap: () => _scrollBy(_brandsScrollController, 320),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                child: Transform.scale(
+                  scale: 0.7,
+                  child: CarouselArrow(
+                    icon: Icons.arrow_back_ios_new,
+                    onTap: () => _scrollBy(_brandsScrollController, -320),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
