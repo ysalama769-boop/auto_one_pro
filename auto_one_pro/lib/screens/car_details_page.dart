@@ -1192,19 +1192,127 @@ class CarDetailsPage extends StatefulWidget {
     final baseUrl =
         '${html.window.location.origin}${html.window.location.pathname}';
     final link = '$baseUrl?car=${car.id}';
+    final shareText = isArabic
+        ? 'شوف السيارة دي في AUTO ONE: ${car.displayName(isArabic)}'
+        : 'Check out this car on AUTO ONE: ${car.displayName(isArabic)}';
 
-    await Clipboard.setData(ClipboardData(text: link));
-
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isArabic
-              ? '🔗 تم نسخ رابط السيارة!'
-              : '🔗 Car link copied!',
-        ),
-        backgroundColor: Colors.green,
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (sheetContext) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                isArabic ? 'مشاركة السيارة' : 'Share this car',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 22),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 18,
+                runSpacing: 18,
+                children: [
+                  _ShareOptionButton(
+                    label: 'WhatsApp',
+                    icon: FontAwesomeIcons.whatsapp,
+                    color: const Color(0xFF25D366),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      launchUrl(
+                        Uri.parse(
+                          'https://wa.me/?text=${Uri.encodeComponent('$shareText $link')}',
+                        ),
+                        webOnlyWindowName: '_blank',
+                      );
+                    },
+                  ),
+                  _ShareOptionButton(
+                    label: 'Facebook',
+                    icon: FontAwesomeIcons.facebook,
+                    color: const Color(0xFF1877F2),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      launchUrl(
+                        Uri.parse(
+                          'https://www.facebook.com/sharer/sharer.php?u=${Uri.encodeComponent(link)}',
+                        ),
+                        webOnlyWindowName: '_blank',
+                      );
+                    },
+                  ),
+                  _ShareOptionButton(
+                    label: 'Telegram',
+                    icon: FontAwesomeIcons.telegram,
+                    color: const Color(0xFF26A5E4),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      launchUrl(
+                        Uri.parse(
+                          'https://t.me/share/url?url=${Uri.encodeComponent(link)}&text=${Uri.encodeComponent(shareText)}',
+                        ),
+                        webOnlyWindowName: '_blank',
+                      );
+                    },
+                  ),
+                  _ShareOptionButton(
+                    label: 'Instagram',
+                    icon: FontAwesomeIcons.instagram,
+                    color: const Color(0xFFE1306C),
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      await Clipboard.setData(
+                        ClipboardData(text: '$shareText $link'),
+                      );
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            isArabic
+                                ? '📋 اتنسخ الرابط، الصقه في ستوري أو منشور إنستجرام'
+                                : '📋 Link copied — paste it in an Instagram story or post',
+                          ),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    },
+                  ),
+                  _ShareOptionButton(
+                    label: isArabic ? 'نسخ الرابط' : 'Copy link',
+                    icon: Icons.link_rounded,
+                    color: Colors.black87,
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      await Clipboard.setData(ClipboardData(text: link));
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            isArabic
+                                ? '🔗 تم نسخ رابط السيارة!'
+                                : '🔗 Car link copied!',
+                          ),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
   
@@ -2586,5 +2694,57 @@ AutoOneFooter(isArabic: isArabic),
   );
 }
 
+}
+
+// ============================================================
+// SHARE OPTION BUTTON (دايرة أيقونة + اسم المنصة تحتها)
+// ============================================================
+class _ShareOptionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ShareOptionButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: SizedBox(
+        width: 76,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 26),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
