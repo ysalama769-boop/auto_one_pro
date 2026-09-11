@@ -1225,7 +1225,7 @@ class CarDetailsPage extends StatefulWidget {
                 children: [
                   _ShareOptionButton(
                     label: 'WhatsApp',
-                    icon: FontAwesomeIcons.whatsapp,
+                    faIcon: FontAwesomeIcons.whatsapp,
                     color: const Color(0xFF25D366),
                     onTap: () {
                       Navigator.pop(sheetContext);
@@ -1239,7 +1239,7 @@ class CarDetailsPage extends StatefulWidget {
                   ),
                   _ShareOptionButton(
                     label: 'Facebook',
-                    icon: FontAwesomeIcons.facebook,
+                    faIcon: FontAwesomeIcons.facebook,
                     color: const Color(0xFF1877F2),
                     onTap: () {
                       Navigator.pop(sheetContext);
@@ -1253,7 +1253,7 @@ class CarDetailsPage extends StatefulWidget {
                   ),
                   _ShareOptionButton(
                     label: 'Telegram',
-                    icon: FontAwesomeIcons.telegram,
+                    faIcon: FontAwesomeIcons.telegram,
                     color: const Color(0xFF26A5E4),
                     onTap: () {
                       Navigator.pop(sheetContext);
@@ -1267,7 +1267,7 @@ class CarDetailsPage extends StatefulWidget {
                   ),
                   _ShareOptionButton(
                     label: 'Instagram',
-                    icon: FontAwesomeIcons.instagram,
+                    faIcon: FontAwesomeIcons.instagram,
                     color: const Color(0xFFE1306C),
                     onTap: () async {
                       Navigator.pop(sheetContext);
@@ -2701,13 +2701,15 @@ AutoOneFooter(isArabic: isArabic),
 // ============================================================
 class _ShareOptionButton extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final FaIconData? faIcon;
   final Color color;
   final VoidCallback onTap;
 
   const _ShareOptionButton({
     required this.label,
-    required this.icon,
+    this.icon,
+    this.faIcon,
     required this.color,
     required this.onTap,
   });
@@ -2729,7 +2731,9 @@ class _ShareOptionButton extends StatelessWidget {
                 color: color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 26),
+              child: faIcon != null
+                  ? FaIcon(faIcon, color: color, size: 24)
+                  : Icon(icon, color: color, size: 26),
             ),
             const SizedBox(height: 8),
             Text(
