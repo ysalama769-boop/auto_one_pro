@@ -635,7 +635,7 @@ if (featuredCars.isEmpty && cars.isNotEmpty) {
           child: Transform.scale(
             scale: 0.7,
             child: CarouselArrow(
-              icon: Icons.arrow_forward_ios,
+              icon: Icons.arrow_back_ios_new,
               onTap: () => _scrollBy(_featuredCarsScrollController, 320),
             ),
           ),
@@ -645,7 +645,7 @@ if (featuredCars.isEmpty && cars.isNotEmpty) {
           child: Transform.scale(
             scale: 0.7,
             child: CarouselArrow(
-              icon: Icons.arrow_back_ios_new,
+              icon: Icons.arrow_forward_ios,
               onTap: () => _scrollBy(_featuredCarsScrollController, -320),
             ),
           ),
@@ -1867,7 +1867,7 @@ class _BrandStripState extends State<BrandStrip> {
                 child: Transform.scale(
                   scale: 0.7,
                   child: CarouselArrow(
-                    icon: Icons.arrow_forward_ios,
+                    icon: Icons.arrow_back_ios_new,
                     onTap: () => _scrollBy(_brandsScrollController, 320),
                   ),
                 ),
@@ -1877,7 +1877,7 @@ class _BrandStripState extends State<BrandStrip> {
                 child: Transform.scale(
                   scale: 0.7,
                   child: CarouselArrow(
-                    icon: Icons.arrow_back_ios_new,
+                    icon: Icons.arrow_forward_ios,
                     onTap: () => _scrollBy(_brandsScrollController, -320),
                   ),
                 ),
