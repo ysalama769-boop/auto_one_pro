@@ -586,12 +586,8 @@ if (featuredCars.isEmpty && cars.isNotEmpty) {
 }
 
     // بقت بتتسحب لجنب زي شريط الماركات، بدل ما تتلف على أكتر من صف.
-    // Scrollbar بمعرّف ظاهر دايمًا (thumbVisibility) عشان يبان شريط
-    // السحب بوضوح في نسخة الديسكتوب.
-    return Scrollbar(
+    return styledHorizontalScrollbar(
       controller: _featuredCarsScrollController,
-      thumbVisibility: true,
-      trackVisibility: true,
       child: SingleChildScrollView(
         controller: _featuredCarsScrollController,
         scrollDirection: Axis.horizontal,
@@ -1716,10 +1712,8 @@ class _BrandStripState extends State<BrandStrip> {
 
           const SizedBox(height: 28),
 
-          Scrollbar(
+          styledHorizontalScrollbar(
             controller: _brandsScrollController,
-            thumbVisibility: true,
-            trackVisibility: true,
             child: SingleChildScrollView(
               controller: _brandsScrollController,
               scrollDirection: Axis.horizontal,
