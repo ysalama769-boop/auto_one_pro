@@ -201,278 +201,199 @@ final List<Map<String, String>> slideButtons = [
           // ====================================================
 
         Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 25),
-
+  padding: const EdgeInsets.symmetric(horizontal: 20),
   child: LayoutBuilder(
     builder: (context, constraints) {
-      final isSmall = constraints.maxWidth < 850;
+      final heroHeight = constraints.maxWidth < 850 ? 480.0 : 560.0;
 
       return GestureDetector(
         onHorizontalDragEnd: (details) {
           final velocity = details.primaryVelocity ?? 0;
-
           if (velocity < -100) {
             nextImage();
           } else if (velocity > 100) {
             previousImage();
           }
         },
-
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 550),
-
-          transitionBuilder: (child, animation) {
-            final curved = CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            );
-
-            return FadeTransition(
-              opacity: curved,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.08, 0),
-                  end: Offset.zero,
-                ).animate(curved),
-                child: child,
-              ),
-            );
-          },
-
-          child: Container(
-            key: ValueKey(images[safeImageIndex]),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: SizedBox(
             width: double.infinity,
-
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 20,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-
-            clipBehavior: Clip.antiAlias,
-
-            child: Flex(
-              direction: isSmall
-                  ? Axis.vertical
-                  : Axis.horizontal,
-
+            height: heroHeight,
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-
-                // =================================================
-                // الصورة
-                // =================================================
-
-                Expanded(
-                  flex: isSmall ? 0 : 7,
-
-                  child: SizedBox(
+                // الصورة كاملة (Netflix-style) بدل ما تبقى نص الكارت بس
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 550),
+                  transitionBuilder: (child, animation) {
+                    final curved = CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeInOut,
+                    );
+                    return FadeTransition(
+                      opacity: curved,
+                      child: child,
+                    );
+                  },
+                  child: Image.asset(
+                    images[safeImageIndex],
+                    key: ValueKey(images[safeImageIndex]),
                     width: double.infinity,
-                    height: isSmall ? 350 : 600,
-
-                    child: Image.asset(
-                      images[safeImageIndex],
-
-                      width: double.infinity,
-                      height: double.infinity,
-
-                      fit: BoxFit.cover,
-
-                      errorBuilder:
-                          (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[100],
-                          child: const Center(
-                            child: Icon(
-                              Icons.directions_car,
-                              size: 90,
-                              color: Colors.grey,
-                            ),
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: Icon(
+                            Icons.directions_car,
+                            size: 90,
+                            color: Colors.grey,
                           ),
-                        );
-                      },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // تظليل تدريجي أسود من تحت عشان النص يبقى واضح فوق الصورة
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black87,
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.75],
                     ),
                   ),
                 ),
 
-                // =================================================
-                // الجانب الأبيض + اللوجو
-                // =================================================
-
-                Expanded(
-                  flex: isSmall ? 0 : 4,
-
-                  child: Container(
-                    width: double.infinity,
-                    color: Colors.white,
-
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 25,
-                    ),
-
+                // النص والشعار فوق الصورة مباشرة
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(28, 20, 28, 26),
                     child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
-
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-
-                        // اللوجو الحقيقي
-                       Image.asset(
-  'assets/logo-autoone.png',
-  width: isSmall ? 130 : 165,
-  height: isSmall ? 75: 90,
-  fit: BoxFit.contain,
-),
-
-                        const SizedBox(height: 10),
-
+                        Image.asset(
+                          'assets/logo-autoone.png',
+                          width: 120,
+                          height: 68,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 8),
                         Text(
-                          widget.isArabic
-                              ? 'معرض سيارات'
-                              : 'CAR DEALERSHIP',
-
+                          widget.isArabic ? 'معرض سيارات' : 'CAR DEALERSHIP',
                           textAlign: TextAlign.center,
-
                           style: const TextStyle(
-                            fontSize: 17,
-                            color: Colors.grey,
+                            fontSize: 14,
+                            color: Colors.white70,
                             fontWeight: FontWeight.w600,
+                            letterSpacing: 1,
                           ),
                         ),
-
-                        const SizedBox(height: 25),
-
+                        const SizedBox(height: 14),
                         Text(
                           widget.isArabic
-                              ? slideTexts[currentImage]['ar']!
-                              : slideTexts[currentImage]['en']!,
-
+                              ? slideTexts[safeImageIndex]['ar']!
+                              : slideTexts[safeImageIndex]['en']!,
                           textAlign: TextAlign.center,
-
                           style: const TextStyle(
                             fontSize: 26,
                             height: 1.3,
                             fontWeight: FontWeight.w900,
-                            color: Color.fromARGB(255, 149, 138, 138),
+                            color: Colors.white,
                           ),
                         ),
-
-                        const SizedBox(height: 14),
-
+                        const SizedBox(height: 10),
                         Text(
                           widget.isArabic
-                              ? slideDescriptions[currentImage]['ar']!
-                              : slideDescriptions[currentImage]['en']!,
-
+                              ? slideDescriptions[safeImageIndex]['ar']!
+                              : slideDescriptions[safeImageIndex]['en']!,
                           textAlign: TextAlign.center,
-
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 15,
                             height: 1.6,
-                            color: Colors.black54,
+                            color: Colors.white70,
                           ),
                         ),
-
-                        const SizedBox(height: 22),
-
-                       
-
-                        const SizedBox(height: 20),
-
+                        const SizedBox(height: 16),
                         Container(
                           height: 4,
-                          width: 80,
-
+                          width: 70,
                           decoration: BoxDecoration(
                             color: Colors.redAccent,
-                            borderRadius:
-                                BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            images.length,
+                            (index) {
+                              final isActive = index == currentImage;
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 250),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                width: isActive ? 22 : 7,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  color: isActive
+                                      ? Colors.redAccent
+                                      : Colors.white38,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
+
+                // سهمين على حافتي الصورة (زي باقي السلايدرات في الصفحة)
+                Positioned(
+                  right: 4,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: Transform.scale(
+                      scale: 0.85,
+                      child: CarouselArrow(
+                        icon: Icons.arrow_back_ios_new,
+                        onTap: previousImage,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 4,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: Transform.scale(
+                      scale: 0.85,
+                      child: CarouselArrow(
+                        icon: Icons.arrow_forward_ios,
+                        onTap: nextImage,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-      );
-    },
-  ),
-),
-
-          
-          const SizedBox(height: 25),
-
-          // ====================================================
-          // ARROWS
-          // ====================================================
-
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
-
-            children: [
-             Transform.scale(
-  scale: 0.7,
-  child: CarouselArrow(
-    icon: Icons.arrow_back_ios_new,
-    onTap: previousImage,
-  ),
-),
-
-Transform.scale(
-  scale: 0.7,
-  child: CarouselArrow(
-    icon: Icons.arrow_forward_ios,
-    onTap: nextImage,
-  ),
-),
-
-const SizedBox(width: 8),
-
-Text(
-  '${safeImageIndex + 1} / ${images.length}',
-  style: const TextStyle(
-    fontWeight: FontWeight.bold,
-    color: Colors.grey,
-  ),
-),
-
-const SizedBox(width: 8),
-
-
-            ],
-          ),
-
-          const SizedBox(height: 18),
-
-Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: List.generate(
-    images.length,
-    (index) {
-      final isActive = index == currentImage;
-
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        margin: const EdgeInsets.symmetric(
-          horizontal: 4,
-        ),
-        width: isActive ? 24 : 8,
-        height: 8,
-        decoration: BoxDecoration(
-          color: isActive
-              ? Colors.red
-              : Colors.black26,
-          borderRadius: BorderRadius.circular(20),
         ),
       );
     },
@@ -632,21 +553,49 @@ if (featuredCars.isEmpty && cars.isNotEmpty) {
         ),
         Positioned(
           right: 0,
-          child: Transform.scale(
-            scale: 0.7,
-            child: CarouselArrow(
-              icon: Icons.arrow_back_ios_new,
-              onTap: () => _scrollBy(_featuredCarsScrollController, 320),
+          top: 0,
+          bottom: 14,
+          child: Container(
+            width: 60,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0),
+                  Colors.white.withValues(alpha: 0.9),
+                ],
+              ),
+            ),
+            child: Transform.scale(
+              scale: 0.65,
+              child: CarouselArrow(
+                icon: Icons.arrow_back_ios_new,
+                onTap: () => _scrollBy(_featuredCarsScrollController, 320),
+              ),
             ),
           ),
         ),
         Positioned(
           left: 0,
-          child: Transform.scale(
-            scale: 0.7,
-            child: CarouselArrow(
-              icon: Icons.arrow_forward_ios,
-              onTap: () => _scrollBy(_featuredCarsScrollController, -320),
+          top: 0,
+          bottom: 14,
+          child: Container(
+            width: 60,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.9),
+                  Colors.white.withValues(alpha: 0),
+                ],
+              ),
+            ),
+            child: Transform.scale(
+              scale: 0.65,
+              child: CarouselArrow(
+                icon: Icons.arrow_forward_ios,
+                onTap: () => _scrollBy(_featuredCarsScrollController, -320),
+              ),
             ),
           ),
         ),
@@ -1864,21 +1813,49 @@ class _BrandStripState extends State<BrandStrip> {
               ),
               Positioned(
                 right: 0,
-                child: Transform.scale(
-                  scale: 0.7,
-                  child: CarouselArrow(
-                    icon: Icons.arrow_back_ios_new,
-                    onTap: () => _scrollBy(_brandsScrollController, 320),
+                top: 0,
+                bottom: 14,
+                child: Container(
+                  width: 60,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: 0),
+                        Colors.white.withValues(alpha: 0.9),
+                      ],
+                    ),
+                  ),
+                  child: Transform.scale(
+                    scale: 0.65,
+                    child: CarouselArrow(
+                      icon: Icons.arrow_back_ios_new,
+                      onTap: () => _scrollBy(_brandsScrollController, 320),
+                    ),
                   ),
                 ),
               ),
               Positioned(
                 left: 0,
-                child: Transform.scale(
-                  scale: 0.7,
-                  child: CarouselArrow(
-                    icon: Icons.arrow_forward_ios,
-                    onTap: () => _scrollBy(_brandsScrollController, -320),
+                top: 0,
+                bottom: 14,
+                child: Container(
+                  width: 60,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: 0.9),
+                        Colors.white.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                  child: Transform.scale(
+                    scale: 0.65,
+                    child: CarouselArrow(
+                      icon: Icons.arrow_forward_ios,
+                      onTap: () => _scrollBy(_brandsScrollController, -320),
+                    ),
                   ),
                 ),
               ),
