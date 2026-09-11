@@ -307,6 +307,7 @@ class _AutoOneShellState extends State<AutoOneShell> {
 
       child: Scaffold(
         backgroundColor: const Color(0xfff5f5f5),
+        extendBodyBehindAppBar: true,
 
         // ======================================================
         // TOP BAR
@@ -318,6 +319,7 @@ class _AutoOneShellState extends State<AutoOneShell> {
           child: AutoOneHeader(
             isArabic: widget.isArabic,
             showCars: showCars,
+            transparent: !showCars,
 
             onHome: openHome,
            onCars: () => openCars(),

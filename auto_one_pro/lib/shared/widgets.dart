@@ -87,6 +87,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
 class AutoOneHeader extends StatelessWidget {
   final bool isArabic;
   final bool showCars;
+  final bool transparent;
 
   final VoidCallback onHome;
   final VoidCallback onCars;
@@ -97,6 +98,7 @@ class AutoOneHeader extends StatelessWidget {
     super.key,
     required this.isArabic,
     required this.showCars,
+    this.transparent = false,
     required this.onHome,
     required this.onCars,
     required this.onLanguage,
@@ -127,7 +129,20 @@ class AutoOneHeader extends StatelessWidget {
     final isMobile =
                  MediaQuery.of(context).size.width < 700;
     return Container(
-      color: const Color.fromARGB(255, 238, 221, 221),
+      decoration: transparent
+          ? BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.35),
+                  Colors.transparent,
+                ],
+              ),
+            )
+          : const BoxDecoration(
+              color: Color.fromARGB(255, 238, 221, 221),
+            ),
 
       child: SafeArea(
         child: Padding(
@@ -162,6 +177,7 @@ InkWell(
   HeaderButton(
     title: isArabic ? 'الرئيسية' : 'HOME',
     active: !showCars,
+    lightText: transparent,
     onTap: onHome,
   ),
 
@@ -170,6 +186,7 @@ InkWell(
   HeaderButton(
     title: isArabic ? 'المعرض' : 'CARS',
     active: showCars,
+    lightText: transparent,
     onTap: onCars,
   ),
 
@@ -214,8 +231,10 @@ InkWell(
       ),
       child: Text(
         isArabic ? 'EN' : 'AR',
-        style: const TextStyle(
-          color: Color.fromARGB(255, 12, 12, 12),
+        style: TextStyle(
+          color: transparent
+              ? Colors.white
+              : const Color.fromARGB(255, 12, 12, 12),
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -313,12 +332,14 @@ if (isMobile)
 class HeaderButton extends StatelessWidget {
   final String title;
   final bool active;
+  final bool lightText;
   final VoidCallback onTap;
 
   const HeaderButton({
     super.key,
     required this.title,
     required this.active,
+    this.lightText = false,
     required this.onTap,
   });
 
@@ -352,8 +373,10 @@ class HeaderButton extends StatelessWidget {
         child: Text(
           title,
 
-          style: const TextStyle(
-            color: Color.fromARGB(255, 0, 0, 0),
+          style: TextStyle(
+            color: (lightText && !active)
+                ? Colors.white
+                : const Color.fromARGB(255, 0, 0, 0),
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),

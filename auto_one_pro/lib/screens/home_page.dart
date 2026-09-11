@@ -184,15 +184,15 @@ final List<Map<String, String>> slideButtons = [
     return SingleChildScrollView(
       child: Column(
         children: [
-          const SizedBox(height: 35),
-
           // ====================================================
           // CAROUSEL
           // ====================================================
 
         LayoutBuilder(
     builder: (context, constraints) {
-      final heroHeight = constraints.maxWidth < 850 ? 480.0 : 560.0;
+      // بقت بتاخد ارتفاع الشاشة كامل عشان الهيدر يبان شفاف فوقها
+      // بدل ما تكون مربوطة بارتفاع ثابت تحت الهيدر.
+      final heroHeight = MediaQuery.of(context).size.height;
 
       return GestureDetector(
         onHorizontalDragEnd: (details) {
@@ -258,19 +258,8 @@ final List<Map<String, String>> slideButtons = [
                   ),
                 ),
 
-                // اللوجو صغير في مكان مميز (أعلى الصورة) بدل ما يكون
-                // كبير في نص الكارت
-                Positioned(
-                  top: 18,
-                  left: widget.isArabic ? null : 18,
-                  right: widget.isArabic ? 18 : null,
-                  child: Image.asset(
-                    'assets/logo-autoone.png',
-                    width: 70,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  ),
-                ),
+                // (اللوجو بقى ظاهر أوتوماتيك من الهيدر الشفاف اللي بيطفو
+                // فوق الصورة، فمحتاجين لوجو تاني منفصل هنا)
 
                 // النص فوق الصورة مباشرة
                 Positioned(
