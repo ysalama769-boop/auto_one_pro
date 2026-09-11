@@ -583,39 +583,25 @@ if (featuredCars.isEmpty && cars.isNotEmpty) {
   featuredCars.addAll(cars.take(5));
 }
 
-    int columns = 1;
-
-    if (constraints.maxWidth >= 1400) {
-      columns = 5;
-    } else if (constraints.maxWidth >= 1100) {
-      columns = 4;
-    } else if (constraints.maxWidth >= 800) {
-      columns = 2;
-    } else {
-      columns = 1;
-    }
-
-return GridView.builder(
-  shrinkWrap: true,
-  physics: const NeverScrollableScrollPhysics(),
-
-  itemCount: featuredCars.length,
-
-  gridDelegate:
-      SliverGridDelegateWithFixedCrossAxisCount(
-    crossAxisCount: columns,
-    crossAxisSpacing: 16,
-    mainAxisSpacing: 20,
-    childAspectRatio: 0.66,
-  ),
-
-  itemBuilder: (context, index) {
-    return FeaturedCarCard(
-      car: featuredCars[index],
-      isArabic: widget.isArabic,
+    // بقت بتتسحب لجنب زي شريط الماركات، بدل ما تتلف على أكتر من صف.
+    // على الديسكتوب، Flutter بيظهر تلقائيًا شريط سحب (scrollbar) تحتها.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: featuredCars.map((car) {
+          return Padding(
+            padding: const EdgeInsetsDirectional.only(end: 16),
+            child: SizedBox(
+              width: 260,
+              child: FeaturedCarCard(
+                car: car,
+                isArabic: widget.isArabic,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
-  },
-);
         },
       ),
     ],
