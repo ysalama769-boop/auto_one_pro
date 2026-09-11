@@ -57,6 +57,21 @@ void dispose() {
   super.dispose();
 }
 
+// بيحرّك أي شريط بيتسحب لجنب (سيارات مميزة أو الماركات) خطوة لقدام
+// أو لورا لما حد يدوس على السهم، بحركة سلسة بدل قفزة مفاجئة.
+void _scrollBy(ScrollController controller, double delta) {
+  if (!controller.hasClients) return;
+  final target = (controller.offset + delta).clamp(
+    0.0,
+    controller.position.maxScrollExtent,
+  );
+  controller.animateTo(
+    target,
+    duration: const Duration(milliseconds: 350),
+    curve: Curves.easeOut,
+  );
+}
+
   // ==========================================================
   // صور الواجهة
   //
@@ -572,7 +587,30 @@ Container(
         ),
       ),
 
-      const SizedBox(height: 35),
+      const SizedBox(height: 20),
+
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Transform.scale(
+            scale: 0.7,
+            child: CarouselArrow(
+              icon: Icons.arrow_back_ios_new,
+              onTap: () => _scrollBy(_featuredCarsScrollController, -320),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Transform.scale(
+            scale: 0.7,
+            child: CarouselArrow(
+              icon: Icons.arrow_forward_ios,
+              onTap: () => _scrollBy(_featuredCarsScrollController, 320),
+            ),
+          ),
+        ],
+      ),
+
+      const SizedBox(height: 15),
 
       LayoutBuilder(
   builder: (context, constraints) {
@@ -1614,6 +1652,19 @@ class _BrandStripState extends State<BrandStrip> {
     super.dispose();
   }
 
+  void _scrollBy(ScrollController controller, double delta) {
+    if (!controller.hasClients) return;
+    final target = (controller.offset + delta).clamp(
+      0.0,
+      controller.position.maxScrollExtent,
+    );
+    controller.animateTo(
+      target,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOut,
+    );
+  }
+
   Future<void> _loadBrands() async {
     try {
       final response = await Supabase.instance.client
@@ -1710,7 +1761,30 @@ class _BrandStripState extends State<BrandStrip> {
             ),
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Transform.scale(
+                scale: 0.7,
+                child: CarouselArrow(
+                  icon: Icons.arrow_back_ios_new,
+                  onTap: () => _scrollBy(_brandsScrollController, -320),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Transform.scale(
+                scale: 0.7,
+                child: CarouselArrow(
+                  icon: Icons.arrow_forward_ios,
+                  onTap: () => _scrollBy(_brandsScrollController, 320),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 15),
 
           styledHorizontalScrollbar(
             controller: _brandsScrollController,
