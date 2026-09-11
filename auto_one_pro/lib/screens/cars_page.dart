@@ -49,6 +49,12 @@ void initState() {
   double? maxPrice;
   String sortOption = 'newest'; // newest, price_asc, price_desc
 
+  // عرض السيارات على دفعات (25 في كل مرة) بدل ما نعرضهم كلهم مرة
+  // واحدة، وده بيسرّع فتح الصفحة لما يكون عدد السيارات كبير.
+  static const int _carsPerPage = 25;
+  int _visibleCarsCount = _carsPerPage;
+  String _lastFilterSignature = '';
+
   final TextEditingController controller =
       TextEditingController();
 
@@ -1415,6 +1421,21 @@ String _searchAlias(Car car) {
       columns = 1;
     }
 
+              final allFilteredCars = filteredCars;
+
+              // لو الفلتر أو البحث اتغيّر، نرجع نعرض أول 25 سيارة بس
+              // تاني بدل ما نفضل عارضين نفس العدد القديم على فلتر جديد.
+              final currentSignature =
+                  '$search|$selectedBrand|$selectedType|$selectedCategory|'
+                  '$selectedModel|$showOffers|$minPrice|$maxPrice|$sortOption';
+              if (currentSignature != _lastFilterSignature) {
+                _lastFilterSignature = currentSignature;
+                _visibleCarsCount = _carsPerPage;
+              }
+
+              final visibleCars =
+                  allFilteredCars.take(_visibleCarsCount).toList();
+
               if (filteredCars.isEmpty) {
                 return Container(
                   width: double.infinity,
@@ -1502,29 +1523,42 @@ String _searchAlias(Car car) {
                 );
               }
 
-              return GridView.builder(
-                shrinkWrap: true,
-                physics:
-                    const NeverScrollableScrollPhysics(),
-                itemCount: filteredCars.length,
-                gridDelegate:
-                    SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20,
-                  childAspectRatio: 0.66,
-                ),
-                itemBuilder: (context, index) {
-                  final car = filteredCars[index];
+              return Column(
+                children: [
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: visibleCars.length,
+                    gridDelegate:
+                        SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                      childAspectRatio: 0.66,
+                    ),
+                    itemBuilder: (context, index) {
+                      final car = visibleCars[index];
 
-                 return FeaturedCarCard(
-  key: ValueKey(
-    '${car.name}-${car.year}',
-  ),
-  car: car,
-  isArabic: widget.isArabic,
-);
-                },
+                      return FeaturedCarCard(
+                        key: ValueKey('${car.name}-${car.year}'),
+                        car: car,
+                        isArabic: widget.isArabic,
+                      );
+                    },
+                  ),
+                  if (_visibleCarsCount < allFilteredCars.length) ...[
+                    const SizedBox(height: 30),
+                    _ShowMoreCarsButton(
+                      isArabic: widget.isArabic,
+                      remaining: allFilteredCars.length - _visibleCarsCount,
+                      onTap: () {
+                        setState(() {
+                          _visibleCarsCount += _carsPerPage;
+                        });
+                      },
+                    ),
+                  ],
+                ],
               );
             },
           ),
@@ -1536,4 +1570,75 @@ String _searchAlias(Car car) {
     );
   }
    }
+
+// ============================================================
+// SHOW MORE CARS BUTTON (بهوية اوتو ون - نفس تدرج زرار الحجز)
+// ============================================================
+class _ShowMoreCarsButton extends StatelessWidget {
+  final bool isArabic;
+  final int remaining;
+  final VoidCallback onTap;
+
+  const _ShowMoreCarsButton({
+    required this.isArabic,
+    required this.remaining,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: HoverLift(
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 28,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE53935), Color(0xFFB71C1C)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.red.withValues(alpha: 0.3),
+                  blurRadius: 16,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.expand_more_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isArabic
+                      ? 'عرض المزيد ($remaining سيارة تانية)'
+                      : 'Show more ($remaining more)',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
