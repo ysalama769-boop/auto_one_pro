@@ -869,351 +869,175 @@ Widget _buildAutoOneContactSection(BuildContext context) {
     }
   }
 
-  return Container(
-    width: double.infinity,
-    margin: const EdgeInsets.symmetric(horizontal: 20),
-    padding: const EdgeInsets.symmetric(
-      horizontal: 25,
-      vertical: 35,
+  final contactOptions = <_QuickContactOption>[
+    _QuickContactOption(
+      label: widget.isArabic ? 'واتساب' : 'WhatsApp',
+      icon: FontAwesomeIcons.whatsapp,
+      color: const Color(0xFF25D366),
+      onTap: () => openLink('https://wa.me/966541577894'),
     ),
-    decoration: BoxDecoration(
-      color: const Color(0xFF0B0B0B),
-      borderRadius: BorderRadius.circular(25),
+    _QuickContactOption(
+      label: 'Instagram',
+      icon: FontAwesomeIcons.instagram,
+      color: const Color(0xFFE1306C),
+      onTap: () => openLink('https://www.instagram.com/autoone_sa'),
     ),
+    _QuickContactOption(
+      label: 'TikTok',
+      icon: FontAwesomeIcons.tiktok,
+      color: Colors.black,
+      onTap: () => openLink('https://www.tiktok.com/@autoone_sa'),
+    ),
+    _QuickContactOption(
+      label: 'Facebook',
+      icon: FontAwesomeIcons.facebookF,
+      color: const Color(0xFF1877F2),
+      onTap: () => openLink('https://www.facebook.com/share/1EiuLeeFP7/'),
+    ),
+    _QuickContactOption(
+      label: 'X',
+      icon: FontAwesomeIcons.xTwitter,
+      color: Colors.black,
+      onTap: () => openLink('https://x.com/autoone_sa'),
+    ),
+    _QuickContactOption(
+      label: 'Threads',
+      icon: FontAwesomeIcons.threads,
+      color: Colors.black,
+      onTap: () => openLink('https://www.threads.com/@autoone_sa'),
+    ),
+    _QuickContactOption(
+      label: 'Snapchat',
+      icon: FontAwesomeIcons.snapchat,
+      color: const Color(0xFFFFFC00),
+      onTap: () => openLink('https://www.snapchat.com/add/autoone_sa'),
+    ),
+    _QuickContactOption(
+      label: widget.isArabic ? 'اتصل بنا' : 'Call Us',
+      materialIcon: Icons.phone_rounded,
+      color: Colors.red,
+      onTap: () => openLink('tel:+966541577894'),
+    ),
+  ];
 
-    child: Column(
-      children: [
-
-        const Icon(
-          Icons.support_agent_rounded,
-          color: Colors.red,
-          size: 45,
-        ),
-
-        const SizedBox(height: 12),
-
-        Text(
-          widget.isArabic
-              ? 'تواصل مع أوتو ون'
-              : 'CONTACT AUTO ONE',
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 26,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        Text(
-          widget.isArabic
-              ? 'تواصل معنا عبر منصاتنا'
-              : 'Connect with us on our platforms',
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white60,
-            fontSize: 14,
-          ),
-        ),
-
-        const SizedBox(height: 28),
-
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-
-            // =================================================
-            // WHATSAPP
-            // =================================================
-
-            ElevatedButton.icon(
-              onPressed: () {
-                openLink(
-                  'https://wa.me/966541577894',
-                );
-              },
-
-              icon: const FaIcon(
-                FontAwesomeIcons.whatsapp,
-                size: 18,
-              ),
-
-              label: Text(
-                widget.isArabic
-                    ? 'واتساب'
-                    : 'WHATSAPP',
-              ),
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF25D366),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                ),
-              ),
+  // زرار واحد بس مكان القسم الكبير اللي كان فيه كل أزرار التواصل
+  // ظاهرة طول الوقت. دلوقتي بتفتح بعد ما تدوس عليه.
+  return Center(
+    child: HoverLift(
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.white,
+            showDragHandle: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-
-            // =================================================
-            // INSTAGRAM
-            // =================================================
-
-            ElevatedButton.icon(
-              onPressed: () {
-                openLink(
-                  'https://www.instagram.com/autoone_sa',
-                );
-              },
-
-              icon: const FaIcon(
-                FontAwesomeIcons.instagram,
-                size: 18,
-              ),
-
-              label: const Text('Instagram'),
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE1306C),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
+            builder: (sheetContext) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.isArabic ? 'تواصل مع أوتو ون' : 'Contact AUTO ONE',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 18,
+                      runSpacing: 18,
+                      children: contactOptions.map((option) {
+                        return InkWell(
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            option.onTap();
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: SizedBox(
+                            width: 76,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: option.color.withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: option.materialIcon != null
+                                      ? Icon(
+                                          option.materialIcon,
+                                          color: option.color,
+                                          size: 26,
+                                        )
+                                      : FaIcon(
+                                          option.icon,
+                                          color: option.color,
+                                          size: 24,
+                                        ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  option.label,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                ),
-              ),
-            ),
-
-            // =================================================
-            // TIKTOK
-            // =================================================
-
-            ElevatedButton.icon(
-              onPressed: () {
-                openLink(
-                  'https://www.tiktok.com/@autoone_sa',
-                );
-              },
-
-              icon: const FaIcon(
-                FontAwesomeIcons.tiktok,
-                size: 18,
-              ),
-
-              label: const Text('TikTok'),
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                  side: const BorderSide(
-                    color: Colors.white30,
-                  ),
-                ),
-              ),
-            ),
-
-            // =================================================
-            // FACEBOOK
-            // =================================================
-
-            ElevatedButton.icon(
-              onPressed: () {
-                openLink(
-                  'https://www.facebook.com/share/1EiuLeeFP7/',
-                );
-              },
-
-              icon: const FaIcon(
-                FontAwesomeIcons.facebookF,
-                size: 18,
-              ),
-
-              label: const Text('Facebook'),
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1877F2),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                ),
-              ),
-            ),
-
-            // =================================================
-            // X
-            // =================================================
-
-            ElevatedButton.icon(
-              onPressed: () {
-                openLink(
-                  'https://x.com/autoone_sa',
-                );
-              },
-
-              icon: const FaIcon(
-                FontAwesomeIcons.xTwitter,
-                size: 18,
-              ),
-
-              label: const Text('X'),
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                  side: const BorderSide(
-                    color: Colors.white30,
-                  ),
-                ),
-              ),
-            ),
-
-            // =================================================
-            // THREADS
-            // =================================================
-
-            ElevatedButton.icon(
-              onPressed: () {
-                openLink(
-                  'https://www.threads.com/@autoone_sa',
-                );
-              },
-
-              icon: const FaIcon(
-                FontAwesomeIcons.threads,
-                size: 18,
-              ),
-
-              label: const Text('Threads'),
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                  side: const BorderSide(
-                    color: Colors.white30,
-                  ),
-                ),
-              ),
-            ),
-
-            // =================================================
-            // SNAPCHAT
-            // =================================================
-
-            ElevatedButton.icon(
-              onPressed: () {
-                openLink(
-                  'https://www.snapchat.com/add/autoone_sa',
-                );
-              },
-
-              icon: const FaIcon(
-                FontAwesomeIcons.snapchat,
-                size: 18,
-              ),
-
-              label: const Text('Snapchat'),
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFFC00),
-                foregroundColor: Colors.black,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                ),
-              ),
-            ),
-
-            // =================================================
-            // CALL
-            // =================================================
-
-            ElevatedButton.icon(
-              onPressed: () {
-                openLink(
-                  'tel:+966541577894',
-                );
-              },
-
-              icon: const Icon(
-                Icons.phone_rounded,
-                size: 18,
-              ),
-
-              label: Text(
-                widget.isArabic
-                    ? 'اتصل بنا'
-                    : 'CALL US',
-              ),
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 25),
-
-        Container(
-          width: 45,
-          height: 3,
+              );
+            },
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(10),
+            color: const Color(0xFF0B0B0B),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.support_agent_rounded,
+                color: Colors.red,
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                widget.isArabic ? 'تواصل سريع' : 'Quick Contact',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     ),
   );
 }
+
 // ============================================================
 // OUR BRANCHES
 // ============================================================
@@ -2462,3 +2286,19 @@ Widget _lightspecDivider() {
   }
 }
 
+
+class _QuickContactOption {
+  final String label;
+  final FaIconData? icon;
+  final IconData? materialIcon;
+  final Color color;
+  final VoidCallback onTap;
+
+  _QuickContactOption({
+    required this.label,
+    this.icon,
+    this.materialIcon,
+    required this.color,
+    required this.onTap,
+  });
+}

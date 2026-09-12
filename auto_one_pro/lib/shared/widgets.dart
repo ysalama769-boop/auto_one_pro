@@ -1088,7 +1088,7 @@ class AutoOneFooter extends StatelessWidget {
       child: Container(
         width: double.infinity,
         color: kHeaderColor,
-        padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
+        padding: const EdgeInsets.only(top: 32),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1100),
