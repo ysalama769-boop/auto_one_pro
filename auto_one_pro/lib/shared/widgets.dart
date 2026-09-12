@@ -609,23 +609,67 @@ class CompareButton extends StatelessWidget {
       builder: (context, list, _) {
         final isSelected = list.contains(carId);
 
+        // شارة دهبية صغيرة بدل الدايرة العادية، عشان تبان مميزة
+        // زي وسام على الكارت.
         return HoverLift(
-          scale: 1.15,
-          borderRadius: BorderRadius.circular(30),
+          scale: 1.08,
+          borderRadius: BorderRadius.circular(20),
           child: Material(
-            color: isSelected ? Colors.blue : Colors.white,
-            shape: const CircleBorder(),
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
             child: InkWell(
-              customBorder: const CircleBorder(),
+              borderRadius: BorderRadius.circular(20),
               onTap: () => toggleCompare(carId!),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  isSelected
-                      ? Icons.check_box_rounded
-                      : Icons.add_box_outlined,
-                  color: isSelected ? Colors.white : Colors.black45,
-                  size: 15,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isSelected
+                        ? [
+                            const Color(0xFFFFD700),
+                            const Color(0xFFB8860B),
+                          ]
+                        : [
+                            const Color(0xFFFFE9A8),
+                            const Color(0xFFD4A017),
+                          ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 1.2,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 5,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isSelected
+                          ? Icons.check_circle_rounded
+                          : Icons.workspace_premium_rounded,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 3),
+                    const Text(
+                      'قارن',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

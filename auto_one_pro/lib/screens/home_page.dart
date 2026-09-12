@@ -190,10 +190,7 @@ final List<Map<String, String>> slideButtons = [
           // CAROUSEL
           // ====================================================
 
-        Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 25),
-
-  child: LayoutBuilder(
+        LayoutBuilder(
     builder: (context, constraints) {
       final isSmall = constraints.maxWidth < 850;
 
@@ -312,31 +309,15 @@ final List<Map<String, String>> slideButtons = [
 
                       children: [
 
-                        // اللوجو الحقيقي
+                        // اللوجو الحقيقي (بقى أكبر شوية)
                        Image.asset(
   'assets/logo-autoone.png',
-  width: isSmall ? 130 : 165,
-  height: isSmall ? 75: 90,
+  width: isSmall ? 160 : 200,
+  height: isSmall ? 92 : 112,
   fit: BoxFit.contain,
 ),
 
-                        const SizedBox(height: 10),
-
-                        Text(
-                          widget.isArabic
-                              ? 'معرض سيارات'
-                              : 'CAR DEALERSHIP',
-
-                          textAlign: TextAlign.center,
-
-                          style: const TextStyle(
-                            fontSize: 17,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 22),
 
                         Text(
                           widget.isArabic
@@ -352,26 +333,6 @@ final List<Map<String, String>> slideButtons = [
                             color: Color.fromARGB(255, 149, 138, 138),
                           ),
                         ),
-
-                        const SizedBox(height: 14),
-
-                        Text(
-                          widget.isArabic
-                              ? slideDescriptions[currentImage]['ar']!
-                              : slideDescriptions[currentImage]['en']!,
-
-                          textAlign: TextAlign.center,
-
-                          style: const TextStyle(
-                            fontSize: 16,
-                            height: 1.6,
-                            color: Colors.black54,
-                          ),
-                        ),
-
-                        const SizedBox(height: 22),
-
-                       
 
                         const SizedBox(height: 20),
 
@@ -467,7 +428,6 @@ Row(
       );
     },
   ),
-),
 BrandStrip(
   isArabic: widget.isArabic,
   onBrandTap: (brand) {
@@ -2418,90 +2378,7 @@ Text(
                   ),
                 ),
 
-                const SizedBox(height: 5),
-
-                // =================================================
-                // BUTTONS
-                // =================================================
-
-                Row(
-                  children: [
-
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _openWhatsApp,
-                        icon: const FaIcon(
-                          FontAwesomeIcons.whatsapp,
-                          size: 15,
-                        ),
-                        label: Text(
-                          isArabic
-                              ? 'واتساب'
-                              : 'WHATSAPP',
-                        ),
-                        style: ElevatedButton.styleFrom(
-backgroundColor: const Color(0xff25D366),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 11,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(11),
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 9),
-
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: onDetails ??
-                            () {
-                              Navigator.push(
-                                context,
-                                smoothRoute(
-                                  CarDetailsPage(
-                                    car: car,
-                                    isArabic: isArabic,
-                                  ),
-                                ),
-                              );
-                            },
-                        icon: const Icon(
-                          Icons.description_outlined,
-                          size: 15,
-                        ),
-                        label: Text(
-                          isArabic
-                              ? 'التفاصيل'
-                              : 'DETAILS',
-                        ),
-                      style: ElevatedButton.styleFrom(
-  backgroundColor: const Color(0xff0B0B0B),
-  foregroundColor: Colors.white,
-  elevation: 0,
-  padding: const EdgeInsets.symmetric(
-    vertical: 9,
-  ),
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(11),
-  ),
-  textStyle: const TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w800,
-  ),
-),
-                      ),
-                    ),
-                  ],
-                ),
+                const SizedBox(height: 3),
               ],
             ),
           ),
