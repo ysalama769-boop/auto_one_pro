@@ -184,191 +184,290 @@ final List<Map<String, String>> slideButtons = [
     return SingleChildScrollView(
       child: Column(
         children: [
+          const SizedBox(height: 35),
+
           // ====================================================
           // CAROUSEL
           // ====================================================
 
-        LayoutBuilder(
+        Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 25),
+
+  child: LayoutBuilder(
     builder: (context, constraints) {
-      // بقت بتاخد ارتفاع الشاشة كامل عشان الهيدر يبان شفاف فوقها
-      // بدل ما تكون مربوطة بارتفاع ثابت تحت الهيدر.
-      final heroHeight = MediaQuery.of(context).size.height;
+      final isSmall = constraints.maxWidth < 850;
 
       return GestureDetector(
         onHorizontalDragEnd: (details) {
           final velocity = details.primaryVelocity ?? 0;
+
           if (velocity < -100) {
             nextImage();
           } else if (velocity > 100) {
             previousImage();
           }
         },
-        child: SizedBox(
-            width: double.infinity,
-            height: heroHeight,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // الصورة كاملة (Netflix-style) بدل ما تبقى نص الكارت بس
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 550),
-                  transitionBuilder: (child, animation) {
-                    final curved = CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeInOut,
-                    );
-                    return FadeTransition(
-                      opacity: curved,
-                      child: child,
-                    );
-                  },
-                  child: Image.asset(
-                    images[safeImageIndex],
-                    key: ValueKey(images[safeImageIndex]),
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: Icon(
-                            Icons.directions_car,
-                            size: 90,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
 
-                // تظليل تدريجي أسود من تحت عشان النص يبقى واضح فوق الصورة
-                Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black87,
-                        Colors.transparent,
-                      ],
-                      stops: [0.0, 0.75],
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 550),
+
+          transitionBuilder: (child, animation) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            );
+
+            return FadeTransition(
+              opacity: curved,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.08, 0),
+                  end: Offset.zero,
+                ).animate(curved),
+                child: child,
+              ),
+            );
+          },
+
+          child: Container(
+            key: ValueKey(images[safeImageIndex]),
+            width: double.infinity,
+
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+
+            clipBehavior: Clip.antiAlias,
+
+            child: Flex(
+              direction: isSmall
+                  ? Axis.vertical
+                  : Axis.horizontal,
+
+              children: [
+
+                // =================================================
+                // الصورة
+                // =================================================
+
+                Expanded(
+                  flex: isSmall ? 0 : 7,
+
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: isSmall ? 350 : 600,
+
+                    child: Image.asset(
+                      images[safeImageIndex],
+
+                      width: double.infinity,
+                      height: double.infinity,
+
+                      fit: BoxFit.cover,
+
+                      errorBuilder:
+                          (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[100],
+                          child: const Center(
+                            child: Icon(
+                              Icons.directions_car,
+                              size: 90,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
 
-                // (اللوجو بقى ظاهر أوتوماتيك من الهيدر الشفاف اللي بيطفو
-                // فوق الصورة، فمحتاجين لوجو تاني منفصل هنا)
+                // =================================================
+                // الجانب الأبيض + اللوجو
+                // =================================================
 
-                // النص فوق الصورة مباشرة
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(28, 20, 28, 26),
+                Expanded(
+                  flex: isSmall ? 0 : 4,
+
+                  child: Container(
+                    width: double.infinity,
+                    color: Colors.white,
+
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 25,
+                    ),
+
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment:
+                          MainAxisAlignment.center,
+
                       children: [
+
+                        // اللوجو الحقيقي
+                       Image.asset(
+  'assets/logo-autoone.png',
+  width: isSmall ? 130 : 165,
+  height: isSmall ? 75: 90,
+  fit: BoxFit.contain,
+),
+
+                        const SizedBox(height: 10),
+
                         Text(
                           widget.isArabic
-                              ? slideTexts[safeImageIndex]['ar']!
-                              : slideTexts[safeImageIndex]['en']!,
+                              ? 'معرض سيارات'
+                              : 'CAR DEALERSHIP',
+
                           textAlign: TextAlign.center,
+
+                          style: const TextStyle(
+                            fontSize: 17,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+
+                        const SizedBox(height: 25),
+
+                        Text(
+                          widget.isArabic
+                              ? slideTexts[currentImage]['ar']!
+                              : slideTexts[currentImage]['en']!,
+
+                          textAlign: TextAlign.center,
+
                           style: const TextStyle(
                             fontSize: 26,
                             height: 1.3,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                            color: Color.fromARGB(255, 149, 138, 138),
                           ),
                         ),
-                        const SizedBox(height: 10),
+
+                        const SizedBox(height: 14),
+
                         Text(
                           widget.isArabic
-                              ? slideDescriptions[safeImageIndex]['ar']!
-                              : slideDescriptions[safeImageIndex]['en']!,
+                              ? slideDescriptions[currentImage]['ar']!
+                              : slideDescriptions[currentImage]['en']!,
+
                           textAlign: TextAlign.center,
+
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 16,
                             height: 1.6,
-                            color: Colors.white70,
+                            color: Colors.black54,
                           ),
                         ),
-                        const SizedBox(height: 16),
+
+                        const SizedBox(height: 22),
+
+                       
+
+                        const SizedBox(height: 20),
+
                         Container(
                           height: 4,
-                          width: 70,
+                          width: 80,
+
                           decoration: BoxDecoration(
                             color: Colors.redAccent,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            images.length,
-                            (index) {
-                              final isActive = index == currentImage;
-                              return AnimatedContainer(
-                                duration: const Duration(milliseconds: 250),
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                width: isActive ? 22 : 7,
-                                height: 7,
-                                decoration: BoxDecoration(
-                                  color: isActive
-                                      ? Colors.redAccent
-                                      : Colors.white38,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              );
-                            },
+                            borderRadius:
+                                BorderRadius.circular(20),
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                ),
-
-                // سهمين على حافتي الصورة (زي باقي السلايدرات في الصفحة)
-                Positioned(
-                  right: 4,
-                  top: 0,
-                  bottom: 0,
-                  child: Center(
-                    child: Transform.scale(
-                      scale: 0.85,
-                      child: CarouselArrow(
-                        icon: Icons.arrow_back_ios_new,
-                        onTap: previousImage,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 4,
-                  top: 0,
-                  bottom: 0,
-                  child: Center(
-                    child: Transform.scale(
-                      scale: 0.85,
-                      child: CarouselArrow(
-                        icon: Icons.arrow_forward_ios,
-                        onTap: nextImage,
-                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
       );
     },
   ),
+),
 
+          
+          const SizedBox(height: 25),
+
+          // ====================================================
+          // ARROWS
+          // ====================================================
+
+          Row(
+            mainAxisAlignment:
+                MainAxisAlignment.center,
+
+            children: [
+             Transform.scale(
+  scale: 0.7,
+  child: CarouselArrow(
+    icon: Icons.arrow_back_ios_new,
+    onTap: previousImage,
+  ),
+),
+
+Transform.scale(
+  scale: 0.7,
+  child: CarouselArrow(
+    icon: Icons.arrow_forward_ios,
+    onTap: nextImage,
+  ),
+),
+
+const SizedBox(width: 8),
+
+Text(
+  '${safeImageIndex + 1} / ${images.length}',
+  style: const TextStyle(
+    fontWeight: FontWeight.bold,
+    color: Colors.grey,
+  ),
+),
+
+const SizedBox(width: 8),
+
+
+            ],
+          ),
+
+          const SizedBox(height: 18),
+
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: List.generate(
+    images.length,
+    (index) {
+      final isActive = index == currentImage;
+
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        margin: const EdgeInsets.symmetric(
+          horizontal: 4,
+        ),
+        width: isActive ? 24 : 8,
+        height: 8,
+        decoration: BoxDecoration(
+          color: isActive
+              ? Colors.red
+              : Colors.black26,
+          borderRadius: BorderRadius.circular(20),
+        ),
+      );
+    },
+  ),
+),
 BrandStrip(
   isArabic: widget.isArabic,
   onBrandTap: (brand) {
