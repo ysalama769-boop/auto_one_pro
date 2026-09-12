@@ -357,7 +357,6 @@ final List<Map<String, String>> slideButtons = [
       );
     },
   ),
-),
 
           
           const SizedBox(height: 25),
@@ -428,6 +427,7 @@ Row(
       );
     },
   ),
+),
 BrandStrip(
   isArabic: widget.isArabic,
   onBrandTap: (brand) {
