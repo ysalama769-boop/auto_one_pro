@@ -1208,16 +1208,6 @@ String _searchAlias(Car car) {
             const SizedBox(height: 20),
           ],
           Text(
-            heroTitle,
-            style: const TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          Text(
             heroSubtitle,
             style: const TextStyle(
               color: Colors.grey,
@@ -1533,7 +1523,7 @@ String _searchAlias(Car car) {
                       crossAxisCount: columns,
                       crossAxisSpacing: 20,
                       mainAxisSpacing: 20,
-                      childAspectRatio: 0.66,
+                      childAspectRatio: 0.8,
                     ),
                     itemBuilder: (context, index) {
                       final car = visibleCars[index];
