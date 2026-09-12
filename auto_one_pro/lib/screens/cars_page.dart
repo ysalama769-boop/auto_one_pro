@@ -51,7 +51,7 @@ void initState() {
 
   // عرض السيارات على دفعات (25 في كل مرة) بدل ما نعرضهم كلهم مرة
   // واحدة، وده بيسرّع فتح الصفحة لما يكون عدد السيارات كبير.
-  static const int _carsPerPage = 25;
+  static const int _carsPerPage = 20;
   int _visibleCarsCount = _carsPerPage;
   String _lastFilterSignature = '';
 
@@ -1228,8 +1228,7 @@ String _searchAlias(Car car) {
 
           Row(
             children: [
-              SizedBox(
-             width: 360,
+              Expanded(
               child: Container(
                  height: 48,
                   decoration: BoxDecoration(
@@ -1623,9 +1622,7 @@ class _ShowMoreCarsButton extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isArabic
-                      ? 'عرض المزيد ($remaining سيارة تانية)'
-                      : 'Show more ($remaining more)',
+                  isArabic ? 'المزيد' : 'More',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
