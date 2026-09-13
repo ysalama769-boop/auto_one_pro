@@ -1055,6 +1055,459 @@ class _CarFormPageState extends State<CarFormPage> {
     setState(() {});
   }
 
+  Future<void> _openSpecsDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              title: Text(isArabic ? 'إدارة المواصفات' : 'Manage specs'),
+              content: SizedBox(
+                width: 480,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: transmissionCtrl,
+                      label: isArabic ? 'ناقل الحركة' : 'Transmission',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: fuelCtrl,
+                      label: isArabic ? 'الوقود' : 'Fuel',
+                    ),
+                  ),
+                ],
+              ),
+              _field(
+                controller: driveCtrl,
+                label: isArabic ? 'نظام الدفع' : 'Drive system',
+              ),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: lengthCtrl,
+                      label: isArabic ? 'الطول (سم)' : 'Length (cm)',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: widthCtrl,
+                      label: isArabic ? 'العرض (سم)' : 'Width (cm)',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: heightCtrl,
+                      label: isArabic ? 'الارتفاع (سم)' : 'Height (cm)',
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: wheelbaseCtrl,
+                      label: isArabic ? 'قاعدة العجلات' : 'Wheelbase',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: trunkCapacityCtrl,
+                      label:
+                          isArabic ? 'سعة صندوق الأمتعة' : 'Trunk capacity',
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+              Divider(color: Colors.grey.shade300),
+              const SizedBox(height: 8),
+
+              Text(
+                isArabic ? 'مواصفات إضافية للقيادة' : 'Extra driving specs',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: horsepowerCtrl,
+                      label: isArabic ? 'قوة المحرك (حصان)' : 'Horsepower',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: torqueCtrl,
+                      label: isArabic ? 'عزم الدوران' : 'Torque',
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: fuelTankCtrl,
+                      label:
+                          isArabic ? 'سعة خزان الوقود' : 'Fuel tank capacity',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: fuelConsumptionCtrl,
+                      label:
+                          isArabic ? 'استهلاك الوقود' : 'Fuel consumption',
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+              Divider(color: Colors.grey.shade300),
+              const SizedBox(height: 8),
+
+              Text(
+                isArabic ? 'التجهيزات والمزايا' : 'Features',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: infotainmentCtrl,
+                      label:
+                          isArabic ? 'نظام الترفيه/الشاشة' : 'Infotainment',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: sunroofCtrl,
+                      label: isArabic ? 'فتحة سقف' : 'Sunroof',
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: cameraSensorsCtrl,
+                      label: isArabic
+                          ? 'كاميرا خلفية + حساسات ركن'
+                          : 'Camera & sensors',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: wirelessChargerCtrl,
+                      label:
+                          isArabic ? 'شاحن لاسلكي' : 'Wireless charger',
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+              Divider(color: Colors.grey.shade300),
+              const SizedBox(height: 8),
+
+              Text(
+                isArabic ? 'الأمان' : 'Safety',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: airbagsCtrl,
+                      label: isArabic
+                          ? 'عدد الوسائد الهوائية'
+                          : 'Number of airbags',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: absSystemCtrl,
+                      label: isArabic ? 'نظام ABS' : 'ABS system',
+                    ),
+                  ),
+                ],
+              ),
+
+                      const SizedBox(height: 8),
+                      Divider(color: Colors.grey.shade300),
+                      const SizedBox(height: 8),
+              const SizedBox(height: 10),
+              Text(
+                isArabic ? 'مواصفات إضافية' : 'Extra specs',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isArabic
+                    ? 'ضيف أي مواصفة عايزها (زي ACC، تسخين المقاعد...) بالاسم والقيمة'
+                    : 'Add any spec (e.g. ACC, Seat heating...) with a name and value',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 10),
+
+              for (var i = 0; i < extraSpecControllers.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: TextFormField(
+                          controller: extraSpecControllers[i].key,
+                          decoration: InputDecoration(
+                            hintText: isArabic ? 'اسم المواصفة' : 'Spec name',
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 4,
+                        child: TextFormField(
+                          controller: extraSpecControllers[i].value,
+                          decoration: InputDecoration(
+                            hintText: isArabic ? 'القيمة' : 'Value',
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          setDialogState(() {
+                            setState(() {
+                              extraSpecControllers.removeAt(i);
+                            });
+                          });
+                        },
+                        icon: const Icon(
+                          Icons.remove_circle_outline_rounded,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              OutlinedButton.icon(
+                onPressed: () {
+                  setDialogState(() {
+                    setState(() {
+                      extraSpecControllers.add(
+                        MapEntry(
+                          TextEditingController(),
+                          TextEditingController(),
+                        ),
+                      );
+                    });
+                  });
+                },
+                icon: const Icon(Icons.add_rounded),
+                label: Text(
+                  isArabic ? 'إضافة مواصفة' : 'Add spec',
+                ),
+              ),
+
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(isArabic ? 'تم' : 'Done'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    setState(() {});
+  }
+
+  Future<void> _openGalleryDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              title: Text(
+                isArabic ? 'إدارة صور المعرض' : 'Manage gallery photos',
+              ),
+              content: SizedBox(
+                width: 420,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+              // ==========================================
+              // EXTRA IMAGES SECTION
+              // ==========================================
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    isArabic ? 'صور إضافية للمعرض' : 'Extra gallery photos',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setDialogState(() {
+                        setState(() {
+                          extraImageControllers.add(TextEditingController());
+                        });
+                      });
+                    },
+                    icon: const Icon(
+                      Icons.add_circle_rounded,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              if (extraImageControllers.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    isArabic
+                        ? 'مفيش صور إضافية، دوسي + عشان تضيفي'
+                        : 'No extra photos, tap + to add one',
+                    style: const TextStyle(color: Colors.black45, fontSize: 12),
+                  ),
+                ),
+              ...extraImageControllers.asMap().entries.map((entry) {
+                final controller = entry.value;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          decoration: InputDecoration(
+                            hintText: isArabic
+                                ? 'رابط صورة إضافية'
+                                : 'Extra image link',
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _isUploadingImage
+                            ? null
+                            : () => _pickAndUploadImage(controller),
+                        icon: const Icon(Icons.upload_file),
+                        tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          setDialogState(() {
+                        setState(() {
+                          controller.dispose();
+                          extraImageControllers.remove(controller);
+                        });
+                      });
+                        },
+                        icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(isArabic ? 'تم' : 'Done'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    setState(() {});
+  }
+
   Future<void> _save() async {
     if (!formKey.currentState!.validate()) return;
 
@@ -1438,201 +1891,50 @@ class _CarFormPageState extends State<CarFormPage> {
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: transmissionCtrl,
-                      label: isArabic ? 'ناقل الحركة' : 'Transmission',
-                    ),
+              // ==========================================
+              // SPECS — زرار صغير يفتح نافذة إدارة كل المواصفات
+              // (القيادة، الأبعاد، التجهيزات، الأمان، ومواصفات إضافية حرة)
+              // ==========================================
+              InkWell(
+                onTap: _openSpecsDialog,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: fuelCtrl,
-                      label: isArabic ? 'الوقود' : 'Fuel',
-                    ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black12),
                   ),
-                ],
-              ),
-              _field(
-                controller: driveCtrl,
-                label: isArabic ? 'نظام الدفع' : 'Drive system',
-              ),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: lengthCtrl,
-                      label: isArabic ? 'الطول (سم)' : 'Length (cm)',
-                    ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.tune_rounded,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isArabic
+                              ? 'إدارة المواصفات (القيادة، الأبعاد، الأمان، التجهيزات)'
+                              : 'Manage specs (driving, dimensions, safety, features)',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.chevron_left_rounded,
+                        color: Colors.black38,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: widthCtrl,
-                      label: isArabic ? 'العرض (سم)' : 'Width (cm)',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: heightCtrl,
-                      label: isArabic ? 'الارتفاع (سم)' : 'Height (cm)',
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: wheelbaseCtrl,
-                      label: isArabic ? 'قاعدة العجلات' : 'Wheelbase',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: trunkCapacityCtrl,
-                      label:
-                          isArabic ? 'سعة صندوق الأمتعة' : 'Trunk capacity',
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-              Divider(color: Colors.grey.shade300),
-              const SizedBox(height: 8),
-
-              Text(
-                isArabic ? 'مواصفات إضافية للقيادة' : 'Extra driving specs',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
                 ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: horsepowerCtrl,
-                      label: isArabic ? 'قوة المحرك (حصان)' : 'Horsepower',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: torqueCtrl,
-                      label: isArabic ? 'عزم الدوران' : 'Torque',
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: fuelTankCtrl,
-                      label:
-                          isArabic ? 'سعة خزان الوقود' : 'Fuel tank capacity',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: fuelConsumptionCtrl,
-                      label:
-                          isArabic ? 'استهلاك الوقود' : 'Fuel consumption',
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-              Divider(color: Colors.grey.shade300),
-              const SizedBox(height: 8),
-
-              Text(
-                isArabic ? 'التجهيزات والمزايا' : 'Features',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: infotainmentCtrl,
-                      label:
-                          isArabic ? 'نظام الترفيه/الشاشة' : 'Infotainment',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: sunroofCtrl,
-                      label: isArabic ? 'فتحة سقف' : 'Sunroof',
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: cameraSensorsCtrl,
-                      label: isArabic
-                          ? 'كاميرا خلفية + حساسات ركن'
-                          : 'Camera & sensors',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: wirelessChargerCtrl,
-                      label:
-                          isArabic ? 'شاحن لاسلكي' : 'Wireless charger',
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-              Divider(color: Colors.grey.shade300),
-              const SizedBox(height: 8),
-
-              Text(
-                isArabic ? 'الأمان' : 'Safety',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: airbagsCtrl,
-                      label: isArabic
-                          ? 'عدد الوسائد الهوائية'
-                          : 'Number of airbags',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: absSystemCtrl,
-                      label: isArabic ? 'نظام ABS' : 'ABS system',
-                    ),
-                  ),
-                ],
               ),
 
               const SizedBox(height: 8),
@@ -1746,87 +2048,68 @@ class _CarFormPageState extends State<CarFormPage> {
               const SizedBox(height: 8),
 
               // ==========================================
-              // EXTRA IMAGES SECTION
+              // GALLERY — زرار صغير يفتح نافذة إدارة صور المعرض
               // ==========================================
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    isArabic ? 'صور إضافية للمعرض' : 'Extra gallery photos',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                    ),
+              InkWell(
+                onTap: _openGalleryDialog,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
                   ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        extraImageControllers.add(TextEditingController());
-                      });
-                    },
-                    icon: const Icon(
-                      Icons.add_circle_rounded,
-                      color: Colors.red,
-                    ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.black12),
                   ),
-                ],
-              ),
-              if (extraImageControllers.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    isArabic
-                        ? 'مفيش صور إضافية، دوسي + عشان تضيفي'
-                        : 'No extra photos, tap + to add one',
-                    style: const TextStyle(color: Colors.black45, fontSize: 12),
-                  ),
-                ),
-              ...extraImageControllers.asMap().entries.map((entry) {
-                final controller = entry.value;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
                   child: Row(
                     children: [
+                      const Icon(
+                        Icons.photo_library_outlined,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
                       Expanded(
-                        child: TextField(
-                          controller: controller,
-                          decoration: InputDecoration(
-                            hintText: isArabic
-                                ? 'رابط صورة إضافية'
-                                : 'Extra image link',
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide.none,
-                            ),
+                        child: Text(
+                          isArabic
+                              ? 'إدارة صور المعرض'
+                              : 'Manage gallery photos',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
                           ),
                         ),
                       ),
-                      IconButton(
-                        onPressed: _isUploadingImage
-                            ? null
-                            : () => _pickAndUploadImage(controller),
-                        icon: const Icon(Icons.upload_file),
-                        tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            controller.dispose();
-                            extraImageControllers.remove(controller);
-                          });
-                        },
-                        icon: const Icon(
-                          Icons.delete_outline_rounded,
-                          color: Colors.red,
+                      if (extraImageControllers.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${extraImageControllers.length}',
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.chevron_left_rounded,
+                        color: Colors.black38,
                       ),
                     ],
                   ),
-                );
-              }),
+                ),
+              ),
 
               const SizedBox(height: 12),
 
@@ -2012,91 +2295,6 @@ class _CarFormPageState extends State<CarFormPage> {
               ),
 
               const SizedBox(height: 10),
-              Text(
-                isArabic ? 'مواصفات إضافية' : 'Extra specs',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                isArabic
-                    ? 'ضيف أي مواصفة عايزها (زي ACC، تسخين المقاعد...) بالاسم والقيمة'
-                    : 'Add any spec (e.g. ACC, Seat heating...) with a name and value',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 10),
-
-              for (var i = 0; i < extraSpecControllers.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        flex: 4,
-                        child: TextFormField(
-                          controller: extraSpecControllers[i].key,
-                          decoration: InputDecoration(
-                            hintText: isArabic ? 'اسم المواصفة' : 'Spec name',
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 4,
-                        child: TextFormField(
-                          controller: extraSpecControllers[i].value,
-                          decoration: InputDecoration(
-                            hintText: isArabic ? 'القيمة' : 'Value',
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            extraSpecControllers.removeAt(i);
-                          });
-                        },
-                        icon: const Icon(
-                          Icons.remove_circle_outline_rounded,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              OutlinedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    extraSpecControllers.add(
-                      MapEntry(
-                        TextEditingController(),
-                        TextEditingController(),
-                      ),
-                    );
-                  });
-                },
-                icon: const Icon(Icons.add_rounded),
-                label: Text(
-                  isArabic ? 'إضافة مواصفة' : 'Add spec',
-                ),
-              ),
-
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
