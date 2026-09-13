@@ -1552,6 +1552,10 @@ floatingActionButtonLocation:
       ),
 
       body: SingleChildScrollView(
+
+        child: Column(
+          children: [
+        Padding(
         padding: const EdgeInsets.all(24),
 
         child: Center(
@@ -2683,14 +2687,17 @@ Container(
 ),
 
 const SizedBox(height: 20),
-AutoOneFooter(isArabic: isArabic),
        ],
        ),
           ),
         ),
+        ),
+        AutoOneFooter(isArabic: isArabic),
+          ],
+        ),
       ),
     ),
-  ),
+    ),
   );
 }
 

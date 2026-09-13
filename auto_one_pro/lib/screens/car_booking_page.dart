@@ -71,7 +71,11 @@ class _CarBookingPageState extends State<CarBookingPage> {
         ),
 
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+
+          child: Column(
+            children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
 
           child: Center(
             child: ConstrainedBox(
@@ -562,10 +566,13 @@ onPressed: () async {
                   ),
 
                   const SizedBox(height: 20),
-                  AutoOneFooter(isArabic: isArabic),
                 ],
               ),
             ),
+          ),
+          ),
+          AutoOneFooter(isArabic: isArabic),
+            ],
           ),
         ),
       ),
