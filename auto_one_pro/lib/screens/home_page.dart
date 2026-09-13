@@ -579,51 +579,27 @@ if (featuredCars.isEmpty && cars.isNotEmpty) {
             ),
           ),
         ),
+        // السهمين بقوا صغيرين وف نفس مستوى شريط السحب (Scrollbar)
+        // تحت، مش قاعدين فوق صورة الكارت.
         Positioned(
           right: 0,
-          top: 0,
-          bottom: 14,
-          child: Container(
-            width: 60,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0),
-                  Colors.white.withValues(alpha: 0.9),
-                ],
-              ),
-            ),
-            child: Transform.scale(
-              scale: 0.65,
-              child: CarouselArrow(
-                icon: Icons.arrow_back_ios_new,
-                onTap: () => _scrollBy(_featuredCarsScrollController, 320),
-              ),
+          bottom: 0,
+          child: Transform.scale(
+            scale: 0.5,
+            child: CarouselArrow(
+              icon: Icons.arrow_back_ios_new,
+              onTap: () => _scrollBy(_featuredCarsScrollController, 320),
             ),
           ),
         ),
         Positioned(
           left: 0,
-          top: 0,
-          bottom: 14,
-          child: Container(
-            width: 60,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0.9),
-                  Colors.white.withValues(alpha: 0),
-                ],
-              ),
-            ),
-            child: Transform.scale(
-              scale: 0.65,
-              child: CarouselArrow(
-                icon: Icons.arrow_forward_ios,
-                onTap: () => _scrollBy(_featuredCarsScrollController, -320),
-              ),
+          bottom: 0,
+          child: Transform.scale(
+            scale: 0.5,
+            child: CarouselArrow(
+              icon: Icons.arrow_forward_ios,
+              onTap: () => _scrollBy(_featuredCarsScrollController, -320),
             ),
           ),
         ),
@@ -1640,49 +1616,23 @@ class _BrandStripState extends State<BrandStrip> {
               ),
               Positioned(
                 right: 0,
-                top: 0,
-                bottom: 14,
-                child: Container(
-                  width: 60,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0),
-                        Colors.white.withValues(alpha: 0.9),
-                      ],
-                    ),
-                  ),
-                  child: Transform.scale(
-                    scale: 0.65,
-                    child: CarouselArrow(
-                      icon: Icons.arrow_back_ios_new,
-                      onTap: () => _scrollBy(_brandsScrollController, 320),
-                    ),
+                bottom: 0,
+                child: Transform.scale(
+                  scale: 0.5,
+                  child: CarouselArrow(
+                    icon: Icons.arrow_back_ios_new,
+                    onTap: () => _scrollBy(_brandsScrollController, 320),
                   ),
                 ),
               ),
               Positioned(
                 left: 0,
-                top: 0,
-                bottom: 14,
-                child: Container(
-                  width: 60,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0.9),
-                        Colors.white.withValues(alpha: 0),
-                      ],
-                    ),
-                  ),
-                  child: Transform.scale(
-                    scale: 0.65,
-                    child: CarouselArrow(
-                      icon: Icons.arrow_forward_ios,
-                      onTap: () => _scrollBy(_brandsScrollController, -320),
-                    ),
+                bottom: 0,
+                child: Transform.scale(
+                  scale: 0.5,
+                  child: CarouselArrow(
+                    icon: Icons.arrow_forward_ios,
+                    onTap: () => _scrollBy(_brandsScrollController, -320),
                   ),
                 ),
               ),

@@ -881,8 +881,9 @@ class AutoOneFooter extends StatelessWidget {
       text,
       style: const TextStyle(
         color: Colors.black87,
-        fontSize: 14,
-        fontWeight: FontWeight.w800,
+        fontSize: 15,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 0.2,
       ),
     );
   }
@@ -897,12 +898,13 @@ class AutoOneFooter extends StatelessWidget {
           Navigator.of(context).popUntil((route) => route.isFirst);
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
             label,
             style: const TextStyle(
-              color: Colors.black54,
-              fontSize: 13,
+              color: Colors.black87,
+              fontSize: 14,
+              height: 1.5,
             ),
           ),
         ),
@@ -945,20 +947,51 @@ class AutoOneFooter extends StatelessWidget {
           'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('AUTO ONE $text')}',
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3),
+          padding: const EdgeInsets.symmetric(vertical: 5),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.location_on_outlined,
-                  size: 15, color: Colors.black45),
-              const SizedBox(width: 6),
+              const Icon(Icons.location_on_rounded,
+                  size: 17, color: Colors.redAccent),
+              const SizedBox(width: 7),
               Text(
                 text,
                 style: const TextStyle(
-                  color: Colors.black54,
-                  fontSize: 13,
-                  decoration: TextDecoration.underline,
-                  decorationColor: Colors.black26,
+                  color: Colors.black87,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _phoneLine(String displayNumber, String telUrl) {
+    return HoverLift(
+      scale: 1.02,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: () => _openLink(telUrl),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            textDirection: TextDirection.ltr,
+            children: [
+              const Icon(Icons.phone_rounded,
+                  size: 17, color: Colors.redAccent),
+              const SizedBox(width: 7),
+              Text(
+                displayNumber,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 14,
+                  height: 1.5,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -975,14 +1008,14 @@ class AutoOneFooter extends StatelessWidget {
     final textAlign = isArabic ? TextAlign.right : TextAlign.left;
 
     // ============================================================
-    // COLUMN 1 — CONTACT & BRANCHES
+    // COLUMN 1 — LOCATIONS (لوحدها)
     // ============================================================
-    Widget contactColumn() {
+    Widget locationColumn() {
       return Column(
         crossAxisAlignment: crossAxis,
         children: [
-          _columnTitle(isArabic ? 'تواصل معنا' : 'Contact Us'),
-          const SizedBox(height: 12),
+          _columnTitle(isArabic ? 'مواقعنا' : 'Our Locations'),
+          const SizedBox(height: 14),
           _branchLine(
             isArabic ? 'جدة — حي الجوهرة' : 'Jeddah — Al Jawharah',
           ),
@@ -992,7 +1025,21 @@ class AutoOneFooter extends StatelessWidget {
           _branchLine(
             isArabic ? 'الرياض — حي القادسية' : 'Riyadh — Al Qadisiyah',
           ),
+        ],
+      );
+    }
+
+    // ============================================================
+    // COLUMN 2 — CONTACT (لوحده: الرقم الموحّد + السوشيال ميديا)
+    // ============================================================
+    Widget contactColumn() {
+      return Column(
+        crossAxisAlignment: crossAxis,
+        children: [
+          _columnTitle(isArabic ? 'تواصل معنا' : 'Contact Us'),
           const SizedBox(height: 14),
+          _phoneLine('+966 54 157 7894', 'tel:+966541577894'),
+          const SizedBox(height: 12),
           Wrap(
             alignment:
                 isArabic ? WrapAlignment.end : WrapAlignment.start,
@@ -1036,14 +1083,14 @@ class AutoOneFooter extends StatelessWidget {
     }
 
     // ============================================================
-    // COLUMN 2 — QUICK LINKS
+    // COLUMN 3 — QUICK LINKS
     // ============================================================
     Widget linksColumn(BuildContext context) {
       return Column(
         crossAxisAlignment: crossAxis,
         children: [
           _columnTitle(isArabic ? 'روابط سريعة' : 'Quick Links'),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           _quickLink(context, isArabic ? 'الرئيسية' : 'Home'),
           _quickLink(context, isArabic ? 'تصفح السيارات' : 'Browse Cars'),
         ],
@@ -1051,31 +1098,45 @@ class AutoOneFooter extends StatelessWidget {
     }
 
     // ============================================================
-    // COLUMN 3 — LOGO & TAGLINE
+    // COLUMN 4 — LOGO & TAGLINE
     // ============================================================
     Widget logoColumn() {
       return Column(
         crossAxisAlignment: crossAxis,
         children: [
-          Image.asset(
-            'assets/logo-autoone.png',
-            height: 44,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stack) =>
-                const SizedBox.shrink(),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Image.asset(
+              'assets/logo-autoone.png',
+              height: 46,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stack) =>
+                  const SizedBox.shrink(),
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           SizedBox(
-            width: 220,
+            width: 230,
             child: Text(
               isArabic
                   ? 'معرض سيارات موثوق، نوفّر لك أفضل السيارات بأسعار تنافسية وتجربة شراء سهلة.'
                   : 'A trusted car showroom offering the best cars at competitive prices.',
               textAlign: textAlign,
               style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 12,
-                height: 1.6,
+                color: Colors.black87,
+                fontSize: 13,
+                height: 1.7,
               ),
             ),
           ),
@@ -1088,22 +1149,23 @@ class AutoOneFooter extends StatelessWidget {
       child: Container(
         width: double.infinity,
         color: kHeaderColor,
-        padding: const EdgeInsets.only(top: 32),
+        padding: const EdgeInsets.only(top: 36),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1100),
+            constraints: const BoxConstraints(maxWidth: 1150),
             child: Column(
               children: [
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    if (constraints.maxWidth >= 700) {
-                      // شاشة واسعة: 3 أعمدة جنب بعض
+                    if (constraints.maxWidth >= 800) {
+                      // شاشة واسعة: 4 أعمدة جنب بعض
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Expanded(child: logoColumn()),
+                          Expanded(child: locationColumn()),
                           Expanded(child: contactColumn()),
                           Expanded(child: linksColumn(context)),
-                          Expanded(child: logoColumn()),
                         ],
                       );
                     }
@@ -1112,23 +1174,25 @@ class AutoOneFooter extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         logoColumn(),
-                        const SizedBox(height: 26),
+                        const SizedBox(height: 30),
+                        locationColumn(),
+                        const SizedBox(height: 30),
                         contactColumn(),
-                        const SizedBox(height: 26),
+                        const SizedBox(height: 30),
                         linksColumn(context),
                       ],
                     );
                   },
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
                 Container(
                   height: 1,
                   color: Colors.black12,
                 ),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
 
                 Wrap(
                   alignment: WrapAlignment.center,
@@ -1148,7 +1212,7 @@ class AutoOneFooter extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
                 Text(
                   isArabic
@@ -1156,10 +1220,12 @@ class AutoOneFooter extends StatelessWidget {
                       : '© ${DateTime.now().year} AUTO ONE — All rights reserved',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: Colors.black45,
-                    fontSize: 11,
+                    color: Colors.black54,
+                    fontSize: 12,
                   ),
                 ),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),
