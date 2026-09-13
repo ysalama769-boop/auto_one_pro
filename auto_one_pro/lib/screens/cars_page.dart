@@ -1185,9 +1185,12 @@ String _searchAlias(Car car) {
         : <String>[];
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(30),
       child: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              children: [
           if (bannerImages.isNotEmpty) ...[
             SizedBox(
               height: 160,
@@ -1550,6 +1553,9 @@ String _searchAlias(Car car) {
                 ],
               );
             },
+          ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 20),

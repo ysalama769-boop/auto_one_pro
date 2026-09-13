@@ -734,6 +734,7 @@ Container(
                     ? 'تواصل معنا بسهولة واحصل على المساعدة التي تحتاجها.'
                     : 'Easy communication and quick support when you need it.',
                 isSmall: isSmall,
+                onTap: () => _showQuickContactSheet(context),
               ),
             ],
           );
@@ -751,11 +752,9 @@ const SizedBox(height: 55),
 
 _buildBranchesSection(context),
 
-const SizedBox(height: 55),
+const SizedBox(height: 40),
 
-_buildAutoOneContactSection(context),
-
-const SizedBox(height: 30),
+AutoOneFooter(isArabic: widget.isArabic),
 
         ],
       ),
@@ -767,8 +766,9 @@ const SizedBox(height: 30),
   required String title,
   required String description,
   required bool isSmall,
+  VoidCallback? onTap,
 }) {
-  return Container(
+  final content = Container(
     width: isSmall ? 320 : 260,
     padding: const EdgeInsets.all(24),
 
@@ -856,8 +856,19 @@ const SizedBox(height: 30),
       ],
     ),
   );
+
+  if (onTap == null) return content;
+
+  return HoverLift(
+    borderRadius: BorderRadius.circular(20),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: content,
+    ),
+  );
 }
-Widget _buildAutoOneContactSection(BuildContext context) {
+void _showQuickContactSheet(BuildContext context) {
   Future<void> openLink(String link) async {
     final Uri url = Uri.parse(link);
 
@@ -920,34 +931,28 @@ Widget _buildAutoOneContactSection(BuildContext context) {
     ),
   ];
 
-  // زرار واحد بس مكان القسم الكبير اللي كان فيه كل أزرار التواصل
-  // ظاهرة طول الوقت. دلوقتي بتفتح بعد ما تدوس عليه.
-  return Center(
-    child: HoverLift(
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.white,
-            showDragHandle: true,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            builder: (sheetContext) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.isArabic ? 'تواصل مع أوتو ون' : 'Contact AUTO ONE',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
+  // بتفتح قائمة وسائل التواصل — دلوقتي بتتنادى من كارت "تواصل سريع"
+  // نفسه في قسم "لماذا AUTO ONE" بدل ما تكون زرار منفصل في الصفحة.
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    showDragHandle: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetContext) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.isArabic ? 'تواصل مع أوتو ون' : 'Contact AUTO ONE',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
                     ),
                     const SizedBox(height: 22),
                     Wrap(
@@ -1006,36 +1011,6 @@ Widget _buildAutoOneContactSection(BuildContext context) {
               );
             },
           );
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0B0B0B),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.support_agent_rounded,
-                color: Colors.red,
-                size: 22,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                widget.isArabic ? 'تواصل سريع' : 'Quick Contact',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
 }
 
 // ============================================================
