@@ -10,6 +10,20 @@ import '../admin/admin_shared.dart';
 // ============================================================
 // ADMIN INVENTORY (CARS CRUD)
 // ============================================================
+
+// مواصفة إضافية حرة مربوطة بقسم معيّن (القيادة، الأمان...) بدل ما
+// تكون في مجموعة واحدة عامة من غير تصنيف.
+class ExtraSpecEntry {
+  final String category;
+  final TextEditingController keyCtrl;
+  final TextEditingController valueCtrl;
+
+  ExtraSpecEntry({
+    required this.category,
+    required this.keyCtrl,
+    required this.valueCtrl,
+  });
+}
 class AdminCarsPage extends StatefulWidget {
   final bool isArabic;
 
@@ -563,9 +577,8 @@ class _CarFormPageState extends State<CarFormPage> {
   late final TextEditingController locationCtrl;
   late final TextEditingController arrivalDateCtrl;
 
-  // مواصفات إضافية مرنة (Key : Value)
-  List<MapEntry<TextEditingController, TextEditingController>>
-      extraSpecControllers = [];
+  // مواصفات إضافية مرنة، كل واحدة مربوطة بقسم (القيادة، الأمان...)
+  List<ExtraSpecEntry> extraSpecEntries = [];
 
   // الألوان المتاحة في المتجر كله، وإيه اللي متحدد للسيارة دي
   List<Map<String, dynamic>> allColors = [];
@@ -664,13 +677,28 @@ class _CarFormPageState extends State<CarFormPage> {
 
     final rawExtraSpecs = car?['extra_specs'];
     if (rawExtraSpecs is Map) {
-      rawExtraSpecs.forEach((key, value) {
-        extraSpecControllers.add(
-          MapEntry(
-            TextEditingController(text: key.toString()),
-            TextEditingController(text: value.toString()),
-          ),
-        );
+      rawExtraSpecs.forEach((catKey, catValue) {
+        if (catValue is Map) {
+          // النسخة الجديدة: مواصفات مقسّمة على أقسام
+          catValue.forEach((k, v) {
+            extraSpecEntries.add(
+              ExtraSpecEntry(
+                category: catKey.toString(),
+                keyCtrl: TextEditingController(text: k.toString()),
+                valueCtrl: TextEditingController(text: v.toString()),
+              ),
+            );
+          });
+        } else {
+          // بيانات قديمة كانت مسطّحة من غير أقسام — نحطها تحت "أخرى"
+          extraSpecEntries.add(
+            ExtraSpecEntry(
+              category: isArabic ? 'أخرى' : 'Other',
+              keyCtrl: TextEditingController(text: catKey.toString()),
+              valueCtrl: TextEditingController(text: catValue.toString()),
+            ),
+          );
+        }
       });
     }
 
@@ -825,9 +853,9 @@ class _CarFormPageState extends State<CarFormPage> {
     plateNumberCtrl.dispose();
     locationCtrl.dispose();
     arrivalDateCtrl.dispose();
-    for (final entry in extraSpecControllers) {
-      entry.key.dispose();
-      entry.value.dispose();
+    for (final entry in extraSpecEntries) {
+      entry.keyCtrl.dispose();
+      entry.valueCtrl.dispose();
     }
     for (final controller in extraImageControllers) {
       controller.dispose();
@@ -846,6 +874,8 @@ class _CarFormPageState extends State<CarFormPage> {
           builder: (dialogContext, setDialogState) {
             return AlertDialog(
               title: Text(isArabic ? 'إدارة الألوان' : 'Manage colors'),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
               content: SizedBox(
                 width: 380,
                 child: SingleChildScrollView(
@@ -1055,6 +1085,99 @@ class _CarFormPageState extends State<CarFormPage> {
     setState(() {});
   }
 
+  // قائمة "مواصفة إضافية" خاصة بقسم معيّن (القيادة، الأمان...) — كل
+  // مواصفة بتتضاف هنا بتتسجل تحت نفس اسم القسم اللي بتضاف منه.
+  Widget _categoryExtraSpecsSection(
+    String category,
+    StateSetter setDialogState,
+  ) {
+    final entries =
+        extraSpecEntries.where((e) => e.category == category).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        for (final entry in entries)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 4,
+                  child: TextFormField(
+                    controller: entry.keyCtrl,
+                    decoration: InputDecoration(
+                      hintText: isArabic ? 'اسم المواصفة' : 'Spec name',
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 4,
+                  child: TextFormField(
+                    controller: entry.valueCtrl,
+                    decoration: InputDecoration(
+                      hintText: isArabic ? 'القيمة' : 'Value',
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    setDialogState(() {
+                      setState(() {
+                        entry.keyCtrl.dispose();
+                        entry.valueCtrl.dispose();
+                        extraSpecEntries.remove(entry);
+                      });
+                    });
+                  },
+                  icon: const Icon(
+                    Icons.remove_circle_outline_rounded,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            onPressed: () {
+              setDialogState(() {
+                setState(() {
+                  extraSpecEntries.add(
+                    ExtraSpecEntry(
+                      category: category,
+                      keyCtrl: TextEditingController(),
+                      valueCtrl: TextEditingController(),
+                    ),
+                  );
+                });
+              });
+            },
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: Text(isArabic ? 'إضافة مواصفة' : 'Add spec'),
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _openSpecsDialog() async {
     await showDialog<void>(
       context: context,
@@ -1063,6 +1186,8 @@ class _CarFormPageState extends State<CarFormPage> {
           builder: (dialogContext, setDialogState) {
             return AlertDialog(
               title: Text(isArabic ? 'إدارة المواصفات' : 'Manage specs'),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
               content: SizedBox(
                 width: 480,
                 child: SingleChildScrollView(
@@ -1070,6 +1195,31 @@ class _CarFormPageState extends State<CarFormPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+              Text(
+                isArabic ? 'القيادة والأبعاد' : 'Driving & Dimensions',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _field(
+                      controller: seatsCtrl,
+                      label: isArabic ? 'المقاعد' : 'Seats',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _field(
+                      controller: engineCtrl,
+                      label: isArabic ? 'المحرك' : 'Engine',
+                    ),
+                  ),
+                ],
+              ),
               Row(
                 children: [
                   Expanded(
@@ -1135,6 +1285,8 @@ class _CarFormPageState extends State<CarFormPage> {
                 ],
               ),
 
+              _categoryExtraSpecsSection('driving', setDialogState),
+
               const SizedBox(height: 8),
               Divider(color: Colors.grey.shade300),
               const SizedBox(height: 8),
@@ -1183,6 +1335,8 @@ class _CarFormPageState extends State<CarFormPage> {
                   ),
                 ],
               ),
+
+              _categoryExtraSpecsSection('driving_extra', setDialogState),
 
               const SizedBox(height: 8),
               Divider(color: Colors.grey.shade300),
@@ -1235,6 +1389,8 @@ class _CarFormPageState extends State<CarFormPage> {
                 ],
               ),
 
+              _categoryExtraSpecsSection('features', setDialogState),
+
               const SizedBox(height: 8),
               Divider(color: Colors.grey.shade300),
               const SizedBox(height: 8),
@@ -1267,98 +1423,7 @@ class _CarFormPageState extends State<CarFormPage> {
                 ],
               ),
 
-                      const SizedBox(height: 8),
-                      Divider(color: Colors.grey.shade300),
-                      const SizedBox(height: 8),
-              const SizedBox(height: 10),
-              Text(
-                isArabic ? 'مواصفات إضافية' : 'Extra specs',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                isArabic
-                    ? 'ضيف أي مواصفة عايزها (زي ACC، تسخين المقاعد...) بالاسم والقيمة'
-                    : 'Add any spec (e.g. ACC, Seat heating...) with a name and value',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 10),
-
-              for (var i = 0; i < extraSpecControllers.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        flex: 4,
-                        child: TextFormField(
-                          controller: extraSpecControllers[i].key,
-                          decoration: InputDecoration(
-                            hintText: isArabic ? 'اسم المواصفة' : 'Spec name',
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 4,
-                        child: TextFormField(
-                          controller: extraSpecControllers[i].value,
-                          decoration: InputDecoration(
-                            hintText: isArabic ? 'القيمة' : 'Value',
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          setDialogState(() {
-                            setState(() {
-                              extraSpecControllers.removeAt(i);
-                            });
-                          });
-                        },
-                        icon: const Icon(
-                          Icons.remove_circle_outline_rounded,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              OutlinedButton.icon(
-                onPressed: () {
-                  setDialogState(() {
-                    setState(() {
-                      extraSpecControllers.add(
-                        MapEntry(
-                          TextEditingController(),
-                          TextEditingController(),
-                        ),
-                      );
-                    });
-                  });
-                },
-                icon: const Icon(Icons.add_rounded),
-                label: Text(
-                  isArabic ? 'إضافة مواصفة' : 'Add spec',
-                ),
-              ),
+              _categoryExtraSpecsSection('safety', setDialogState),
 
                     ],
                   ),
@@ -1392,6 +1457,8 @@ class _CarFormPageState extends State<CarFormPage> {
               title: Text(
                 isArabic ? 'إدارة صور المعرض' : 'Manage gallery photos',
               ),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
               content: SizedBox(
                 width: 420,
                 child: SingleChildScrollView(
@@ -1565,12 +1632,18 @@ class _CarFormPageState extends State<CarFormPage> {
           ? null
           : arrivalDateCtrl.text.trim(),
 
-      // مواصفات إضافية مرنة
-      'extra_specs': {
-        for (final entry in extraSpecControllers)
-          if (entry.key.text.trim().isNotEmpty)
-            entry.key.text.trim(): entry.value.text.trim(),
-      },
+      // مواصفات إضافية مرنة، مقسّمة حسب القسم اللي أضيفت فيه
+      'extra_specs': () {
+        final grouped = <String, Map<String, String>>{};
+        for (final entry in extraSpecEntries) {
+          final k = entry.keyCtrl.text.trim();
+          final v = entry.valueCtrl.text.trim();
+          if (k.isEmpty) continue;
+          grouped.putIfAbsent(entry.category, () => {});
+          grouped[entry.category]![k] = v;
+        }
+        return grouped;
+      }(),
     };
 
     try {
@@ -1873,23 +1946,6 @@ class _CarFormPageState extends State<CarFormPage> {
                     ? 'الوصف بالإنجليزي (اختياري)'
                     : 'Description in English (optional)',
                 maxLines: 3,
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: seatsCtrl,
-                      label: isArabic ? 'المقاعد' : 'Seats',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: engineCtrl,
-                      label: isArabic ? 'المحرك' : 'Engine',
-                    ),
-                  ),
-                ],
               ),
               // ==========================================
               // SPECS — زرار صغير يفتح نافذة إدارة كل المواصفات
