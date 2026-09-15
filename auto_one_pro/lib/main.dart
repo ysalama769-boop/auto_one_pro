@@ -243,11 +243,13 @@ class _AutoOneShellState extends State<AutoOneShell> {
   bool showCars = false;
   String? selectedBrand;
   bool showOffers = false;
+  String? selectedBodyType;
   void openHome() {
   setState(() {
     showCars = false;
     showOffers = false;
     selectedBrand = null;
+    selectedBodyType = null;
   });
 }
  void openCars([String? brand]) {
@@ -256,6 +258,14 @@ class _AutoOneShellState extends State<AutoOneShell> {
 
     // فتح العروض فقط
     showOffers = brand == '__OFFERS__';
+
+    // فتح نوع جسم معيّن بس (SUV / سيدان / جيب)
+    if (brand != null && brand.startsWith('__BODYTYPE_')) {
+      selectedBodyType = brand.replaceFirst('__BODYTYPE_', '');
+      selectedBrand = null;
+      return;
+    }
+    selectedBodyType = null;
 
     if (brand == null || brand == '__OFFERS__') {
       selectedBrand = null;
@@ -279,27 +289,6 @@ class _AutoOneShellState extends State<AutoOneShell> {
 
   @override
   Widget build(BuildContext context) {
-    void openCars([String? brand]) {
-  setState(() {
-    showCars = true;
-
-    if (brand == null) {
-      selectedBrand = null;
-    } else if (brand.toLowerCase() == 'chery') {
-      selectedBrand = 'CHERY PRO';
-    } else if (brand.toLowerCase() == 'jetour') {
-      selectedBrand = 'JETOUR';
-    } else {
-      selectedBrand = cars
-          .map((car) => car.brand)
-          .firstWhere(
-            (value) =>
-                value.toLowerCase() == brand.toLowerCase(),
-            orElse: () => brand,
-          );
-    }
-  });
-}
     return Directionality(
       textDirection: widget.isArabic
           ? TextDirection.rtl
@@ -348,6 +337,7 @@ class _AutoOneShellState extends State<AutoOneShell> {
           isArabic: widget.isArabic,
          initialBrand: selectedBrand,
           initialOffers: showOffers,
+          initialBodyType: selectedBodyType,
         )
                     : HomePage(
                         key: const ValueKey('home'),

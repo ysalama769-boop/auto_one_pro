@@ -7,6 +7,7 @@ import '../models/car.dart';
 import '../shared/repository.dart';
 import '../shared/widgets.dart';
 import '../screens/car_details_page.dart';
+import '../screens/static_pages.dart';
 
 // ============================================================
 // HOME PAGE
@@ -677,6 +678,7 @@ Container(
                     ? 'مجموعة متنوعة من السيارات والموديلات لتختار ما يناسبك.'
                     : 'A wide selection of cars and models to match your needs.',
                 isSmall: isSmall,
+                onTap: () => _showBodyTypeSheet(context),
               ),
 
               _whyAutoOneCard(
@@ -688,6 +690,7 @@ Container(
                     ? 'أسعار مدروسة وعروض مميزة على مجموعة من السيارات.'
                     : 'Competitive prices and special offers on selected cars.',
                 isSmall: isSmall,
+                onTap: () => widget.onOpenCars('__OFFERS__'),
               ),
 
               _whyAutoOneCard(
@@ -699,6 +702,13 @@ Container(
                     ? 'نهتم بتقديم تجربة واضحة ومريحة من البداية للنهاية.'
                     : 'A clear and comfortable experience from start to finish.',
                 isSmall: isSmall,
+                onTap: () {
+                  Navigator.of(context).push(
+                    smoothRoute(
+                      AboutAutoOnePage(isArabic: widget.isArabic),
+                    ),
+                  );
+                },
               ),
 
               _whyAutoOneCard(
@@ -844,6 +854,86 @@ AutoOneFooter(isArabic: widget.isArabic),
     ),
   );
 }
+void _showBodyTypeSheet(BuildContext context) {
+  final options = [
+    (
+      'SUV',
+      widget.isArabic ? 'إس يو في' : 'SUV',
+      Icons.directions_car_filled_rounded,
+    ),
+    (
+      'SEDAN',
+      widget.isArabic ? 'سيدان' : 'Sedan',
+      Icons.time_to_leave_rounded,
+    ),
+    (
+      'JEEP',
+      widget.isArabic ? 'جيب' : 'Jeep',
+      Icons.terrain_rounded,
+    ),
+  ];
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    showDragHandle: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetContext) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.isArabic ? 'اختر نوع السيارة' : 'Choose a body type',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 20),
+            for (final option in options)
+              InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  widget.onOpenCars('__BODYTYPE_${option.$1}__');
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(option.$3, color: Colors.red),
+                      const SizedBox(width: 12),
+                      Text(
+                        option.$2,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 void _showQuickContactSheet(BuildContext context) {
   Future<void> openLink(String link) async {
     final Uri url = Uri.parse(link);

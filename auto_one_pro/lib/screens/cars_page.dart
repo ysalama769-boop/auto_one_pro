@@ -14,12 +14,14 @@ class CarsPage extends StatefulWidget {
   final bool isArabic;
   final String? initialBrand;
   final bool initialOffers;
+  final String? initialBodyType;
 
   const CarsPage({
     super.key,
     required this.isArabic,
     this.initialBrand,
     this.initialOffers = false,
+    this.initialBodyType,
   });
 
   @override
@@ -39,10 +41,13 @@ void initState() {
 
   selectedBrand = widget.initialBrand ?? 'ALL';
   showOffers = widget.initialOffers;
+  selectedBodyType = widget.initialBodyType ?? 'ALL';
 }
   String selectedType = 'ALL';
   String selectedCategory = 'ALL';
   String selectedModel = 'ALL';
+  // نوع الجسم (SUV / سيدان / جيب) — فلتر منفصل عن باقي الفلاتر
+  String selectedBodyType = 'ALL';
 
   // فلترة السعر والترتيب
   double? minPrice;
@@ -512,6 +517,42 @@ String _searchAlias(Car car) {
     return double.tryParse(digits) ?? 0;
   }
 
+  Widget _bodyTypeFilterChip(String value, String label) {
+    final isSelected = selectedBodyType == value;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        setState(() {
+          selectedBodyType = value;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.red : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 8,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
   List<Car> get filteredCars {
     final query = _normalize(search);
 
@@ -540,6 +581,10 @@ String _searchAlias(Car car) {
           final matchesOffer =
     !showOffers || car.isOfferActive;
 
+      final matchesBodyType =
+          selectedBodyType == 'ALL' ||
+          car.category.trim().toUpperCase() == selectedBodyType;
+
       final price = _parsePrice(car.price);
       final matchesMinPrice = minPrice == null || price >= minPrice!;
       final matchesMaxPrice = maxPrice == null || price <= maxPrice!;
@@ -550,6 +595,7 @@ String _searchAlias(Car car) {
     matchesCategory &&
     matchesModel &&
     matchesOffer &&
+    matchesBodyType &&
     matchesMinPrice &&
     matchesMaxPrice;
     }).toList();
@@ -1282,6 +1328,20 @@ String _searchAlias(Car car) {
 
           const SizedBox(height: 14),
 
+          // BODY TYPE FILTER (الكل / SUV / سيدان / جيب)
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _bodyTypeFilterChip('ALL', widget.isArabic ? 'الكل' : 'All'),
+              _bodyTypeFilterChip('SUV', widget.isArabic ? 'إس يو في' : 'SUV'),
+              _bodyTypeFilterChip('SEDAN', widget.isArabic ? 'سيدان' : 'Sedan'),
+              _bodyTypeFilterChip('JEEP', widget.isArabic ? 'جيب' : 'Jeep'),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
           // SORT + PRICE RANGE
           Wrap(
             spacing: 12,
@@ -1419,7 +1479,7 @@ String _searchAlias(Car car) {
               // تاني بدل ما نفضل عارضين نفس العدد القديم على فلتر جديد.
               final currentSignature =
                   '$search|$selectedBrand|$selectedType|$selectedCategory|'
-                  '$selectedModel|$showOffers|$minPrice|$maxPrice|$sortOption';
+                  '$selectedModel|$showOffers|$minPrice|$maxPrice|$sortOption|$selectedBodyType';
               if (currentSignature != _lastFilterSignature) {
                 _lastFilterSignature = currentSignature;
                 _visibleCarsCount = _carsPerPage;
