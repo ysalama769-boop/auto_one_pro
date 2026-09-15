@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../shared/constants.dart';
+import '../admin/admin_shared.dart';
 
 // ============================================================
 // ABOUT AUTO ONE PAGE (نبذة عن المعرض + طريقة الشراء)
@@ -82,6 +83,13 @@ class AboutAutoOnePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = homepageSettings.value;
+
+    String t(String key, String fallback) {
+      final value = settings?[key]?.toString().trim();
+      return (value == null || value.isEmpty) ? fallback : value;
+    }
+
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -104,26 +112,50 @@ class AboutAutoOnePage extends StatelessWidget {
                   _bulletBlock(
                     isArabic ? 'نبذة عن المعرض' : 'About the showroom',
                     isArabic
-                        ? 'AUTO ONE معرض سيارات يهتم بتقديم تجربة شراء موثوقة وسهلة، بأسعار تنافسية ومجموعة مختارة بعناية من السيارات.'
-                        : 'AUTO ONE is a car showroom focused on offering a trusted and easy buying experience, with competitive prices and a carefully selected range of cars.',
+                        ? t(
+                            'about_intro_ar',
+                            'AUTO ONE معرض سيارات يهتم بتقديم تجربة شراء موثوقة وسهلة، بأسعار تنافسية ومجموعة مختارة بعناية من السيارات.',
+                          )
+                        : t(
+                            'about_intro_en',
+                            'AUTO ONE is a car showroom focused on offering a trusted and easy buying experience, with competitive prices and a carefully selected range of cars.',
+                          ),
                   ),
                   _bulletBlock(
                     isArabic ? 'اللي بنقدمه' : 'What we offer',
                     isArabic
-                        ? 'نوفّر لك مجموعة متنوعة من السيارات بموديلات وفئات مختلفة، مع معلومات وصور واضحة لكل سيارة عشان تقدر تاخد قرارك بثقة.'
-                        : 'We provide a diverse range of cars across different models and categories, with clear information and photos for every car so you can decide with confidence.',
+                        ? t(
+                            'about_offer_ar',
+                            'نوفّر لك مجموعة متنوعة من السيارات بموديلات وفئات مختلفة، مع معلومات وصور واضحة لكل سيارة عشان تقدر تاخد قرارك بثقة.',
+                          )
+                        : t(
+                            'about_offer_en',
+                            'We provide a diverse range of cars across different models and categories, with clear information and photos for every car so you can decide with confidence.',
+                          ),
                   ),
                   _bulletBlock(
                     isArabic ? 'السيارات المتوفرة' : 'Available cars',
                     isArabic
-                        ? 'مخزوننا بيتجدد باستمرار بسيارات جديدة ومستعملة من ماركات متعددة، وتقدر تتصفحها كلها من صفحة "المعرض".'
-                        : 'Our inventory is regularly refreshed with new and used cars from multiple brands, and you can browse them all from the "Cars" page.',
+                        ? t(
+                            'about_available_ar',
+                            'مخزوننا بيتجدد باستمرار بسيارات جديدة ومستعملة من ماركات متعددة، وتقدر تتصفحها كلها من صفحة "المعرض".',
+                          )
+                        : t(
+                            'about_available_en',
+                            'Our inventory is regularly refreshed with new and used cars from multiple brands, and you can browse them all from the "Cars" page.',
+                          ),
                   ),
                   _bulletBlock(
                     isArabic ? 'هدفنا وخدمتنا' : 'Our goal and service',
                     isArabic
-                        ? 'هدفنا إننا نسهّل عليك رحلة اختيار وشراء سيارتك من البداية للنهاية، مع دعم وتواصل سريع في أي وقت تحتاجه.'
-                        : 'Our goal is to make your car-buying journey simple from start to finish, with fast support whenever you need it.',
+                        ? t(
+                            'about_goal_ar',
+                            'هدفنا إننا نسهّل عليك رحلة اختيار وشراء سيارتك من البداية للنهاية، مع دعم وتواصل سريع في أي وقت تحتاجه.',
+                          )
+                        : t(
+                            'about_goal_en',
+                            'Our goal is to make your car-buying journey simple from start to finish, with fast support whenever you need it.',
+                          ),
                   ),
 
                   const SizedBox(height: 20),
@@ -134,27 +166,36 @@ class AboutAutoOnePage extends StatelessWidget {
                   const SizedBox(height: 18),
                   _stepRow(
                     1,
-                    isArabic ? 'اختر سيارتك' : 'Choose your car',
+                    isArabic
+                        ? t('step1_ar', 'اختر سيارتك')
+                        : t('step1_en', 'Choose your car'),
                   ),
                   _stepRow(
                     2,
-                    isArabic ? 'اضغط طلب حجز' : 'Tap "Request Booking"',
+                    isArabic
+                        ? t('step2_ar', 'اضغط طلب حجز')
+                        : t('step2_en', 'Tap "Request Booking"'),
                   ),
                   _stepRow(
                     3,
-                    isArabic ? 'سجّل بياناتك' : 'Fill in your details',
+                    isArabic
+                        ? t('step3_ar', 'سجّل بياناتك')
+                        : t('step3_en', 'Fill in your details'),
                   ),
                   _stepRow(
                     4,
                     isArabic
-                        ? 'فريق AUTO ONE يتواصل معك'
-                        : 'The AUTO ONE team contacts you',
+                        ? t('step4_ar', 'فريق AUTO ONE يتواصل معك')
+                        : t('step4_en', 'The AUTO ONE team contacts you'),
                   ),
                   _stepRow(
                     5,
                     isArabic
-                        ? 'يتم استكمال إجراءات الشراء'
-                        : 'Purchase procedures are completed',
+                        ? t('step5_ar', 'يتم استكمال إجراءات الشراء')
+                        : t(
+                            'step5_en',
+                            'Purchase procedures are completed',
+                          ),
                   ),
                 ],
               ),

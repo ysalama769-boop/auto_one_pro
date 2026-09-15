@@ -25,6 +25,22 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
   final heroSubtitleEnCtrl = TextEditingController();
   List<TextEditingController> bannerControllers = [];
 
+  // محتوى صفحة "عن أوتو ون"
+  final aboutIntroArCtrl = TextEditingController();
+  final aboutIntroEnCtrl = TextEditingController();
+  final aboutOfferArCtrl = TextEditingController();
+  final aboutOfferEnCtrl = TextEditingController();
+  final aboutAvailableArCtrl = TextEditingController();
+  final aboutAvailableEnCtrl = TextEditingController();
+  final aboutGoalArCtrl = TextEditingController();
+  final aboutGoalEnCtrl = TextEditingController();
+
+  // خطوات "طريقة الشراء" (5 خطوات، عربي وإنجليزي)
+  final List<TextEditingController> stepArCtrls =
+      List.generate(5, (_) => TextEditingController());
+  final List<TextEditingController> stepEnCtrls =
+      List.generate(5, (_) => TextEditingController());
+
   bool get isArabic => widget.isArabic;
 
   @override
@@ -40,6 +56,20 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
     heroSubtitleArCtrl.dispose();
     heroSubtitleEnCtrl.dispose();
     for (final c in bannerControllers) {
+      c.dispose();
+    }
+    aboutIntroArCtrl.dispose();
+    aboutIntroEnCtrl.dispose();
+    aboutOfferArCtrl.dispose();
+    aboutOfferEnCtrl.dispose();
+    aboutAvailableArCtrl.dispose();
+    aboutAvailableEnCtrl.dispose();
+    aboutGoalArCtrl.dispose();
+    aboutGoalEnCtrl.dispose();
+    for (final c in stepArCtrls) {
+      c.dispose();
+    }
+    for (final c in stepEnCtrls) {
       c.dispose();
     }
     super.dispose();
@@ -68,6 +98,24 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
       bannerControllers =
           banners.map((url) => TextEditingController(text: url)).toList();
 
+      aboutIntroArCtrl.text = (response?['about_intro_ar'] ?? '').toString();
+      aboutIntroEnCtrl.text = (response?['about_intro_en'] ?? '').toString();
+      aboutOfferArCtrl.text = (response?['about_offer_ar'] ?? '').toString();
+      aboutOfferEnCtrl.text = (response?['about_offer_en'] ?? '').toString();
+      aboutAvailableArCtrl.text =
+          (response?['about_available_ar'] ?? '').toString();
+      aboutAvailableEnCtrl.text =
+          (response?['about_available_en'] ?? '').toString();
+      aboutGoalArCtrl.text = (response?['about_goal_ar'] ?? '').toString();
+      aboutGoalEnCtrl.text = (response?['about_goal_en'] ?? '').toString();
+
+      for (var i = 0; i < 5; i++) {
+        stepArCtrls[i].text =
+            (response?['step${i + 1}_ar'] ?? '').toString();
+        stepEnCtrls[i].text =
+            (response?['step${i + 1}_en'] ?? '').toString();
+      }
+
       setState(() => isLoading = false);
     } catch (e) {
       setState(() => isLoading = false);
@@ -88,6 +136,18 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         'hero_subtitle_ar': heroSubtitleArCtrl.text.trim(),
         'hero_subtitle_en': heroSubtitleEnCtrl.text.trim(),
         'banner_images': banners,
+        'about_intro_ar': aboutIntroArCtrl.text.trim(),
+        'about_intro_en': aboutIntroEnCtrl.text.trim(),
+        'about_offer_ar': aboutOfferArCtrl.text.trim(),
+        'about_offer_en': aboutOfferEnCtrl.text.trim(),
+        'about_available_ar': aboutAvailableArCtrl.text.trim(),
+        'about_available_en': aboutAvailableEnCtrl.text.trim(),
+        'about_goal_ar': aboutGoalArCtrl.text.trim(),
+        'about_goal_en': aboutGoalEnCtrl.text.trim(),
+        for (var i = 0; i < 5; i++)
+          'step${i + 1}_ar': stepArCtrls[i].text.trim(),
+        for (var i = 0; i < 5; i++)
+          'step${i + 1}_en': stepEnCtrls[i].text.trim(),
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', 1);
 
@@ -257,7 +317,90 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
                 ],
               ),
             ),
+
+          const SizedBox(height: 24),
+          Container(height: 1, color: Colors.black12),
+          const SizedBox(height: 24),
+
+          Text(
+            isArabic ? 'محتوى صفحة "عن أوتو ون"' : 'About page content',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+          ),
+          const SizedBox(height: 10),
+          _aboutTextField(
+            aboutIntroArCtrl,
+            isArabic ? 'نبذة عن المعرض (عربي)' : 'About intro (Arabic)',
+          ),
+          _aboutTextField(
+            aboutIntroEnCtrl,
+            isArabic ? 'نبذة عن المعرض (إنجليزي)' : 'About intro (English)',
+          ),
+          _aboutTextField(
+            aboutOfferArCtrl,
+            isArabic ? 'اللي بنقدمه (عربي)' : 'What we offer (Arabic)',
+          ),
+          _aboutTextField(
+            aboutOfferEnCtrl,
+            isArabic ? 'اللي بنقدمه (إنجليزي)' : 'What we offer (English)',
+          ),
+          _aboutTextField(
+            aboutAvailableArCtrl,
+            isArabic ? 'السيارات المتوفرة (عربي)' : 'Available cars (Arabic)',
+          ),
+          _aboutTextField(
+            aboutAvailableEnCtrl,
+            isArabic
+                ? 'السيارات المتوفرة (إنجليزي)'
+                : 'Available cars (English)',
+          ),
+          _aboutTextField(
+            aboutGoalArCtrl,
+            isArabic ? 'هدفنا وخدمتنا (عربي)' : 'Our goal (Arabic)',
+          ),
+          _aboutTextField(
+            aboutGoalEnCtrl,
+            isArabic ? 'هدفنا وخدمتنا (إنجليزي)' : 'Our goal (English)',
+          ),
+
+          const SizedBox(height: 24),
+          Text(
+            isArabic ? 'خطوات "طريقة الشراء"' : '"How to Buy" steps',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+          ),
+          const SizedBox(height: 10),
+          for (var i = 0; i < 5; i++) ...[
+            _aboutTextField(
+              stepArCtrls[i],
+              isArabic
+                  ? 'الخطوة ${i + 1} (عربي)'
+                  : 'Step ${i + 1} (Arabic)',
+            ),
+            _aboutTextField(
+              stepEnCtrls[i],
+              isArabic
+                  ? 'الخطوة ${i + 1} (إنجليزي)'
+                  : 'Step ${i + 1} (English)',
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _aboutTextField(TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextField(
+        controller: controller,
+        maxLines: null,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       ),
     );
   }
