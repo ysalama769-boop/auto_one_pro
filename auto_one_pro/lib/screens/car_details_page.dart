@@ -1798,6 +1798,50 @@ Positioned(
     ),
   ),
 ),
+
+// THUMBNAILS STRIP (معرض صور بذاكرة صغيرة تحت الصورة الرئيسية)
+if (galleryImages.length > 1)
+  Padding(
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    child: SizedBox(
+      height: 72,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: galleryImages.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final img = galleryImages[index];
+          final isSelected = img == (selectedImage ?? car.image);
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedImage = img;
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 96,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? Colors.red : Colors.grey.shade300,
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: carImageAdaptive(
+                img,
+                fit: BoxFit.cover,
+                showWatermark: false,
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  ),
+
 // ============================================================
 // HERO INFO - WHITE AREA
 // ============================================================
@@ -1836,6 +1880,22 @@ Container(
                     color: Colors.black,
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                Row(
+                  children: List.generate(
+                    5,
+                    (index) => const Padding(
+                      padding: EdgeInsets.only(left: 2),
+                      child: Icon(
+                        Icons.star_border_rounded,
+                        color: Colors.amber,
+                        size: 20,
+                      ),
+                    ),
                   ),
                 ),
 
@@ -1961,8 +2021,8 @@ if ((carColorsCache[car.id] ?? const <CarColor>[]).isNotEmpty) ...[
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          width: isSelected ? 36 : 32,
-          height: isSelected ? 36 : 32,
+          width: isSelected ? 54 : 48,
+          height: isSelected ? 54 : 48,
           decoration: BoxDecoration(
             color: Color(color.colorValue),
             shape: BoxShape.circle,
@@ -1986,7 +2046,7 @@ if ((carColorsCache[car.id] ?? const <CarColor>[]).isNotEmpty) ...[
               ? const Icon(
                   Icons.check_rounded,
                   color: Colors.white,
-                  size: 18,
+                  size: 24,
                 )
               : null,
         ),
@@ -2160,10 +2220,17 @@ Container(
 
           Widget specColumn(String title, List<Widget> cards) {
             if (cards.isEmpty) return const SizedBox.shrink();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+            return Theme(
+              data: Theme.of(context).copyWith(
+                dividerColor: Colors.transparent,
+              ),
+              child: ExpansionTile(
+                initiallyExpanded: true,
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: const EdgeInsets.only(top: 12),
+                iconColor: Colors.white,
+                collapsedIconColor: Colors.white54,
+                title: Text(
                   title,
                   style: const TextStyle(
                     color: Colors.white,
@@ -2171,9 +2238,8 @@ Container(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 12),
-                ...cards,
-              ],
+                children: cards,
+              ),
             );
           }
 
@@ -2679,6 +2745,114 @@ Container(
               color: Colors.white38,
               size: 16,
             ),
+          ],
+        ),
+      ),
+    ],
+  ),
+),
+
+const SizedBox(height: 20),
+
+// ============================================================
+// أسئلة شائعة (FAQ) — قابلة للطي
+// ============================================================
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.all(18),
+  decoration: BoxDecoration(
+    color: const Color(0xFF151515),
+    borderRadius: BorderRadius.circular(16),
+    border: Border.all(
+      color: Colors.white.withValues(alpha: 0.06),
+    ),
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        isArabic ? 'الأسئلة الشائعة' : 'Frequently Asked Questions',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      const SizedBox(height: 10),
+      Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+        ),
+        child: Column(
+          children: [
+            for (final faq in [
+              (
+                isArabic
+                    ? 'هل السيارة جديدة ولا مستعملة؟'
+                    : 'Is the car new or used?',
+                isArabic
+                    ? 'نوضّح حالة كل سيارة (جديدة أو مستعملة) في صفحة تفاصيلها، وتقدر كمان تتأكد من الفريق مباشرة قبل الحجز.'
+                    : 'The condition of each car (new or used) is shown on its details page, and you can also confirm directly with our team before booking.',
+              ),
+              (
+                isArabic
+                    ? 'إزاي أحجز السيارة؟'
+                    : 'How do I book this car?',
+                isArabic
+                    ? 'دوس على زرار "احجز الآن"، سجّل بياناتك، وفريق AUTO ONE هيتواصل معاك لاستكمال باقي الإجراءات.'
+                    : 'Tap "Book Now", fill in your details, and the AUTO ONE team will contact you to complete the rest of the process.',
+              ),
+              (
+                isArabic
+                    ? 'فيه إمكانية تقسيط؟'
+                    : 'Is financing available?',
+                isArabic
+                    ? 'تقدر تستخدم حاسبة التقسيط في صفحة السيارة للحصول على تقدير تقريبي، والتفاصيل النهائية بتتحدد مع الفريق حسب الجهة الممولة.'
+                    : 'You can use the financing calculator on the car\'s page for a rough estimate; final details depend on the financing provider and are confirmed with our team.',
+              ),
+              (
+                isArabic
+                    ? 'هل الألوان الموجودة كلها متاحة فعليًا؟'
+                    : 'Are all shown colors actually available?',
+                isArabic
+                    ? 'الألوان المعروضة هي المتاحة في المخزون وقت النشر، وننصح بتأكيد التوفر مع الفريق قبل الحجز النهائي.'
+                    : 'The colors shown reflect current stock at the time of posting; we recommend confirming availability with our team before finalizing your booking.',
+              ),
+            ])
+              Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                ),
+                child: ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  iconColor: Colors.white,
+                  collapsedIconColor: Colors.white54,
+                  title: Text(
+                    faq.$1,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          faq.$2,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            height: 1.7,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

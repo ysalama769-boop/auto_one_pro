@@ -283,12 +283,24 @@ class Car {
       offerEndDate: (map['offer_end_date'] ?? '').toString(),
       isFeatured: (map['is_featured'] ?? false) as bool,
       viewCount: (map['view_count'] ?? 0) as int,
+      // بقت "extra_specs" مخزّنة كمجموعات حسب القسم (القيادة، الأمان...)
+      // { "driving": {"ACC": "نعم"}, "safety": {...} } — نحولها هنا
+      // لقائمة مسطّحة (اسم المواصفة: قيمتها) عشان العرض.
       extraSpecs: (map['extra_specs'] is Map)
-          ? Map<String, String>.from(
-              (map['extra_specs'] as Map).map(
-                (key, value) => MapEntry(key.toString(), value.toString()),
-              ),
-            )
+          ? () {
+              final flat = <String, String>{};
+              (map['extra_specs'] as Map).forEach((catKey, catValue) {
+                if (catValue is Map) {
+                  catValue.forEach((k, v) {
+                    flat[k.toString()] = v.toString();
+                  });
+                } else {
+                  // توافق مع البيانات القديمة المسطّحة (من غير أقسام)
+                  flat[catKey.toString()] = catValue.toString();
+                }
+              });
+              return flat;
+            }()
           : const {},
       carStatus: (map['car_status'] ?? 'available') as String,
       vin: (map['vin'] ?? '') as String,
