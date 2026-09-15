@@ -8,8 +8,12 @@ class CarColor {
   final String nameAr;
   final String nameEn;
   final int colorValue;
-  // صورة السيارة باللون ده تحديدًا (لو موجودة)
+  // صورة السيارة باللون ده تحديدًا (لو موجودة) — أول صورة خارجية،
+  // مستخدمة كصورة أساسية لتبديل اللون بسرعة.
   final String? image;
+  // معرض صور خارجية وداخلية كامل لنفس اللون ده
+  final List<String> exteriorImages;
+  final List<String> interiorImages;
 
   const CarColor({
     required this.id,
@@ -17,6 +21,8 @@ class CarColor {
     required this.nameEn,
     required this.colorValue,
     this.image,
+    this.exteriorImages = const [],
+    this.interiorImages = const [],
   });
 
   // بيحول صف جاي من جدول colors في Supabase لكائن CarColor
