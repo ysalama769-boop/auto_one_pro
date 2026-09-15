@@ -868,10 +868,10 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF151515),
+        color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Colors.black12,
         ),
       ),
       child: Column(
@@ -888,7 +888,7 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
               Text(
                 isArabic ? 'حاسبة التمويل' : 'FINANCING CALCULATOR',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                 ),
@@ -902,7 +902,7 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
             children: [
               Text(
                 isArabic ? 'المقدم' : 'Down payment',
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                style: const TextStyle(color: Colors.black54, fontSize: 12),
               ),
               const Spacer(),
               Text(
@@ -910,7 +910,7 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
                 '${downPayment.toStringAsFixed(0)} '
                 '${isArabic ? 'ريال' : 'SAR'}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
@@ -921,7 +921,7 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: Colors.red,
               thumbColor: Colors.red,
-              inactiveTrackColor: Colors.white24,
+              inactiveTrackColor: Colors.black12,
               overlayColor: Colors.red.withValues(alpha: 0.2),
             ),
             child: Slider(
@@ -940,7 +940,7 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
           // مدة التمويل
           Text(
             isArabic ? 'مدة التمويل' : 'Financing duration',
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
+            style: const TextStyle(color: Colors.black54, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -952,13 +952,13 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
                 label: Text(
                   isArabic ? '$m شهر' : '$m mo',
                   style: TextStyle(
-                    color: selected ? Colors.white : Colors.white70,
+                    color: selected ? Colors.black87 : Colors.black54,
                     fontSize: 12,
                   ),
                 ),
                 selected: selected,
                 selectedColor: Colors.red,
-                backgroundColor: Colors.white.withValues(alpha: 0.08),
+                backgroundColor: Colors.black.withValues(alpha: 0.05),
                 onSelected: (_) => setState(() => months = m),
               );
             }).toList(),
@@ -982,7 +982,7 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
                         ? 'القسط الشهري التقريبي'
                         : 'Estimated monthly installment',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Colors.black87,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
@@ -1006,7 +1006,7 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
             isArabic
                 ? 'ده تقدير تقريبي مش عرض تمويل رسمي، السعر النهائي بيحدده البنك أو جهة التمويل.'
                 : 'This is a rough estimate, not an official offer — the final rate is set by the bank/financing provider.',
-            style: const TextStyle(color: Colors.white38, fontSize: 10.5),
+            style: const TextStyle(color: Colors.black38, fontSize: 10.5),
           ),
         ],
       ),
@@ -1599,7 +1599,7 @@ Container(
         // CAR IMAGE
 Positioned.fill(
   child: Container(
-    color: Colors.black,
+    color: Colors.grey.shade100,
     child: carImageAdaptive(
       selectedImage ?? car.image,
       fit: BoxFit.contain,
@@ -1607,23 +1607,6 @@ Positioned.fill(
     ),
   ),
 ),
-
-        // DARK GRADIENT
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.45),
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.65),
-                ],
-              ),
-            ),
-          ),
-        ),
 
        // NEW
 Positioned(
@@ -2072,7 +2055,7 @@ Container(
   width: double.infinity,
   padding: const EdgeInsets.all(24),
   decoration: BoxDecoration(
-    color: const Color(0xFF0B0B0B),
+    color: Colors.black87,
     borderRadius: BorderRadius.circular(24),
     boxShadow: const [
       BoxShadow(
@@ -2109,7 +2092,7 @@ Container(
                       ? 'مواصفات السيارة'
                       : 'CAR SPECIFICATIONS',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black87,
                     fontSize: 25,
                     fontWeight: FontWeight.w900,
                   ),
@@ -2122,7 +2105,7 @@ Container(
                       ? 'أهم المواصفات الفنية للسيارة'
                       : 'KEY TECHNICAL SPECIFICATIONS',
                   style: const TextStyle(
-                    color: Colors.white54,
+                    color: Colors.black54,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -2172,10 +2155,10 @@ Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF151515),
+                color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: Colors.black12,
                 ),
               ),
               child: Row(
@@ -2197,7 +2180,7 @@ Container(
                         Text(
                           label,
                           style: const TextStyle(
-                            color: Colors.white54,
+                            color: Colors.black54,
                             fontSize: 11,
                           ),
                         ),
@@ -2205,7 +2188,7 @@ Container(
                         Text(
                           value,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Colors.black87,
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
                           ),
@@ -2228,12 +2211,12 @@ Container(
                 initiallyExpanded: true,
                 tilePadding: EdgeInsets.zero,
                 childrenPadding: const EdgeInsets.only(top: 12),
-                iconColor: Colors.white,
-                collapsedIconColor: Colors.white54,
+                iconColor: Colors.black87,
+                collapsedIconColor: Colors.black54,
                 title: Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black87,
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
@@ -2450,10 +2433,10 @@ Container(
           width: double.infinity,
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: const Color(0xFF151515),
+            color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: Colors.black12,
             ),
           ),
           child: Column(
@@ -2462,7 +2445,7 @@ Container(
               Text(
                 isArabic ? 'نبذة عن السيارة' : 'ABOUT THIS CAR',
                 style: const TextStyle(
-                  color: Colors.white54,
+                  color: Colors.black54,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
@@ -2471,7 +2454,7 @@ Container(
               Text(
                 car.displayDescription(isArabic),
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 14,
                   height: 1.7,
                 ),
@@ -2500,7 +2483,7 @@ Container(
   width: double.infinity,
   padding: const EdgeInsets.all(20),
   decoration: BoxDecoration(
-    color: const Color(0xFF0B0B0B),
+    color: Colors.black87,
     borderRadius: BorderRadius.circular(24),
   ),
   child: Column(
@@ -2530,7 +2513,7 @@ Container(
                       ? 'موقع المعرض'
                       : 'SHOWROOM LOCATION',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black87,
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                   ),
@@ -2543,7 +2526,7 @@ Container(
                       ? 'تفضل بزيارة معرض AUTO ONE'
                       : 'VISIT AUTO ONE SHOWROOM',
                   style: const TextStyle(
-                    color: Colors.white54,
+                    color: Colors.black54,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -2575,7 +2558,7 @@ Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF151515),
+            color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -2605,7 +2588,7 @@ Container(
                           ? 'معرض AUTO ONE'
                           : 'AUTO ONE SHOWROOM',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Colors.black87,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
@@ -2618,7 +2601,7 @@ Container(
                           ? 'اضغط لفتح الموقع على خرائط Google'
                           : 'Tap to open the location on Google Maps',
                       style: const TextStyle(
-                        color: Colors.white54,
+                        color: Colors.black54,
                         fontSize: 12,
                       ),
                     ),
@@ -2637,7 +2620,7 @@ Container(
                 ),
                 child: const Icon(
                   Icons.navigation_rounded,
-                  color: Colors.white,
+                  color: Colors.black87,
                   size: 18,
                 ),
               ),
@@ -2658,10 +2641,10 @@ Container(
   width: double.infinity,
   padding: const EdgeInsets.all(18),
   decoration: BoxDecoration(
-    color: const Color(0xFF151515),
+    color: Colors.grey.shade100,
     borderRadius: BorderRadius.circular(16),
     border: Border.all(
-      color: Colors.white.withValues(alpha: 0.06),
+      color: Colors.black12,
     ),
   ),
   child: Column(
@@ -2670,7 +2653,7 @@ Container(
       Text(
         isArabic ? 'الأسئلة الشائعة' : 'Frequently Asked Questions',
         style: const TextStyle(
-          color: Colors.white,
+          color: Colors.black87,
           fontSize: 16,
           fontWeight: FontWeight.w900,
         ),
@@ -2722,12 +2705,12 @@ Container(
                 ),
                 child: ExpansionTile(
                   tilePadding: EdgeInsets.zero,
-                  iconColor: Colors.white,
-                  collapsedIconColor: Colors.white54,
+                  iconColor: Colors.black87,
+                  collapsedIconColor: Colors.black54,
                   title: Text(
                     faq.$1,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Colors.black87,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
@@ -2740,7 +2723,7 @@ Container(
                         child: Text(
                           faq.$2,
                           style: const TextStyle(
-                            color: Colors.white70,
+                            color: Colors.black54,
                             fontSize: 13,
                             height: 1.7,
                           ),
