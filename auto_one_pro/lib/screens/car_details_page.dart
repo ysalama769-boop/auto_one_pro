@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/constants.dart';
 import '../models/car.dart';
 import '../shared/repository.dart';
+import '../shared/favorites_compare.dart';
 import '../shared/widgets.dart';
 import '../screens/car_booking_page.dart';
 
@@ -1147,6 +1148,37 @@ class CarDetailsPage extends StatefulWidget {
     return KeyEventResult.ignored;
   }
 
+  Widget _quickSpecIcon({
+    required IconData icon,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.black54, size: 22),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _heroGalleryArrow({
     required IconData icon,
     required VoidCallback onTap,
@@ -1569,418 +1601,496 @@ floatingActionButtonLocation:
 const SizedBox(height: 24),
 
 // ============================================================
-// HERO CAR CARD - NEW
 // ============================================================
-
-Container(
-  width: double.infinity,
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(24),
-    boxShadow: const [
-      BoxShadow(
-        color: Colors.black12,
-        blurRadius: 20,
-        offset: Offset(0, 8),
+// BREADCRUMB
+// ============================================================
+Padding(
+  padding: const EdgeInsets.only(bottom: 14),
+  child: Wrap(
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      InkWell(
+        onTap: () => Navigator.of(context).popUntil((r) => r.isFirst),
+        child: Text(
+          isArabic ? 'الرئيسية' : 'Home',
+          style: const TextStyle(color: Colors.black54, fontSize: 13),
+        ),
+      ),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6),
+        child: Icon(Icons.chevron_left_rounded, size: 16, color: Colors.black38),
+      ),
+      InkWell(
+        onTap: () => Navigator.of(context).maybePop(),
+        child: Text(
+          isArabic ? 'السيارات' : 'Cars',
+          style: const TextStyle(color: Colors.black54, fontSize: 13),
+        ),
+      ),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6),
+        child: Icon(Icons.chevron_left_rounded, size: 16, color: Colors.black38),
+      ),
+      Text(
+        car.displayName(isArabic),
+        style: const TextStyle(
+          color: Colors.red,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     ],
   ),
-  child: Column(
-    children: [
-         ClipRRect(
-  borderRadius: const BorderRadius.vertical(
-    top: Radius.circular(24),
-  ),
-  child: SizedBox(
-    width: double.infinity,
-    height: 380,
-    child: Stack(
+),
+
+// ============================================================
+// HERO ROW - عمودين جنب بعض (الصورة | التفاصيل)
+// ============================================================
+LayoutBuilder(
+  builder: (context, heroConstraints) {
+    final isWideHero = heroConstraints.maxWidth >= 900;
+
+    final imageBlock = Column(
       children: [
-        // CAR IMAGE
-Positioned.fill(
-  child: Container(
-    color: Colors.grey.shade100,
-    child: carImageAdaptive(
-      selectedImage ?? car.image,
-      fit: BoxFit.contain,
-      showWatermark: false,
-    ),
-  ),
-),
-
-       // NEW
-Positioned(
-  top: 20,
-  left: 20,
-  child: Container(
-    padding: const EdgeInsets.symmetric(
-      horizontal: 14,
-      vertical: 8,
-    ),
-    decoration: BoxDecoration(
-      color: Colors.red,
-      borderRadius: BorderRadius.circular(10),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black38,
-          blurRadius: 8,
-          offset: Offset(0, 3),
-        ),
-      ],
-    ),
-    child: Text(
-      isArabic ? 'جديد' : 'NEW',
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 13,
-        fontWeight: FontWeight.w900,
-      ),
-    ),
-  ),
-),
-
-// BRAND LOGO
-Positioned(
-  top: 20,
-  right: 20,
-  child: Container(
-    width: 58,
-    height: 58,
-    padding: const EdgeInsets.all(8),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black26,
-          blurRadius: 10,
-          offset: Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Image.asset(
-      getBrandLogo(car.brand),
-      fit: BoxFit.contain,
-    ),
-  ),
-),
-
-// AUTO ONE WATERMARK - NEXT TO BRAND LOGO
-Positioned(
-  top: 20,
-  right: 90,
-  child: Opacity(
-    opacity: 0.92,
-    child: Container(
-      width: 44,
-      height: 58,
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Image.asset(
-        'assets/logo-autoone.png',
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stack) =>
-            const SizedBox.shrink(),
-      ),
-    ),
-  ),
-),
-
-// GALLERY NAVIGATION ARROWS
-if (galleryImages.length > 1) ...[
-  Positioned(
-    top: 0,
-    bottom: 0,
-    left: 10,
-    child: Center(
-      child: _heroGalleryArrow(
-        icon: Icons.chevron_right,
-        onTap: () => _goToPreviousImage(),
-      ),
-    ),
-  ),
-  Positioned(
-    top: 0,
-    bottom: 0,
-    right: 10,
-    child: Center(
-      child: _heroGalleryArrow(
-        icon: Icons.chevron_left,
-        onTap: () => _goToNextImage(),
-      ),
-    ),
-  ),
-],
-
-// FULLSCREEN VIEW BUTTON (TRANSPARENT)
-Positioned(
-  bottom: 16,
-  left: 0,
-  right: 0,
-  child: Center(
-    child: Material(
-      color: Colors.black.withValues(alpha: 0.45),
-      borderRadius: BorderRadius.circular(30),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(30),
-        onTap: () {
-          final startIndex = galleryImages.indexOf(
-            selectedImage ?? car.image,
-          );
-          Navigator.of(context).push(
-            smoothRoute(
-              FullScreenGallery(
-                images: galleryImages,
-                initialIndex: startIndex < 0 ? 0 : startIndex,
-              ),
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 10,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.fullscreen_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                isArabic ? 'شاهد الصور' : 'View photos',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  ),
-),
-
-       
-      ],
-    ),
-  ),
-),
-
-// THUMBNAILS STRIP (معرض صور بذاكرة صغيرة تحت الصورة الرئيسية)
-if (galleryImages.length > 1)
-  Padding(
-    padding: const EdgeInsets.symmetric(vertical: 12),
-    child: SizedBox(
-      height: 72,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: galleryImages.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final img = galleryImages[index];
-          final isSelected = img == (selectedImage ?? car.image);
-
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedImage = img;
-              });
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 96,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected ? Colors.red : Colors.grey.shade300,
-                  width: isSelected ? 2 : 1,
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: carImageAdaptive(
-                img,
-                fit: BoxFit.cover,
-                showWatermark: false,
-              ),
-            ),
-          );
-        },
-      ),
-    ),
-  ),
-
-// ============================================================
-// HERO INFO - WHITE AREA
-// ============================================================
-
-Container(
-  width: double.infinity,
-  padding: const EdgeInsets.fromLTRB(
-    24,
-    20,
-    24,
-    24,
-  ),
-  decoration: const BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.vertical(
-      bottom: Radius.circular(24),
-    ),
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-
-      // MODEL + YEAR
-      Row(
-        children: [
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: SizedBox(
+            width: double.infinity,
+            height: 320,
+            child: Stack(
               children: [
-
-                Text(
-                  car.displayName(isArabic),
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.grey.shade100,
+                    child: carImageAdaptive(
+                      selectedImage ?? car.image,
+                      fit: BoxFit.contain,
+                      showWatermark: false,
+                    ),
                   ),
                 ),
 
-                const SizedBox(height: 6),
-
-                Row(
-                  children: List.generate(
-                    5,
-                    (index) => const Padding(
-                      padding: EdgeInsets.only(left: 2),
-                      child: Icon(
-                        Icons.star_border_rounded,
-                        color: Colors.amber,
-                        size: 20,
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      isArabic ? 'جديد' : 'NEW',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 5),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Image.asset(
+                      getBrandLogo(car.brand),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
 
-                Text(
-                  '${car.brand}  •  ${car.year}',
-                  style: const TextStyle(
-                    color: Colors.black45,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                if (galleryImages.length > 1) ...[
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    left: 8,
+                    child: Center(
+                      child: _heroGalleryArrow(
+                        icon: Icons.chevron_right,
+                        onTap: () => _goToPreviousImage(),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    right: 8,
+                    child: Center(
+                      child: _heroGalleryArrow(
+                        icon: Icons.chevron_left,
+                        onTap: () => _goToNextImage(),
+                      ),
+                    ),
+                  ),
+                ],
+
+                Positioned(
+                  bottom: 12,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Material(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(30),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(30),
+                        onTap: () {
+                          final startIndex = galleryImages.indexOf(
+                            selectedImage ?? car.image,
+                          );
+                          Navigator.of(context).push(
+                            smoothRoute(
+                              FullScreenGallery(
+                                images: galleryImages,
+                                initialIndex: startIndex < 0 ? 0 : startIndex,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 9,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.fullscreen_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                isArabic ? 'شاهد الصور' : 'View photos',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
 
-         // PRICE + BOOKING
-Column(
-  crossAxisAlignment: CrossAxisAlignment.end,
-  children: [
-    Text(
-      isArabic ? 'السعر' : 'PRICE',
-      style: const TextStyle(
-        color: Colors.black45,
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-      ),
-    ),
+        if (galleryImages.length > 1) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 72,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: galleryImages.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final img = galleryImages[index];
+                final isSelected = img == (selectedImage ?? car.image);
 
-    const SizedBox(height: 3),
-
-    Text(
-      car.price,
-      style: const TextStyle(
-        color: Colors.red,
-        fontSize: 17,
-        fontWeight: FontWeight.w900,
-      ),
-    ),
-
-    const SizedBox(height: 10),
-
-    CreativeBookButton(
-      isArabic: isArabic,
-      onTap: () {
-        Navigator.push(
-          context,
-          smoothRoute(
-            CarBookingPage(
-              car: car,
-              isArabic: isArabic,
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedImage = img;
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 96,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? Colors.red : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: carImageAdaptive(
+                      img,
+                      fit: BoxFit.cover,
+                      showWatermark: false,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-        );
-      },
-    ),
+        ],
+      ],
+    );
 
-    const SizedBox(height: 10),
+    // بادج التوفر حسب حالة السيارة
+    Color availabilityColor;
+    String availabilityLabel;
+    switch (car.carStatus) {
+      case 'sold':
+        availabilityColor = Colors.grey;
+        availabilityLabel = isArabic ? 'مباعة' : 'SOLD';
+        break;
+      case 'reserved':
+        availabilityColor = Colors.orange;
+        availabilityLabel = isArabic ? 'محجوزة' : 'RESERVED';
+        break;
+      default:
+        availabilityColor = Colors.green;
+        availabilityLabel = isArabic ? 'متاحة الآن' : 'AVAILABLE NOW';
+    }
 
-    SizedBox(
-      width: 228,
-      child: OutlinedButton.icon(
-        onPressed: () => _submitFinancingRequest(context, car, isArabic),
-        icon: const Icon(
-          Icons.account_balance_wallet_outlined,
-          size: 16,
+    final infoBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                car.displayName(isArabic),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            FavoriteButton(carId: car.id, size: 24),
+          ],
         ),
-        label: Text(
-          isArabic ? 'طلب تمويل' : 'Financing',
-          style: const TextStyle(fontSize: 12),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.black87,
-          side: const BorderSide(color: Colors.black26),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+
+        const SizedBox(height: 8),
+
+        Row(
+          children: List.generate(
+            5,
+            (index) => const Padding(
+              padding: EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.star_border_rounded,
+                color: Colors.amber,
+                size: 20,
+              ),
+            ),
           ),
         ),
-      ),
-    ),
-  ],
-),
+
+        const SizedBox(height: 8),
+
+        Text(
+          '${car.brand}  •  ${car.year}',
+          style: const TextStyle(
+            color: Colors.black45,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+        const SizedBox(height: 14),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: availabilityColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: availabilityColor.withValues(alpha: 0.4)),
+          ),
+          child: Text(
+            availabilityLabel,
+            style: TextStyle(
+              color: availabilityColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 18),
+
+        // زرار المقارنة + طلب تمويل + احجز الآن
+        Row(
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                if (car.id != null) toggleCompare(car.id!);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      isArabic
+                          ? 'اتضافت للمقارنة'
+                          : 'Added to comparison',
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                ),
+                child: const Icon(
+                  Icons.compare_arrows_rounded,
+                  color: Colors.amber,
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 10),
+
+            InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => _submitFinancingRequest(context, car, isArabic),
+              child: Container(
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.black12),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 10),
+
+            Expanded(
+              child: CreativeBookButton(
+                isArabic: isArabic,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    smoothRoute(
+                      CarBookingPage(
+                        car: car,
+                        isArabic: isArabic,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: Text(
+            car.price,
+            style: const TextStyle(
+              color: Colors.red,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // 4 أيقونات مواصفات سريعة
+        Row(
+          children: [
+            Expanded(
+              child: _quickSpecIcon(
+                icon: Icons.settings_rounded,
+                label: car.transmission.isNotEmpty
+                    ? car.transmission
+                    : (isArabic ? 'أوتوماتيك' : 'Automatic'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _quickSpecIcon(
+                icon: Icons.event_seat_rounded,
+                label: car.seats.isNotEmpty
+                    ? car.seats
+                    : (isArabic ? '—' : '—'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _quickSpecIcon(
+                icon: Icons.local_gas_station_rounded,
+                label: car.fuelConsumption.isNotEmpty
+                    ? car.fuelConsumption
+                    : car.fuel,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _quickSpecIcon(
+                icon: Icons.calendar_today_rounded,
+                label: car.year,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    if (isWideHero) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(flex: 5, child: imageBlock),
+          const SizedBox(width: 28),
+          Expanded(flex: 6, child: infoBlock),
         ],
-      ),
+      );
+    }
 
-     const SizedBox(height: 18),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        imageBlock,
+        const SizedBox(height: 20),
+        infoBlock,
+      ],
+    );
+  },
+),
 
+const SizedBox(height: 28),
 
-const SizedBox(height: 18),
-
-
-// COLORS TITLE
+// COLORS (لو موجودة)
 if ((carColorsCache[car.id] ?? const <CarColor>[]).isNotEmpty) ...[
   Text(
-    isArabic
-        ? 'الألوان المتاحة'
-        : 'AVAILABLE COLORS',
+    isArabic ? 'اختيار لون السيارة' : 'SELECT CAR COLOR',
     style: const TextStyle(
       color: Colors.black87,
-      fontSize: 13,
+      fontSize: 14,
       fontWeight: FontWeight.w800,
     ),
   ),
@@ -2037,14 +2147,6 @@ if ((carColorsCache[car.id] ?? const <CarColor>[]).isNotEmpty) ...[
     }).toList(),
   ),
 ],
-
-// إغلاق Column الخاص بمعلومات السيارة
-],
-),
-),
-    ],
-  ),
-),
 
 const SizedBox(height: 30),
 // ============================================================
