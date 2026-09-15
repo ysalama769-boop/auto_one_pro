@@ -1054,6 +1054,9 @@ class CarDetailsPage extends StatefulWidget {
 
   class _CarDetailsPageState extends State<CarDetailsPage> {
   String? selectedImage;
+  // صورة اللون المختار (معاينة صغيرة بس، مش بتغيّر صورة السيارة
+  // الرئيسية اللي فوق).
+  String? selectedColorImage;
   // بنعرض بيانات السيارة المختصرة فورًا (زي ما بتوصل من القائمة)،
   // وبعدين نجيب باقي المواصفات التفصيلية (الأبعاد، الحصان، المزايا...)
   // في الخلفية من غير ما نأخر ظهور الصفحة.
@@ -2104,12 +2107,12 @@ if ((carColorsCache[car.id] ?? const <CarColor>[]).isNotEmpty) ...[
       final image = color.image ?? car.colorImages[color.id];
 
       final isSelected =
-          image != null && selectedImage == image;
+          image != null && selectedColorImage == image;
 
       return InkWell(
         onTap: () {
           setState(() {
-            selectedImage = image ?? car.image;
+            selectedColorImage = image;
           });
         },
         child: AnimatedContainer(
@@ -2146,6 +2149,25 @@ if ((carColorsCache[car.id] ?? const <CarColor>[]).isNotEmpty) ...[
       );
     }).toList(),
   ),
+
+  // معاينة صغيرة لصورة اللون المختار (مش بتغيّر الصورة الرئيسية)
+  if (selectedColorImage != null) ...[
+    const SizedBox(height: 14),
+    Container(
+      width: 130,
+      height: 90,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.black12),
+      ),
+      child: carImageAdaptive(
+        selectedColorImage!,
+        fit: BoxFit.cover,
+        showWatermark: false,
+      ),
+    ),
+  ],
 ],
 
 const SizedBox(height: 30),
@@ -2157,7 +2179,7 @@ Container(
   width: double.infinity,
   padding: const EdgeInsets.all(24),
   decoration: BoxDecoration(
-    color: Colors.black87,
+    color: Colors.white,
     borderRadius: BorderRadius.circular(24),
     boxShadow: const [
       BoxShadow(
@@ -2585,7 +2607,7 @@ Container(
   width: double.infinity,
   padding: const EdgeInsets.all(20),
   decoration: BoxDecoration(
-    color: Colors.black87,
+    color: Colors.white,
     borderRadius: BorderRadius.circular(24),
   ),
   child: Column(
