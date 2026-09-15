@@ -1085,7 +1085,39 @@ class _CarFormPageState extends State<CarFormPage> {
     setState(() {});
   }
 
-  // قائمة "مواصفة إضافية" خاصة بقسم معيّن (القيادة، الأمان...) — كل
+  Widget _bodyTypeChip(String value, String label) {
+    final isSelected = categoryCtrl.text.trim().toUpperCase() == value;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () {
+        setState(() {
+          categoryCtrl.text = value;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.red : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? Colors.red : Colors.black12,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // قائمة "المواصفة الإضافية" خاصة بقسم معيّن (القيادة، الأمان...) — كل
   // مواصفة بتتضاف هنا بتتسجل تحت نفس اسم القسم اللي بتضاف منه.
   Widget _categoryExtraSpecsSection(
     String category,
@@ -1860,10 +1892,24 @@ class _CarFormPageState extends State<CarFormPage> {
                 label: isArabic ? 'الماركة' : 'Brand',
                 required: true,
               ),
-              _field(
-                controller: categoryCtrl,
-                label: isArabic ? 'الفئة' : 'Category',
+              Text(
+                isArabic ? 'نوع السيارة' : 'Body type',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
               ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _bodyTypeChip('SUV', isArabic ? 'إس يو في' : 'SUV'),
+                  _bodyTypeChip('SEDAN', isArabic ? 'سيدان' : 'Sedan'),
+                  _bodyTypeChip('JEEP', isArabic ? 'جيب' : 'Jeep'),
+                ],
+              ),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   Expanded(
