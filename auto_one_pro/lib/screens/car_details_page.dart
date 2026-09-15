@@ -1556,7 +1556,7 @@ floatingActionButtonLocation:
         child: Column(
           children: [
         Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
 
         child: Center(
           child: ConstrainedBox(
@@ -2498,17 +2498,10 @@ Container(
 
 Container(
   width: double.infinity,
-  padding: const EdgeInsets.all(24),
+  padding: const EdgeInsets.all(20),
   decoration: BoxDecoration(
     color: const Color(0xFF0B0B0B),
     borderRadius: BorderRadius.circular(24),
-    boxShadow: const [
-      BoxShadow(
-        color: Colors.black26,
-        blurRadius: 20,
-        offset: Offset(0, 8),
-      ),
-    ],
   ),
   child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2519,7 +2512,7 @@ Container(
         children: [
           Container(
             width: 5,
-            height: 48,
+            height: 40,
             decoration: BoxDecoration(
               color: Colors.red,
               borderRadius: BorderRadius.circular(10),
@@ -2538,12 +2531,12 @@ Container(
                       : 'SHOWROOM LOCATION',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 25,
+                    fontSize: 20,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
 
-                const SizedBox(height: 5),
+                const SizedBox(height: 4),
 
                 Text(
                   isArabic
@@ -2558,36 +2551,14 @@ Container(
               ],
             ),
           ),
-
-          // AUTO ONE BADGE
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.red.withValues(alpha: 0.25),
-              ),
-            ),
-            child: const Text(
-              'AUTO ONE',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
         ],
       ),
 
-      const SizedBox(height: 22),
+      const SizedBox(height: 18),
 
-      // LOCATION CARD
-      GestureDetector(
+      // LOCATION CARD (كارت واحد بس بدل التلاتة القديمين)
+      InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () async {
           final Uri url = Uri.parse(
             'https://maps.app.goo.gl/HL4SPud1pafGup8v8',
@@ -2601,151 +2572,77 @@ Container(
           }
         },
         child: Container(
-          height: 190,
           width: double.infinity,
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: const Color(0xFF151515),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.06),
-            ),
+            borderRadius: BorderRadius.circular(16),
           ),
-          child: Stack(
-            alignment: Alignment.center,
+          child: Row(
             children: [
-
-              // MAP ICON
               Container(
-                width: 82,
-                height: 82,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
+                  color: Colors.red.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Image.asset(
-  'assets/google_maps_pin.png',
-  width: 65,
-  height: 65,
-  fit: BoxFit.contain,
-),
+                child: const Icon(
+                  Icons.location_on_rounded,
+                  color: Colors.red,
+                  size: 26,
+                ),
               ),
 
-              // OPEN MAP BUTTON
-              Positioned(
-                bottom: 18,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black38,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.navigation_rounded,
+              const SizedBox(width: 14),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isArabic
+                          ? 'معرض AUTO ONE'
+                          : 'AUTO ONE SHOWROOM',
+                      style: const TextStyle(
                         color: Colors.white,
-                        size: 18,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
                       ),
+                    ),
 
-                      const SizedBox(width: 8),
+                    const SizedBox(height: 4),
 
-                      Text(
-                        isArabic
-                            ? 'فتح موقع المعرض'
-                            : 'OPEN SHOWROOM',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
+                    Text(
+                      isArabic
+                          ? 'اضغط لفتح الموقع على خرائط Google'
+                          : 'Tap to open the location on Google Maps',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.navigation_rounded,
+                  color: Colors.white,
+                  size: 18,
                 ),
               ),
             ],
           ),
-        ),
-      ),
-
-      const SizedBox(height: 14),
-
-      // LOCATION INFO
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF151515),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.06),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.location_on_rounded,
-                color: Colors.red,
-                size: 22,
-              ),
-            ),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isArabic
-                        ? 'معرض AUTO ONE'
-                        : 'AUTO ONE SHOWROOM',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    isArabic
-                        ? 'اضغط لفتح الموقع على خرائط Google'
-                        : 'Tap to open the location on Google Maps',
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: Colors.white38,
-              size: 16,
-            ),
-          ],
         ),
       ),
     ],
