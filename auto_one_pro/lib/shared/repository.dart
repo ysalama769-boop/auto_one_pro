@@ -15,13 +15,40 @@ Future<List<CarColor>> fetchColorsForCar(int carId) async {
   try {
     final response = await Supabase.instance.client
         .from('car_color_availability')
-        .select('color_id, is_available, colors(id, name_ar, name_en, color_value)')
+        .select(
+          'color_id, is_available, image, exterior_images, interior_images, colors(id, name_ar, name_en, color_value)',
+        )
         .eq('car_id', carId)
         .eq('is_available', true);
 
     return (response as List)
         .where((row) => row['colors'] != null)
-        .map((row) => CarColor.fromMap(row['colors'] as Map<String, dynamic>))
+        .map((row) {
+          final baseColor =
+              CarColor.fromMap(row['colors'] as Map<String, dynamic>);
+          final colorImage = row['image'] as String?;
+          return CarColor(
+            id: baseColor.id,
+            nameAr: baseColor.nameAr,
+            nameEn: baseColor.nameEn,
+            colorValue: baseColor.colorValue,
+            image: (colorImage != null && colorImage.trim().isNotEmpty)
+                ? colorImage.trim()
+                : null,
+            exteriorImages: (row['exterior_images'] is List)
+                ? List<String>.from(
+                    (row['exterior_images'] as List)
+                        .map((e) => e.toString()),
+                  )
+                : const [],
+            interiorImages: (row['interior_images'] is List)
+                ? List<String>.from(
+                    (row['interior_images'] as List)
+                        .map((e) => e.toString()),
+                  )
+                : const [],
+          );
+        })
         .toList();
   } catch (e) {
     debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل ألوان السيارة $carId: $e');
@@ -35,7 +62,9 @@ Future<void> loadColorsForCars(List<Car> carsList) async {
   try {
     final response = await Supabase.instance.client
         .from('car_color_availability')
-        .select('car_id, color_id, is_available, image, colors(id, name_ar, name_en, color_value)')
+        .select(
+          'car_id, color_id, is_available, image, exterior_images, interior_images, colors(id, name_ar, name_en, color_value)',
+        )
         .eq('is_available', true);
 
     final Map<int, List<CarColor>> grouped = {};
@@ -56,6 +85,16 @@ Future<void> loadColorsForCars(List<Car> carsList) async {
         image: (colorImage != null && colorImage.trim().isNotEmpty)
             ? colorImage.trim()
             : null,
+        exteriorImages: (map['exterior_images'] is List)
+            ? List<String>.from(
+                (map['exterior_images'] as List).map((e) => e.toString()),
+              )
+            : const [],
+        interiorImages: (map['interior_images'] is List)
+            ? List<String>.from(
+                (map['interior_images'] as List).map((e) => e.toString()),
+              )
+            : const [],
       );
       grouped.putIfAbsent(carId, () => []).add(color);
     }

@@ -226,6 +226,173 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
 }
 
 
+// ============================================================
+// COLOR PHOTO GALLERY (معرض صغير لصور لون معيّن - خارجي أو داخلي)
+// ============================================================
+class _ColorPhotoGallery extends StatefulWidget {
+  final String title;
+  final List<String> images;
+
+  const _ColorPhotoGallery({
+    required this.title,
+    required this.images,
+  });
+
+  @override
+  State<_ColorPhotoGallery> createState() => _ColorPhotoGalleryState();
+}
+
+class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
+  int currentIndex = 0;
+
+  @override
+  void didUpdateWidget(covariant _ColorPhotoGallery oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // لو اتغيّر اللون (وبالتالي قايمة الصور)، نرجع نبدأ من أول صورة
+    if (oldWidget.images != widget.images) {
+      currentIndex = 0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final images = widget.images;
+    final safeIndex = currentIndex < images.length ? currentIndex : 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.title,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: double.infinity,
+              height: 200,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  carImageAdaptive(
+                    images[safeIndex],
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.contain,
+                    showWatermark: false,
+                  ),
+                  if (images.length > 1) ...[
+                    Positioned(
+                      left: 6,
+                      child: Material(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        shape: const CircleBorder(),
+                        elevation: 2,
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () {
+                            setState(() {
+                              currentIndex =
+                                  (safeIndex - 1 + images.length) %
+                                      images.length;
+                            });
+                          },
+                          child: const SizedBox(
+                            width: 34,
+                            height: 34,
+                            child: Icon(
+                              Icons.chevron_right,
+                              color: Colors.black87,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: 6,
+                      child: Material(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        shape: const CircleBorder(),
+                        elevation: 2,
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () {
+                            setState(() {
+                              currentIndex = (safeIndex + 1) % images.length;
+                            });
+                          },
+                          child: const SizedBox(
+                            width: 34,
+                            height: 34,
+                            child: Icon(
+                              Icons.chevron_left,
+                              color: Colors.black87,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          if (images.length > 1) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 58,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: images.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final isSelected = index == safeIndex;
+                  return GestureDetector(
+                    onTap: () => setState(() => currentIndex = index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 78,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color:
+                              isSelected ? Colors.red : Colors.grey.shade300,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: carImageAdaptive(
+                        images[index],
+                        fit: BoxFit.cover,
+                        showWatermark: false,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class CarGallery extends StatefulWidget {
   final List<String> images;
 
@@ -1054,9 +1221,9 @@ class CarDetailsPage extends StatefulWidget {
 
   class _CarDetailsPageState extends State<CarDetailsPage> {
   String? selectedImage;
-  // صورة اللون المختار (معاينة صغيرة بس، مش بتغيّر صورة السيارة
-  // الرئيسية اللي فوق).
-  String? selectedColorImage;
+  // اللون المختار حاليًا (لو موجود) — بنستخدمه عشان نعرض معرض
+  // الصور الخارجية والداخلية بتاعته تحت.
+  CarColor? selectedColorObj;
   // بنعرض بيانات السيارة المختصرة فورًا (زي ما بتوصل من القائمة)،
   // وبعدين نجيب باقي المواصفات التفصيلية (الأبعاد، الحصان، المزايا...)
   // في الخلفية من غير ما نأخر ظهور الصفحة.
@@ -1149,6 +1316,16 @@ class CarDetailsPage extends StatefulWidget {
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
+  }
+
+  // بيرجّع ويدجت معرض الصور للون المختار، أو null لو مفيش صور خالص
+  // (عشان القسم كله يختفي بدل ما يبان فاضي).
+  Widget? _colorPhotoGallery({
+    required String title,
+    required List<String> images,
+  }) {
+    if (images.isEmpty) return null;
+    return _ColorPhotoGallery(title: title, images: images);
   }
 
   Widget _quickSpecIcon({
@@ -2104,15 +2281,12 @@ if ((carColorsCache[car.id] ?? const <CarColor>[]).isNotEmpty) ...[
     spacing: 10,
     runSpacing: 10,
     children: (carColorsCache[car.id] ?? const <CarColor>[]).map((color) {
-      final image = color.image ?? car.colorImages[color.id];
-
-      final isSelected =
-          image != null && selectedColorImage == image;
+      final isSelected = selectedColorObj?.id == color.id;
 
       return InkWell(
         onTap: () {
           setState(() {
-            selectedColorImage = image;
+            selectedColorObj = color;
           });
         },
         child: AnimatedContainer(
@@ -2149,26 +2323,57 @@ if ((carColorsCache[car.id] ?? const <CarColor>[]).isNotEmpty) ...[
       );
     }).toList(),
   ),
-
-  // معاينة صغيرة لصورة اللون المختار (مش بتغيّر الصورة الرئيسية)
-  if (selectedColorImage != null) ...[
-    const SizedBox(height: 14),
-    Container(
-      width: 130,
-      height: 90,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black12),
-      ),
-      child: carImageAdaptive(
-        selectedColorImage!,
-        fit: BoxFit.cover,
-        showWatermark: false,
-      ),
-    ),
-  ],
 ],
+
+const SizedBox(height: 28),
+
+// ============================================================
+// معارض الصور الخارجية والداخلية لنفس اللون المختار
+// ============================================================
+if (selectedColorObj != null &&
+    (selectedColorObj!.exteriorImages.isNotEmpty ||
+        selectedColorObj!.interiorImages.isNotEmpty))
+  LayoutBuilder(
+    builder: (context, galleryConstraints) {
+      final isWideGalleries = galleryConstraints.maxWidth >= 800;
+
+      final exteriorGallery = _colorPhotoGallery(
+        title: isArabic ? 'الصور الخارجية' : 'EXTERIOR PHOTOS',
+        images: selectedColorObj!.exteriorImages,
+      );
+      final interiorGallery = _colorPhotoGallery(
+        title: isArabic ? 'الصور الداخلية' : 'INTERIOR PHOTOS',
+        images: selectedColorObj!.interiorImages,
+      );
+
+      if (exteriorGallery == null && interiorGallery == null) {
+        return const SizedBox.shrink();
+      }
+
+      final galleries = [
+        if (exteriorGallery != null) exteriorGallery,
+        if (interiorGallery != null) interiorGallery,
+      ];
+
+      if (isWideGalleries && galleries.length == 2) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: galleries[0]),
+            const SizedBox(width: 20),
+            Expanded(child: galleries[1]),
+          ],
+        );
+      }
+
+      final stacked = <Widget>[];
+      for (var i = 0; i < galleries.length; i++) {
+        if (i > 0) stacked.add(const SizedBox(height: 20));
+        stacked.add(galleries[i]);
+      }
+      return Column(children: stacked);
+    },
+  ),
 
 const SizedBox(height: 30),
 // ============================================================

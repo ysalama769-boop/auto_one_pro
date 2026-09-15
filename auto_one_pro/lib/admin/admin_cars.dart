@@ -583,8 +583,10 @@ class _CarFormPageState extends State<CarFormPage> {
   // الألوان المتاحة في المتجر كله، وإيه اللي متحدد للسيارة دي
   List<Map<String, dynamic>> allColors = [];
   Set<int> selectedColorIds = {};
-  // رابط صورة خاص بكل لون متحدد (لو موجود)
-  Map<int, TextEditingController> colorImageControllers = {};
+  // لكل لون: قايمة صور خارجية وقايمة صور داخلية منفصلة (معرض كامل
+  // مش صورة واحدة بس)
+  Map<int, List<TextEditingController>> colorExteriorImageControllers = {};
+  Map<int, List<TextEditingController>> colorInteriorImageControllers = {};
   bool isLoadingExtras = true;
 
   // صور إضافية للمعرض (غير الصورة الأساسية)
@@ -717,7 +719,7 @@ class _CarFormPageState extends State<CarFormPage> {
 
         final carColorsResponse = await Supabase.instance.client
             .from('car_color_availability')
-            .select('color_id, image')
+            .select('color_id, image, exterior_images, interior_images')
             .eq('car_id', carId)
             .eq('is_available', true);
 
@@ -727,9 +729,31 @@ class _CarFormPageState extends State<CarFormPage> {
 
         for (final row in carColorsResponse) {
           final colorId = row['color_id'] as int;
-          colorImageControllers[colorId] = TextEditingController(
-            text: (row['image'] ?? '').toString(),
-          );
+
+          final exteriorList = (row['exterior_images'] is List)
+              ? List<String>.from(
+                  (row['exterior_images'] as List).map((e) => e.toString()),
+                )
+              : <String>[];
+          // توافق مع البيانات القديمة: لو مفيش exterior_images بس فيه
+          // "image" قديمة، نحطها كأول صورة خارجية
+          if (exteriorList.isEmpty &&
+              (row['image'] ?? '').toString().trim().isNotEmpty) {
+            exteriorList.add((row['image'] as String).trim());
+          }
+
+          final interiorList = (row['interior_images'] is List)
+              ? List<String>.from(
+                  (row['interior_images'] as List).map((e) => e.toString()),
+                )
+              : <String>[];
+
+          colorExteriorImageControllers[colorId] = exteriorList
+              .map((url) => TextEditingController(text: url))
+              .toList();
+          colorInteriorImageControllers[colorId] = interiorList
+              .map((url) => TextEditingController(text: url))
+              .toList();
         }
 
         final carImagesResponse = await Supabase.instance.client
@@ -860,10 +884,100 @@ class _CarFormPageState extends State<CarFormPage> {
     for (final controller in extraImageControllers) {
       controller.dispose();
     }
-    for (final controller in colorImageControllers.values) {
-      controller.dispose();
+    for (final list in colorExteriorImageControllers.values) {
+      for (final c in list) {
+        c.dispose();
+      }
+    }
+    for (final list in colorInteriorImageControllers.values) {
+      for (final c in list) {
+        c.dispose();
+      }
     }
     super.dispose();
+  }
+
+  // قايمة صور صغيرة (خارجية أو داخلية) لنفس اللون — إضافة/حذف/رفع
+  // من الجهاز لكل صورة.
+  Widget _colorImageGallerySection({
+    required String label,
+    required List<TextEditingController> controllers,
+    required StateSetter setDialogState,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black54,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                setDialogState(() {
+                  setState(() {
+                    controllers.add(TextEditingController());
+                  });
+                });
+              },
+              icon: const Icon(Icons.add_circle_rounded, color: Colors.red),
+              iconSize: 20,
+            ),
+          ],
+        ),
+        for (final controller in controllers)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      hintText: isArabic ? 'رابط الصورة' : 'Image link',
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: _isUploadingImage
+                      ? null
+                      : () => _pickAndUploadImage(controller),
+                  icon: const Icon(Icons.upload_file),
+                  tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+                ),
+                IconButton(
+                  onPressed: () {
+                    setDialogState(() {
+                      setState(() {
+                        controller.dispose();
+                        controllers.remove(controller);
+                      });
+                    });
+                  },
+                  icon: const Icon(
+                    Icons.remove_circle_outline_rounded,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
   Future<void> _openColorsDialog() async {
@@ -933,15 +1047,28 @@ class _CarFormPageState extends State<CarFormPage> {
                                   setState(() {
                                     if (isSelected) {
                                       selectedColorIds.remove(colorId);
-                                      colorImageControllers[colorId]
-                                          ?.dispose();
-                                      colorImageControllers.remove(colorId);
+                                      for (final c
+                                          in colorExteriorImageControllers[
+                                                  colorId] ??
+                                              []) {
+                                        c.dispose();
+                                      }
+                                      for (final c
+                                          in colorInteriorImageControllers[
+                                                  colorId] ??
+                                              []) {
+                                        c.dispose();
+                                      }
+                                      colorExteriorImageControllers
+                                          .remove(colorId);
+                                      colorInteriorImageControllers
+                                          .remove(colorId);
                                     } else {
                                       selectedColorIds.add(colorId);
-                                      colorImageControllers.putIfAbsent(
-                                        colorId,
-                                        () => TextEditingController(),
-                                      );
+                                      colorExteriorImageControllers
+                                          .putIfAbsent(colorId, () => []);
+                                      colorInteriorImageControllers
+                                          .putIfAbsent(colorId, () => []);
                                     }
                                   });
                                 });
@@ -1010,52 +1137,59 @@ class _CarFormPageState extends State<CarFormPage> {
                               ? (colorData['name_ar'] ?? '') as String
                               : (colorData['name_en'] ?? '') as String;
 
-                          final controller = colorImageControllers
-                              .putIfAbsent(colorId, () => TextEditingController());
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Row(
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 14),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.black12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 16,
-                                  height: 16,
-                                  margin: const EdgeInsets.only(
-                                    left: 8,
-                                    right: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: displayColor,
-                                    shape: BoxShape.circle,
-                                    border:
-                                        Border.all(color: Colors.black12),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: TextField(
-                                    controller: controller,
-                                    decoration: InputDecoration(
-                                      hintText: isArabic
-                                          ? 'رابط صورة اللون $name (اختياري)'
-                                          : 'Image link for $name (optional)',
-                                      isDense: true,
-                                      filled: true,
-                                      fillColor: Colors.grey.shade100,
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10),
-                                        borderSide: BorderSide.none,
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 16,
+                                      height: 16,
+                                      margin: const EdgeInsets.only(left: 8),
+                                      decoration: BoxDecoration(
+                                        color: displayColor,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.black12,
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                IconButton(
-                                  onPressed: _isUploadingImage
-                                      ? null
-                                      : () => _pickAndUploadImage(controller),
-                                  icon: const Icon(Icons.upload_file),
-                                  tooltip:
-                                      isArabic ? 'اختيار من الجهاز' : 'Browse',
+                                const SizedBox(height: 10),
+                                _colorImageGallerySection(
+                                  label: isArabic
+                                      ? 'صور خارجية'
+                                      : 'Exterior photos',
+                                  controllers:
+                                      colorExteriorImageControllers
+                                          .putIfAbsent(colorId, () => []),
+                                  setDialogState: setDialogState,
+                                ),
+                                const SizedBox(height: 10),
+                                _colorImageGallerySection(
+                                  label: isArabic
+                                      ? 'صور داخلية'
+                                      : 'Interior photos',
+                                  controllers:
+                                      colorInteriorImageControllers
+                                          .putIfAbsent(colorId, () => []),
+                                  setDialogState: setDialogState,
                                 ),
                               ],
                             ),
@@ -1705,17 +1839,29 @@ class _CarFormPageState extends State<CarFormPage> {
 
       if (selectedColorIds.isNotEmpty) {
         await Supabase.instance.client.from('car_color_availability').insert(
-              selectedColorIds
-                  .map((colorId) => {
-                        'car_id': carId,
-                        'color_id': colorId,
-                        'is_available': true,
-                        'image': colorImageControllers[colorId]
-                                ?.text
-                                .trim() ??
-                            '',
-                      })
-                  .toList(),
+              selectedColorIds.map((colorId) {
+                final exteriorUrls = (colorExteriorImageControllers[colorId] ??
+                        [])
+                    .map((c) => c.text.trim())
+                    .where((url) => url.isNotEmpty)
+                    .toList();
+                final interiorUrls = (colorInteriorImageControllers[colorId] ??
+                        [])
+                    .map((c) => c.text.trim())
+                    .where((url) => url.isNotEmpty)
+                    .toList();
+
+                return {
+                  'car_id': carId,
+                  'color_id': colorId,
+                  'is_available': true,
+                  // نسيب "image" (القديمة) بأول صورة خارجية عشان أي كود
+                  // قديم لسه بيعتمد عليها يفضل شغال
+                  'image': exteriorUrls.isNotEmpty ? exteriorUrls.first : '',
+                  'exterior_images': exteriorUrls,
+                  'interior_images': interiorUrls,
+                };
+              }).toList(),
             );
       }
 
