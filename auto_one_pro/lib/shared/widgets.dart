@@ -1408,32 +1408,48 @@ Widget carImageAdaptive(
 
   final effectiveErrorBuilder = errorBuilder ?? defaultErrorPlaceholder;
 
-  final Widget image = path.startsWith('http')
-      ? Image.network(
-          path,
-          fit: fit,
-          width: width,
-          height: height,
-          alignment: alignment,
-          // بنحدّ أقصى حجم يتفك بيه الصورة في الذاكرة، عشان صور
-          // السيارات الكبيرة متبطئش التطبيق حتى لو بتتعرض صغيرة
-          cacheWidth: width != null && width > 0
-              ? (width * 2).clamp(50, 1200).round()
-              : 1000,
-          errorBuilder: effectiveErrorBuilder,
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) return child;
-            return const ShimmerBox();
-          },
-        )
-      : Image.asset(
-          path,
-          fit: fit,
-          width: width,
-          height: height,
-          alignment: alignment,
-          errorBuilder: effectiveErrorBuilder,
-        );
+  // بعض الصور القديمة ممكن تكون اتسجلت بروابط ناقصة أو متقطوعة (زي
+  // "http" لوحدها من غير باقي الرابط) بسبب رفع فشل في نص الطريق —
+  // بدل ما نحاول نحمّلها ونطلع إيرور في الكونسول، بنتأكد إنها رابط
+  // كامل فعلاً الأول.
+  final bool looksLikeFullUrl =
+      path.startsWith('http://') || path.startsWith('https://');
+  final bool looksLikeUsableAsset =
+      path.trim().isNotEmpty && !path.startsWith('http');
+
+  final Widget image;
+  if (looksLikeFullUrl) {
+    image = Image.network(
+      path,
+      fit: fit,
+      width: width,
+      height: height,
+      alignment: alignment,
+      // بنحدّ أقصى حجم يتفك بيه الصورة في الذاكرة، عشان صور
+      // السيارات الكبيرة متبطئش التطبيق حتى لو بتتعرض صغيرة
+      cacheWidth: width != null && width > 0
+          ? (width * 2).clamp(50, 1200).round()
+          : 1000,
+      errorBuilder: effectiveErrorBuilder,
+      loadingBuilder: (context, child, progress) {
+        if (progress == null) return child;
+        return const ShimmerBox();
+      },
+    );
+  } else if (looksLikeUsableAsset) {
+    image = Image.asset(
+      path,
+      fit: fit,
+      width: width,
+      height: height,
+      alignment: alignment,
+      errorBuilder: effectiveErrorBuilder,
+    );
+  } else {
+    image = Builder(
+      builder: (context) => effectiveErrorBuilder(context, 'invalid path', null),
+    );
+  }
 
   if (!showWatermark) return image;
 
