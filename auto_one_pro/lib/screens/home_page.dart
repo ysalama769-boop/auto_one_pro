@@ -1971,7 +1971,7 @@ class _FinancingPartnersCarouselState
     extends State<_FinancingPartnersCarousel> {
   late final PageController controller;
   int currentPage = 0;
-  static const int perPage = 4;
+  static const int perPage = 5;
 
   @override
   void initState() {
@@ -2017,7 +2017,7 @@ class _FinancingPartnersCarouselState
           ),
           const SizedBox(height: 30),
           SizedBox(
-            height: 130,
+            height: 170,
             child: Row(
               children: [
                 if (pageCount > 1)
@@ -2052,35 +2052,67 @@ class _FinancingPartnersCarouselState
                                   ? (p['name_ar'] ?? '').toString()
                                   : p['name_en'].toString());
 
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                height: 70,
-                                width: 110,
-                                child: logo.isEmpty
-                                    ? const Icon(
-                                        Icons.account_balance_rounded,
-                                        color: Colors.black26,
-                                        size: 36,
-                                      )
-                                    : carImageAdaptive(
-                                        logo,
-                                        fit: BoxFit.contain,
-                                        showWatermark: false,
-                                      ),
+                          return Container(
+                            width: 130,
+                            margin: const EdgeInsets.symmetric(horizontal: 6),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 18,
+                              horizontal: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.black.withValues(alpha: 0.06),
                               ),
-                              const SizedBox(height: 10),
-                              Text(
-                                name,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.black87,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  height: 56,
+                                  width: 90,
+                                  child: logo.isEmpty
+                                      ? Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.red
+                                                .withValues(alpha: 0.06),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(
+                                            Icons.account_balance_rounded,
+                                            color: Colors.red,
+                                            size: 28,
+                                          ),
+                                        )
+                                      : carImageAdaptive(
+                                          logo,
+                                          fit: BoxFit.contain,
+                                          showWatermark: false,
+                                        ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  name,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         }).toList(),
                       );
@@ -2141,7 +2173,7 @@ class _ReviewsCarousel extends StatefulWidget {
 class _ReviewsCarouselState extends State<_ReviewsCarousel> {
   late final PageController controller;
   int currentPage = 0;
-  static const int perPage = 3;
+  static const int perPage = 5;
 
   @override
   void initState() {
@@ -2234,36 +2266,52 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
                           return Expanded(
                             child: Container(
                               margin: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                                horizontal: 6,
                               ),
                               padding: const EdgeInsets.fromLTRB(
-                                16,
-                                34,
-                                16,
+                                12,
+                                32,
+                                12,
                                 16,
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: Colors.black.withValues(alpha: 0.06),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
                               ),
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
                                   Positioned(
-                                    top: -34,
+                                    top: -32,
                                     left: 0,
                                     right: 0,
                                     child: Center(
-                                      child: CircleAvatar(
-                                        radius: 26,
-                                        backgroundColor: _avatarColor(name),
-                                        child: Text(
-                                          initial,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w900,
-                                            fontSize: 18,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: CircleAvatar(
+                                          radius: 24,
+                                          backgroundColor: _avatarColor(name),
+                                          child: Text(
+                                            initial,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 16,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -2271,12 +2319,21 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
                                   ),
                                   Column(
                                     children: [
-                                      const SizedBox(height: 10),
+                                      const SizedBox(height: 12),
+                                      Icon(
+                                        Icons.format_quote_rounded,
+                                        color: Colors.red.withValues(alpha: 0.35),
+                                        size: 20,
+                                      ),
+                                      const SizedBox(height: 4),
                                       Text(
                                         name,
                                         textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w800,
+                                          fontSize: 13,
                                           color: Colors.red,
                                         ),
                                       ),
@@ -2287,7 +2344,7 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
                                         maxLines: 4,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
-                                          fontSize: 12.5,
+                                          fontSize: 12,
                                           color: Colors.black54,
                                           height: 1.6,
                                         ),
