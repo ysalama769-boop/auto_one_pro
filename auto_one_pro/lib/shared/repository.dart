@@ -137,6 +137,54 @@ Future<void> loadImagesForCars(List<Car> carsList) async {
   }
 }
 
+// ============================================================
+// FINANCING PARTNERS (جهات التمويل المعتمدة)
+// ============================================================
+List<Map<String, dynamic>> financingPartnersCache = [];
+
+Future<void> loadFinancingPartners() async {
+  try {
+    final response = await Supabase.instance.client
+        .from('financing_partners')
+        .select()
+        .order('id');
+    financingPartnersCache = List<Map<String, dynamic>>.from(response as List);
+  } catch (e) {
+    debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل جهات التمويل: $e');
+  }
+}
+
+// ============================================================
+// CUSTOMER REVIEWS (تقييمات العملاء - الموافَق عليها بس)
+// ============================================================
+List<Map<String, dynamic>> approvedReviewsCache = [];
+
+Future<void> loadApprovedReviews() async {
+  try {
+    final response = await Supabase.instance.client
+        .from('customer_reviews')
+        .select()
+        .eq('status', 'approved')
+        .order('created_at', ascending: false);
+    approvedReviewsCache = List<Map<String, dynamic>>.from(response as List);
+  } catch (e) {
+    debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل تقييمات العملاء: $e');
+  }
+}
+
+Future<void> submitCustomerReview({
+  required String customerName,
+  required String reviewText,
+  int? carId,
+}) async {
+  await Supabase.instance.client.from('customer_reviews').insert({
+    'customer_name': customerName,
+    'review_text': reviewText,
+    'status': 'pending',
+    if (carId != null) 'car_id': carId,
+  });
+}
+
 const List<CarColor> carColorLibrary = [
   CarColor(
     id: 'white',
@@ -291,6 +339,8 @@ Future<void> loadCarsFromSupabase() async {
       await Future.wait([
         loadColorsForCars(fetched),
         loadImagesForCars(fetched),
+        loadFinancingPartners(),
+        loadApprovedReviews(),
       ]);
       debugPrint('AUTO_ONE_DEBUG: colors loaded for ${carColorsCache.length} cars, images loaded for ${carImagesCache.length} cars');
     } else {
