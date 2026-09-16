@@ -35,6 +35,7 @@ class FullScreenGallery extends StatefulWidget {
 class _FullScreenGalleryState extends State<FullScreenGallery> {
   late final PageController controller;
   late int currentIndex;
+  final TransformationController _zoomController = TransformationController();
 
   @override
   void initState() {
@@ -46,11 +47,23 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
   @override
   void dispose() {
     controller.dispose();
+    _zoomController.dispose();
     super.dispose();
+  }
+
+  void _resetZoom() {
+    _zoomController.value = Matrix4.identity();
+  }
+
+  void _zoomBy(double factor) {
+    final current = _zoomController.value.clone();
+    final newScale = (current.getMaxScaleOnAxis() * factor).clamp(1.0, 4.0);
+    _zoomController.value = Matrix4.identity()..scale(newScale);
   }
 
   void _goToNext() {
     if (widget.images.length < 2) return;
+    _resetZoom();
     final newIndex = (currentIndex + 1) % widget.images.length;
     controller.animateToPage(
       newIndex,
@@ -61,10 +74,21 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
 
   void _goToPrevious() {
     if (widget.images.length < 2) return;
+    _resetZoom();
     final newIndex =
         currentIndex <= 0 ? widget.images.length - 1 : currentIndex - 1;
     controller.animateToPage(
       newIndex,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _goToIndex(int index) {
+    if (index == currentIndex) return;
+    _resetZoom();
+    controller.animateToPage(
+      index,
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
     );
@@ -88,6 +112,24 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
     return KeyEventResult.ignored;
   }
 
+  Widget _toolbarButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.black.withValues(alpha: 0.5),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Icon(icon, color: Colors.white, size: 20),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Focus(
@@ -107,6 +149,8 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
             },
             itemBuilder: (context, index) {
               return InteractiveViewer(
+                transformationController:
+                    index == currentIndex ? _zoomController : null,
                 minScale: 1,
                 maxScale: 4,
                 child: Center(
@@ -119,6 +163,74 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
               );
             },
           ),
+
+          // TOOLBAR (توسيط / تكبير / تصغير)
+          Positioned(
+            top: 16,
+            left: 16,
+            child: Row(
+              children: [
+                _toolbarButton(
+                  icon: Icons.center_focus_strong_rounded,
+                  onTap: _resetZoom,
+                ),
+                const SizedBox(width: 8),
+                _toolbarButton(
+                  icon: Icons.zoom_out_rounded,
+                  onTap: () => _zoomBy(0.8),
+                ),
+                const SizedBox(width: 8),
+                _toolbarButton(
+                  icon: Icons.zoom_in_rounded,
+                  onTap: () => _zoomBy(1.25),
+                ),
+              ],
+            ),
+          ),
+
+          // شريط مصغرات عمودي على الجنب
+          if (widget.images.length > 1)
+            Positioned(
+              top: 0,
+              bottom: 0,
+              right: 20,
+              child: Center(
+                child: SizedBox(
+                  height: 420,
+                  width: 84,
+                  child: ListView.separated(
+                    scrollDirection: Axis.vertical,
+                    itemCount: widget.images.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final isSelected = index == currentIndex;
+                      return GestureDetector(
+                        onTap: () => _goToIndex(index),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          height: 72,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.red
+                                  : Colors.white24,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: carImageAdaptive(
+                            widget.images[index],
+                            fit: BoxFit.cover,
+                            showWatermark: false,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
 
           // NAVIGATION ARROWS
           if (widget.images.length > 1) ...[
@@ -259,114 +371,16 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
     final images = widget.images;
     final safeIndex = currentIndex < images.length ? currentIndex : 0;
 
-    final mainImageBox = ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: double.infinity,
-        height: 280,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            carImageAdaptive(
-              images[safeIndex],
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.contain,
-              showWatermark: false,
-            ),
-            if (images.length > 1) ...[
-              Positioned(
-                left: 6,
-                child: Material(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  shape: const CircleBorder(),
-                  elevation: 2,
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () {
-                      setState(() {
-                        currentIndex =
-                            (safeIndex - 1 + images.length) % images.length;
-                      });
-                    },
-                    child: const SizedBox(
-                      width: 34,
-                      height: 34,
-                      child: Icon(
-                        Icons.chevron_right,
-                        color: Colors.black87,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 6,
-                child: Material(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  shape: const CircleBorder(),
-                  elevation: 2,
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () {
-                      setState(() {
-                        currentIndex = (safeIndex + 1) % images.length;
-                      });
-                    },
-                    child: const SizedBox(
-                      width: 34,
-                      height: 34,
-                      child: Icon(
-                        Icons.chevron_left,
-                        color: Colors.black87,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
+    void openFullScreen() {
+      Navigator.of(context).push(
+        smoothRoute(
+          FullScreenGallery(
+            images: images,
+            initialIndex: safeIndex,
+          ),
         ),
-      ),
-    );
-
-    // شريط المصغرات عمودي على جنب الصورة الكبيرة (بدل تحتها)
-    final verticalThumbStrip = images.length > 1
-        ? SizedBox(
-            width: 74,
-            height: 280,
-            child: ListView.separated(
-              scrollDirection: Axis.vertical,
-              itemCount: images.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final isSelected = index == safeIndex;
-                return GestureDetector(
-                  onTap: () => setState(() => currentIndex = index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    height: 66,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: isSelected ? Colors.red : Colors.grey.shade300,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: carImageAdaptive(
-                      images[index],
-                      fit: BoxFit.cover,
-                      showWatermark: false,
-                    ),
-                  ),
-                );
-              },
-            ),
-          )
-        : null;
+      );
+    }
 
     return Container(
       width: double.infinity,
@@ -388,16 +402,134 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
             ),
           ),
           const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: mainImageBox),
-              if (verticalThumbStrip != null) ...[
-                const SizedBox(width: 10),
-                verticalThumbStrip,
-              ],
-            ],
+          GestureDetector(
+            onTap: openFullScreen,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 200,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    carImageAdaptive(
+                      images[safeIndex],
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.contain,
+                      showWatermark: false,
+                    ),
+                    if (images.length > 1) ...[
+                      Positioned(
+                        left: 6,
+                        child: Material(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          shape: const CircleBorder(),
+                          elevation: 2,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () {
+                              setState(() {
+                                currentIndex =
+                                    (safeIndex - 1 + images.length) %
+                                        images.length;
+                              });
+                            },
+                            child: const SizedBox(
+                              width: 34,
+                              height: 34,
+                              child: Icon(
+                                Icons.chevron_right,
+                                color: Colors.black87,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 6,
+                        child: Material(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          shape: const CircleBorder(),
+                          elevation: 2,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () {
+                              setState(() {
+                                currentIndex =
+                                    (safeIndex + 1) % images.length;
+                              });
+                            },
+                            child: const SizedBox(
+                              width: 34,
+                              height: 34,
+                              child: Icon(
+                                Icons.chevron_left,
+                                color: Colors.black87,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.fullscreen_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
+          if (images.length > 1) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 58,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: images.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final isSelected = index == safeIndex;
+                  return GestureDetector(
+                    onTap: () => setState(() => currentIndex = index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 78,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color:
+                              isSelected ? Colors.red : Colors.grey.shade300,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: carImageAdaptive(
+                        images[index],
+                        fit: BoxFit.cover,
+                        showWatermark: false,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -2646,17 +2778,6 @@ Container(
           );
         },
       ),
-
-      // ============================================================
-      // معرض صور السيارة العام (نقلناه هنا بدل الصورة الرئيسية فوق)
-      // ============================================================
-      if (galleryImages.length > 1) ...[
-        const SizedBox(height: 24),
-        _ColorPhotoGallery(
-          title: isArabic ? 'معرض الصور' : 'PHOTO GALLERY',
-          images: galleryImages,
-        ),
-      ],
 
       // DESCRIPTION (لو متسجل)
       if (car.description.trim().isNotEmpty) ...[
