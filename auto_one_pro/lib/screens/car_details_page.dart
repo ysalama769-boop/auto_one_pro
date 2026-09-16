@@ -259,6 +259,115 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
     final images = widget.images;
     final safeIndex = currentIndex < images.length ? currentIndex : 0;
 
+    final mainImageBox = ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: double.infinity,
+        height: 280,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            carImageAdaptive(
+              images[safeIndex],
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.contain,
+              showWatermark: false,
+            ),
+            if (images.length > 1) ...[
+              Positioned(
+                left: 6,
+                child: Material(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  shape: const CircleBorder(),
+                  elevation: 2,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () {
+                      setState(() {
+                        currentIndex =
+                            (safeIndex - 1 + images.length) % images.length;
+                      });
+                    },
+                    child: const SizedBox(
+                      width: 34,
+                      height: 34,
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: Colors.black87,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 6,
+                child: Material(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  shape: const CircleBorder(),
+                  elevation: 2,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () {
+                      setState(() {
+                        currentIndex = (safeIndex + 1) % images.length;
+                      });
+                    },
+                    child: const SizedBox(
+                      width: 34,
+                      height: 34,
+                      child: Icon(
+                        Icons.chevron_left,
+                        color: Colors.black87,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    // شريط المصغرات عمودي على جنب الصورة الكبيرة (بدل تحتها)
+    final verticalThumbStrip = images.length > 1
+        ? SizedBox(
+            width: 74,
+            height: 280,
+            child: ListView.separated(
+              scrollDirection: Axis.vertical,
+              itemCount: images.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final isSelected = index == safeIndex;
+                return GestureDetector(
+                  onTap: () => setState(() => currentIndex = index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    height: 66,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected ? Colors.red : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: carImageAdaptive(
+                      images[index],
+                      fit: BoxFit.cover,
+                      showWatermark: false,
+                    ),
+                  ),
+                );
+              },
+            ),
+          )
+        : null;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -279,114 +388,16 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
             ),
           ),
           const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              width: double.infinity,
-              height: 200,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  carImageAdaptive(
-                    images[safeIndex],
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.contain,
-                    showWatermark: false,
-                  ),
-                  if (images.length > 1) ...[
-                    Positioned(
-                      left: 6,
-                      child: Material(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        shape: const CircleBorder(),
-                        elevation: 2,
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () {
-                            setState(() {
-                              currentIndex =
-                                  (safeIndex - 1 + images.length) %
-                                      images.length;
-                            });
-                          },
-                          child: const SizedBox(
-                            width: 34,
-                            height: 34,
-                            child: Icon(
-                              Icons.chevron_right,
-                              color: Colors.black87,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 6,
-                      child: Material(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        shape: const CircleBorder(),
-                        elevation: 2,
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () {
-                            setState(() {
-                              currentIndex = (safeIndex + 1) % images.length;
-                            });
-                          },
-                          child: const SizedBox(
-                            width: 34,
-                            height: 34,
-                            child: Icon(
-                              Icons.chevron_left,
-                              color: Colors.black87,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: mainImageBox),
+              if (verticalThumbStrip != null) ...[
+                const SizedBox(width: 10),
+                verticalThumbStrip,
+              ],
+            ],
           ),
-          if (images.length > 1) ...[
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 58,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: images.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final isSelected = index == safeIndex;
-                  return GestureDetector(
-                    onTap: () => setState(() => currentIndex = index),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      width: 78,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color:
-                              isSelected ? Colors.red : Colors.grey.shade300,
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: carImageAdaptive(
-                        images[index],
-                        fit: BoxFit.cover,
-                        showWatermark: false,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
         ],
       ),
     );
