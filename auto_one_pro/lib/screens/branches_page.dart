@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../shared/constants.dart';
 import '../shared/widgets.dart';
+import '../admin/admin_shared.dart';
 
 // ============================================================
 // BRANCHES PAGE (فروع أوتو ون - صفحة مستقلة)
@@ -54,6 +55,9 @@ class BranchesPage extends StatelessWidget {
   },
 ];
 
+    final bannerUrl =
+        (homepageSettings.value?['branches_banner'] ?? '').toString().trim();
+
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -66,6 +70,16 @@ class BranchesPage extends StatelessWidget {
         body: SingleChildScrollView(
           child: Column(
             children: [
+              if (bannerUrl.isNotEmpty)
+                SizedBox(
+                  width: double.infinity,
+                  height: 260,
+                  child: carImageAdaptive(
+                    bannerUrl,
+                    fit: BoxFit.cover,
+                    showWatermark: false,
+                  ),
+                ),
 Container(
     width: double.infinity,
     padding: const EdgeInsets.symmetric(
