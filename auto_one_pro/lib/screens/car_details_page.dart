@@ -1897,129 +1897,10 @@ LayoutBuilder(
                     ),
                   ),
                 ),
-
-                if (galleryImages.length > 1) ...[
-                  Positioned(
-                    top: 0,
-                    bottom: 0,
-                    left: 8,
-                    child: Center(
-                      child: _heroGalleryArrow(
-                        icon: Icons.chevron_right,
-                        onTap: () => _goToPreviousImage(),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 0,
-                    bottom: 0,
-                    right: 8,
-                    child: Center(
-                      child: _heroGalleryArrow(
-                        icon: Icons.chevron_left,
-                        onTap: () => _goToNextImage(),
-                      ),
-                    ),
-                  ),
-                ],
-
-                Positioned(
-                  bottom: 12,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Material(
-                      color: Colors.black.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(30),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(30),
-                        onTap: () {
-                          final startIndex = galleryImages.indexOf(
-                            selectedImage ?? car.image,
-                          );
-                          Navigator.of(context).push(
-                            smoothRoute(
-                              FullScreenGallery(
-                                images: galleryImages,
-                                initialIndex: startIndex < 0 ? 0 : startIndex,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 9,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.fullscreen_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                isArabic ? 'شاهد الصور' : 'View photos',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
         ),
-
-        if (galleryImages.length > 1) ...[
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 72,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: galleryImages.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final img = galleryImages[index];
-                final isSelected = img == (selectedImage ?? car.image);
-
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedImage = img;
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 96,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected ? Colors.red : Colors.grey.shade300,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: carImageAdaptive(
-                      img,
-                      fit: BoxFit.cover,
-                      showWatermark: false,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
       ],
     );
 
@@ -2754,6 +2635,17 @@ Container(
           );
         },
       ),
+
+      // ============================================================
+      // معرض صور السيارة العام (نقلناه هنا بدل الصورة الرئيسية فوق)
+      // ============================================================
+      if (galleryImages.length > 1) ...[
+        const SizedBox(height: 24),
+        _ColorPhotoGallery(
+          title: isArabic ? 'معرض الصور' : 'PHOTO GALLERY',
+          images: galleryImages,
+        ),
+      ],
 
       // DESCRIPTION (لو متسجل)
       if (car.description.trim().isNotEmpty) ...[
