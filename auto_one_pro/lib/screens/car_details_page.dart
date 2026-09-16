@@ -1380,6 +1380,13 @@ class CarDetailsPage extends StatefulWidget {
     super.initState();
     _trackView();
     _loadFullDetails();
+
+    // نختار أول لون تلقائيًا عشان صور الداخلي والخارجي تظهر على
+    // طول من غير ما ننتظر المستخدم يدوس على لون.
+    final availableColors = carColorsCache[widget.car.id];
+    if (availableColors != null && availableColors.isNotEmpty) {
+      selectedColorObj = availableColors.first;
+    }
   }
 
   Future<void> _loadFullDetails() async {
