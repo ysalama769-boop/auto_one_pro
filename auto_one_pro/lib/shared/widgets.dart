@@ -8,6 +8,7 @@ import '../shared/favorites_compare.dart';
 import '../models/car.dart';
 import '../shared/repository.dart';
 import '../screens/static_pages.dart';
+import '../screens/branches_page.dart';
 import '../screens/car_details_page.dart';
 import '../screens/favorites_page.dart';
 
@@ -1093,6 +1094,29 @@ class AutoOneFooter extends StatelessWidget {
           const SizedBox(height: 14),
           _quickLink(context, isArabic ? 'الرئيسية' : 'Home'),
           _quickLink(context, isArabic ? 'تصفح السيارات' : 'Browse Cars'),
+          HoverLift(
+            scale: 1.03,
+            borderRadius: BorderRadius.circular(6),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () {
+                Navigator.of(context).push(
+                  smoothRoute(BranchesPage(isArabic: isArabic)),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(
+                  isArabic ? 'فروعنا' : 'Our Branches',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       );
     }
