@@ -730,6 +730,14 @@ Container(
   ),
 ),
 
+const SizedBox(height: 50),
+
+_FinancingPartnersCarousel(isArabic: widget.isArabic),
+
+const SizedBox(height: 50),
+
+_ReviewsCarousel(isArabic: widget.isArabic),
+
 const SizedBox(height: 40),
 
 AutoOneFooter(isArabic: widget.isArabic),
@@ -1945,4 +1953,392 @@ class _QuickContactOption {
     required this.color,
     required this.onTap,
   });
+}
+
+// ============================================================
+// FINANCING PARTNERS CAROUSEL (معتمدون لدى جهات التمويل)
+// ============================================================
+class _FinancingPartnersCarousel extends StatefulWidget {
+  final bool isArabic;
+  const _FinancingPartnersCarousel({required this.isArabic});
+
+  @override
+  State<_FinancingPartnersCarousel> createState() =>
+      _FinancingPartnersCarouselState();
+}
+
+class _FinancingPartnersCarouselState
+    extends State<_FinancingPartnersCarousel> {
+  late final PageController controller;
+  int currentPage = 0;
+  static const int perPage = 4;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = PageController();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final partners = financingPartnersCache;
+    if (partners.isEmpty) return const SizedBox.shrink();
+
+    final pageCount = (partners.length / perPage).ceil();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          Text(
+            widget.isArabic
+                ? 'معتمدون لدى جهات التمويل'
+                : 'APPROVED BY FINANCING PARTNERS',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            widget.isArabic
+                ? 'نالت AUTO ONE ثقة جهات التمويل الرائدة، ونسهّل عليك إجراءات التمويل عند شراء سيارتك.'
+                : 'AUTO ONE is trusted by leading financing partners, making your car financing journey easier.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          const SizedBox(height: 30),
+          SizedBox(
+            height: 130,
+            child: Row(
+              children: [
+                if (pageCount > 1)
+                  IconButton(
+                    onPressed: () {
+                      if (currentPage > 0) {
+                        controller.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.chevron_right_rounded),
+                  ),
+                Expanded(
+                  child: PageView.builder(
+                    controller: controller,
+                    itemCount: pageCount,
+                    onPageChanged: (i) => setState(() => currentPage = i),
+                    itemBuilder: (context, pageIndex) {
+                      final pageItems = partners
+                          .skip(pageIndex * perPage)
+                          .take(perPage)
+                          .toList();
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: pageItems.map((p) {
+                          final logo = (p['logo_url'] ?? '').toString();
+                          final name = widget.isArabic
+                              ? (p['name_ar'] ?? '').toString()
+                              : ((p['name_en'] ?? '').toString().isEmpty
+                                  ? (p['name_ar'] ?? '').toString()
+                                  : p['name_en'].toString());
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                height: 70,
+                                width: 110,
+                                child: logo.isEmpty
+                                    ? const Icon(
+                                        Icons.account_balance_rounded,
+                                        color: Colors.black26,
+                                        size: 36,
+                                      )
+                                    : carImageAdaptive(
+                                        logo,
+                                        fit: BoxFit.contain,
+                                        showWatermark: false,
+                                      ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                name,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ),
+                if (pageCount > 1)
+                  IconButton(
+                    onPressed: () {
+                      if (currentPage < pageCount - 1) {
+                        controller.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.chevron_left_rounded),
+                  ),
+              ],
+            ),
+          ),
+          if (pageCount > 1) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(pageCount, (i) {
+                final isActive = i == currentPage;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: isActive ? 20 : 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: isActive ? Colors.red : Colors.black12,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// REVIEWS CAROUSEL (ماذا يقول عملاؤنا؟)
+// ============================================================
+class _ReviewsCarousel extends StatefulWidget {
+  final bool isArabic;
+  const _ReviewsCarousel({required this.isArabic});
+
+  @override
+  State<_ReviewsCarousel> createState() => _ReviewsCarouselState();
+}
+
+class _ReviewsCarouselState extends State<_ReviewsCarousel> {
+  late final PageController controller;
+  int currentPage = 0;
+  static const int perPage = 3;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = PageController();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  Color _avatarColor(String name) {
+    final colors = [
+      Colors.red,
+      Colors.green.shade700,
+      Colors.orange,
+      Colors.indigo,
+      Colors.teal,
+      Colors.brown,
+    ];
+    if (name.isEmpty) return colors[0];
+    return colors[name.codeUnitAt(0) % colors.length];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reviews = approvedReviewsCache;
+    if (reviews.isEmpty) return const SizedBox.shrink();
+
+    final pageCount = (reviews.length / perPage).ceil();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          Text(
+            widget.isArabic ? 'ماذا يقول عملاؤنا؟' : 'WHAT OUR CUSTOMERS SAY',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            widget.isArabic
+                ? 'رضا عملائنا هو محور اهتمامنا، وده اللي بيشجّعنا نكمل نقدّم أفضل تجربة ممكنة.'
+                : 'Our customers\' satisfaction is what drives us to keep delivering the best experience.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          const SizedBox(height: 30),
+          SizedBox(
+            height: 190,
+            child: Row(
+              children: [
+                if (pageCount > 1)
+                  IconButton(
+                    onPressed: () {
+                      if (currentPage > 0) {
+                        controller.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.chevron_right_rounded),
+                  ),
+                Expanded(
+                  child: PageView.builder(
+                    controller: controller,
+                    itemCount: pageCount,
+                    onPageChanged: (i) => setState(() => currentPage = i),
+                    itemBuilder: (context, pageIndex) {
+                      final pageItems = reviews
+                          .skip(pageIndex * perPage)
+                          .take(perPage)
+                          .toList();
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: pageItems.map((r) {
+                          final name = (r['customer_name'] ?? '').toString();
+                          final text = (r['review_text'] ?? '').toString();
+                          final initial =
+                              name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+                          return Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              padding: const EdgeInsets.fromLTRB(
+                                16,
+                                34,
+                                16,
+                                16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                              ),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Positioned(
+                                    top: -34,
+                                    left: 0,
+                                    right: 0,
+                                    child: Center(
+                                      child: CircleAvatar(
+                                        radius: 26,
+                                        backgroundColor: _avatarColor(name),
+                                        child: Text(
+                                          initial,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Column(
+                                    children: [
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        name,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        text,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 4,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12.5,
+                                          color: Colors.black54,
+                                          height: 1.6,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ),
+                if (pageCount > 1)
+                  IconButton(
+                    onPressed: () {
+                      if (currentPage < pageCount - 1) {
+                        controller.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.chevron_left_rounded),
+                  ),
+              ],
+            ),
+          ),
+          if (pageCount > 1) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(pageCount, (i) {
+                final isActive = i == currentPage;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: isActive ? 20 : 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: isActive ? Colors.red : Colors.black12,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }

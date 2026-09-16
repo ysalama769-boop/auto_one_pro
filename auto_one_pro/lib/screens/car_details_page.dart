@@ -3101,6 +3101,64 @@ Container(
 ),
 
 const SizedBox(height: 20),
+
+// ============================================================
+// دعوة لتقييم التجربة
+// ============================================================
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.all(20),
+  decoration: BoxDecoration(
+    color: Colors.red.withValues(alpha: 0.06),
+    borderRadius: BorderRadius.circular(16),
+    border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+  ),
+  child: Row(
+    children: [
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isArabic
+                  ? 'شاركنا رأيك في تجربتك معانا'
+                  : 'Share your experience with us',
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              isArabic
+                  ? 'رأيك بيساعدنا نطوّر خدماتنا'
+                  : 'Your feedback helps us improve',
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ],
+        ),
+      ),
+      ElevatedButton(
+        onPressed: () => showReviewSubmissionSheet(
+          context,
+          isArabic,
+          carId: car.id,
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: Text(isArabic ? 'قيّم الآن' : 'Rate now'),
+      ),
+    ],
+  ),
+),
+
+const SizedBox(height: 20),
        ],
        ),
           ),

@@ -842,6 +842,164 @@ class MiniContactStrip extends StatelessWidget {
 // ============================================================
 // FULL FOOTER (unified across all pages)
 // ============================================================
+// ============================================================
+// REVIEW SUBMISSION SHEET (تقييم العملاء)
+// ============================================================
+void showReviewSubmissionSheet(
+  BuildContext context,
+  bool isArabic, {
+  int? carId,
+}) {
+  final nameCtrl = TextEditingController();
+  final reviewCtrl = TextEditingController();
+  bool isSending = false;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    showDragHandle: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetContext) {
+      return StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 8,
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isArabic ? 'شاركنا رأيك' : 'Share your feedback',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isArabic
+                      ? 'تقييمك هيظهر بعد مراجعته من فريقنا'
+                      : 'Your review will appear after our team reviews it',
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                const SizedBox(height: 18),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'اسمك' : 'Your name',
+                    filled: true,
+                    fillColor: Colors.grey.shade100,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: reviewCtrl,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'رأيك' : 'Your review',
+                    filled: true,
+                    fillColor: Colors.grey.shade100,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isSending
+                        ? null
+                        : () async {
+                            if (nameCtrl.text.trim().isEmpty ||
+                                reviewCtrl.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    isArabic
+                                        ? 'من فضلك اكتب اسمك ورأيك'
+                                        : 'Please enter your name and review',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                            setSheetState(() => isSending = true);
+                            try {
+                              await submitCustomerReview(
+                                customerName: nameCtrl.text.trim(),
+                                reviewText: reviewCtrl.text.trim(),
+                                carId: carId,
+                              );
+                              if (sheetContext.mounted) {
+                                Navigator.pop(sheetContext);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      isArabic
+                                          ? 'شكرًا لك! تقييمك هيظهر بعد المراجعة'
+                                          : 'Thank you! Your review will appear after review',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              setSheetState(() => isSending = false);
+                              if (sheetContext.mounted) {
+                                ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      isArabic
+                                          ? 'حصلت مشكلة، حاول تاني'
+                                          : 'Something went wrong',
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: isSending
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(isArabic ? 'إرسال التقييم' : 'Submit review'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
 class AutoOneFooter extends StatelessWidget {
   final bool isArabic;
 
@@ -1094,6 +1252,25 @@ class AutoOneFooter extends StatelessWidget {
           const SizedBox(height: 14),
           _quickLink(context, isArabic ? 'الرئيسية' : 'Home'),
           _quickLink(context, isArabic ? 'تصفح السيارات' : 'Browse Cars'),
+          HoverLift(
+            scale: 1.03,
+            borderRadius: BorderRadius.circular(6),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () => showReviewSubmissionSheet(context, isArabic),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(
+                  isArabic ? 'قيّم تجربتك معانا' : 'Rate your experience',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
           HoverLift(
             scale: 1.03,
             borderRadius: BorderRadius.circular(6),
