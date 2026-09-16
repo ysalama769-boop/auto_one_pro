@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:html' as html;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin/admin_shared.dart';
@@ -18,12 +20,16 @@ class AdminHomepagePage extends StatefulWidget {
 class _AdminHomepagePageState extends State<AdminHomepagePage> {
   bool isLoading = true;
   bool isSaving = false;
+  bool isUploadingImage = false;
 
   final heroTitleArCtrl = TextEditingController();
   final heroTitleEnCtrl = TextEditingController();
   final heroSubtitleArCtrl = TextEditingController();
   final heroSubtitleEnCtrl = TextEditingController();
   List<TextEditingController> bannerControllers = [];
+
+  // بانر صفحة الفروع
+  final branchesBannerCtrl = TextEditingController();
 
   // محتوى صفحة "عن أوتو ون"
   final aboutIntroArCtrl = TextEditingController();
@@ -58,6 +64,7 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
     for (final c in bannerControllers) {
       c.dispose();
     }
+    branchesBannerCtrl.dispose();
     aboutIntroArCtrl.dispose();
     aboutIntroEnCtrl.dispose();
     aboutOfferArCtrl.dispose();
@@ -98,6 +105,9 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
       bannerControllers =
           banners.map((url) => TextEditingController(text: url)).toList();
 
+      branchesBannerCtrl.text =
+          (response?['branches_banner'] ?? '').toString();
+
       aboutIntroArCtrl.text = (response?['about_intro_ar'] ?? '').toString();
       aboutIntroEnCtrl.text = (response?['about_intro_en'] ?? '').toString();
       aboutOfferArCtrl.text = (response?['about_offer_ar'] ?? '').toString();
@@ -122,6 +132,60 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
     }
   }
 
+  // بيفتح نافذة اختيار ملف من جهاز المستخدم ويرفعه على نفس مكان
+  // تخزين الصور في Supabase، وبعدين يحط الرابط في خانة بانر الفروع.
+  Future<void> _pickAndUploadBranchesBanner() async {
+    final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
+    uploadInput.click();
+
+    uploadInput.onChange.listen((event) async {
+      final files = uploadInput.files;
+      if (files == null || files.isEmpty) return;
+      final file = files[0];
+
+      setState(() => isUploadingImage = true);
+
+      try {
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(file);
+        await reader.onLoad.first;
+        final bytes = reader.result as Uint8List;
+
+        final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
+        final path =
+            'site/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+
+        await Supabase.instance.client.storage.from('car_images').uploadBinary(
+              path,
+              bytes,
+              fileOptions: const FileOptions(upsert: true),
+            );
+
+        final publicUrl = Supabase.instance.client.storage
+            .from('car_images')
+            .getPublicUrl(path);
+
+        if (mounted) {
+          setState(() {
+            branchesBannerCtrl.text = publicUrl;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isArabic ? 'فشل رفع الصورة: $e' : 'Failed to upload image: $e',
+              ),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => isUploadingImage = false);
+      }
+    });
+  }
+
   Future<void> _save() async {
     setState(() => isSaving = true);
     try {
@@ -136,6 +200,7 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         'hero_subtitle_ar': heroSubtitleArCtrl.text.trim(),
         'hero_subtitle_en': heroSubtitleEnCtrl.text.trim(),
         'banner_images': banners,
+        'branches_banner': branchesBannerCtrl.text.trim(),
         'about_intro_ar': aboutIntroArCtrl.text.trim(),
         'about_intro_en': aboutIntroEnCtrl.text.trim(),
         'about_offer_ar': aboutOfferArCtrl.text.trim(),
@@ -321,6 +386,36 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
           const SizedBox(height: 24),
           Container(height: 1, color: Colors.black12),
           const SizedBox(height: 24),
+
+          Text(
+            isArabic ? 'صورة بانر صفحة الفروع' : 'Branches page banner image',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: branchesBannerCtrl,
+                  decoration: InputDecoration(
+                    hintText:
+                        isArabic ? 'رابط صورة البانر' : 'Banner image URL',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed:
+                    isUploadingImage ? null : _pickAndUploadBranchesBanner,
+                icon: const Icon(Icons.upload_file),
+                tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+              ),
+            ],
+          ),
 
           Text(
             isArabic ? 'محتوى صفحة "عن أوتو ون"' : 'About page content',
