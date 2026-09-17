@@ -1971,7 +1971,6 @@ class _FinancingPartnersCarouselState
     extends State<_FinancingPartnersCarousel> {
   late final PageController controller;
   int currentPage = 0;
-  static const int perPage = 5;
 
   @override
   void initState() {
@@ -1990,9 +1989,16 @@ class _FinancingPartnersCarouselState
     final partners = financingPartnersCache;
     if (partners.isEmpty) return const SizedBox.shrink();
 
-    final pageCount = (partners.length / perPage).ceil();
+    return LayoutBuilder(
+      builder: (context, outerConstraints) {
+        final perPage = outerConstraints.maxWidth >= 900
+            ? 5
+            : outerConstraints.maxWidth >= 600
+                ? 3
+                : 2;
+        final pageCount = (partners.length / perPage).ceil();
 
-    return Padding(
+        return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
@@ -2155,6 +2161,8 @@ class _FinancingPartnersCarouselState
           ],
         ],
       ),
+    );
+      },
     );
   }
 }

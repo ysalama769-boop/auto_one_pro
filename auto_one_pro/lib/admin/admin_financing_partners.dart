@@ -219,22 +219,32 @@ class _AdminFinancingPartnersPageState
           ),
           const SizedBox(height: 20),
 
-          // ADD NEW PARTNER
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.black12),
-            ),
-            child: Column(
+          // ADD NEW PARTNER (قابل للطي)
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: false,
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+              backgroundColor: Colors.grey.shade50,
+              collapsedBackgroundColor: Colors.grey.shade50,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: const BorderSide(color: Colors.black12),
+              ),
+              collapsedShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: const BorderSide(color: Colors.black12),
+              ),
+              title: Text(
+                isArabic ? 'إضافة جهة جديدة' : 'Add a new partner',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isArabic ? 'إضافة جهة جديدة' : 'Add a new partner',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 10),
                 Row(
                   children: [
                     Expanded(
@@ -298,6 +308,9 @@ class _AdminFinancingPartnersPageState
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
                   ),
                 ),
               ],
