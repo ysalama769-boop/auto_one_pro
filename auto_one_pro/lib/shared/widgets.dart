@@ -10,6 +10,7 @@ import '../models/car.dart';
 import '../shared/repository.dart';
 import '../screens/static_pages.dart';
 import '../screens/branches_page.dart';
+import '../screens/services_page.dart';
 import '../screens/car_details_page.dart';
 import '../screens/favorites_page.dart';
 import '../screens/auth_page.dart';
@@ -1402,6 +1403,29 @@ class AutoOneFooter extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Text(
                   isArabic ? 'فروعنا' : 'Our Branches',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          HoverLift(
+            scale: 1.03,
+            borderRadius: BorderRadius.circular(6),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () {
+                Navigator.of(context).push(
+                  smoothRoute(ServicesPage(isArabic: isArabic)),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(
+                  isArabic ? 'الخدمات' : 'Services',
                   style: const TextStyle(
                     color: Colors.black87,
                     fontSize: 14,

@@ -1,0 +1,431 @@
+import 'dart:async';
+import 'dart:html' as html;
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../admin/admin_shared.dart';
+
+// ============================================================
+// ADMIN SERVICE PACKAGES (باقات الخدمات - AUTOCARE plus وغيرها)
+// ============================================================
+class AdminServicesPage extends StatefulWidget {
+  final bool isArabic;
+  const AdminServicesPage({super.key, required this.isArabic});
+
+  @override
+  State<AdminServicesPage> createState() => _AdminServicesPageState();
+}
+
+class _AdminServicesPageState extends State<AdminServicesPage> {
+  List<Map<String, dynamic>> packages = [];
+  bool isLoading = true;
+  bool isUploadingFile = false;
+
+  final nameArCtrl = TextEditingController();
+  final nameEnCtrl = TextEditingController();
+  final descArCtrl = TextEditingController();
+  final priceBeforeCtrl = TextEditingController();
+  final priceAfterCtrl = TextEditingController();
+  final pdfCtrl = TextEditingController();
+
+  bool get isArabic => widget.isArabic;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    nameArCtrl.dispose();
+    nameEnCtrl.dispose();
+    descArCtrl.dispose();
+    priceBeforeCtrl.dispose();
+    priceAfterCtrl.dispose();
+    pdfCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() => isLoading = true);
+    try {
+      final response = await Supabase.instance.client
+          .from('service_packages')
+          .select()
+          .order('price_after');
+      setState(() {
+        packages = List<Map<String, dynamic>>.from(response as List);
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _pickAndUploadPdf(TextEditingController target) async {
+    final uploadInput = html.FileUploadInputElement()..accept = '.pdf';
+    uploadInput.click();
+
+    uploadInput.onChange.listen((event) async {
+      final files = uploadInput.files;
+      if (files == null || files.isEmpty) return;
+      final file = files[0];
+
+      setState(() => isUploadingFile = true);
+      try {
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(file);
+        await reader.onLoad.first;
+        final bytes = reader.result as Uint8List;
+
+        final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
+        final path =
+            'services/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+
+        await Supabase.instance.client.storage.from('car_images').uploadBinary(
+              path,
+              bytes,
+              fileOptions: const FileOptions(
+                upsert: true,
+                contentType: 'application/pdf',
+              ),
+            );
+
+        final publicUrl =
+            Supabase.instance.client.storage.from('car_images').getPublicUrl(path);
+
+        if (mounted) setState(() => target.text = publicUrl);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isArabic ? 'فشل رفع الملف: $e' : 'Failed to upload: $e',
+              ),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => isUploadingFile = false);
+      }
+    });
+  }
+
+  Future<void> _addPackage() async {
+    if (nameArCtrl.text.trim().isEmpty || priceAfterCtrl.text.trim().isEmpty) {
+      return;
+    }
+    try {
+      await Supabase.instance.client.from('service_packages').insert({
+        'name_ar': nameArCtrl.text.trim(),
+        'name_en': nameEnCtrl.text.trim(),
+        'description_ar': descArCtrl.text.trim(),
+        'price_before': double.tryParse(priceBeforeCtrl.text.trim()),
+        'price_after': double.tryParse(priceAfterCtrl.text.trim()) ?? 0,
+        'pdf_url': pdfCtrl.text.trim().isEmpty ? null : pdfCtrl.text.trim(),
+      });
+      nameArCtrl.clear();
+      nameEnCtrl.clear();
+      descArCtrl.clear();
+      priceBeforeCtrl.clear();
+      priceAfterCtrl.clear();
+      pdfCtrl.clear();
+      await logActivity(
+        isArabic ? 'أضاف باقة خدمة جديدة' : 'Added a service package',
+      );
+      _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isArabic ? 'حصلت مشكلة' : 'Something went wrong')),
+      );
+    }
+  }
+
+  Future<void> _deletePackage(int id) async {
+    try {
+      await Supabase.instance.client
+          .from('service_packages')
+          .delete()
+          .eq('id', id);
+      _load();
+    } catch (e) {
+      // silent
+    }
+  }
+
+  Future<void> _updatePdfFor(Map<String, dynamic> package) async {
+    final ctrl = TextEditingController();
+    await _pickAndUploadPdf(ctrl);
+    if (ctrl.text.trim().isEmpty) return;
+    try {
+      await Supabase.instance.client
+          .from('service_packages')
+          .update({'pdf_url': ctrl.text.trim()}).eq('id', package['id'] as int);
+      _load();
+    } catch (e) {
+      // silent
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isArabic ? 'باقات الخدمات' : 'Service Packages',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            isArabic
+                ? 'القائمة دي بتظهر في صفحة "الخدمات" للزبائن مرتبة من الأرخص للأغلى.'
+                : 'This list shows on the customer "Services" page, sorted from cheapest to most expensive.',
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+          ),
+          const SizedBox(height: 20),
+
+          // ADD NEW PACKAGE
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.black12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isArabic ? 'إضافة باقة جديدة' : 'Add a new package',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: nameArCtrl,
+                        decoration: InputDecoration(
+                          labelText: isArabic ? 'اسم الباقة (عربي)' : 'Package name (Arabic)',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: nameEnCtrl,
+                        decoration: InputDecoration(
+                          labelText: isArabic ? 'اسم الباقة (إنجليزي، اختياري)' : 'Package name (English)',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: descArCtrl,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'وصف مختصر (اختياري)' : 'Short description',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: priceBeforeCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: isArabic ? 'السعر قبل الخصم (اختياري)' : 'Price before discount',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: priceAfterCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: isArabic ? 'السعر الحالي' : 'Current price',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: pdfCtrl,
+                        decoration: InputDecoration(
+                          labelText: isArabic ? 'رابط ملف PDF (اختياري)' : 'PDF file link',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: isUploadingFile
+                          ? null
+                          : () => _pickAndUploadPdf(pdfCtrl),
+                      icon: const Icon(Icons.upload_file),
+                      tooltip: isArabic ? 'رفع ملف PDF' : 'Upload PDF',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _addPackage,
+                  icon: const Icon(Icons.add_rounded),
+                  label: Text(isArabic ? 'إضافة' : 'Add'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          Expanded(
+            child: packages.isEmpty
+                ? Center(
+                    child: Text(
+                      isArabic ? 'مفيش باقات لسه' : 'No packages yet',
+                      style: TextStyle(color: Colors.grey.shade500),
+                    ),
+                  )
+                : ListView.separated(
+                    itemCount: packages.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final p = packages[index];
+                      final pdf = (p['pdf_url'] ?? '').toString();
+                      final priceBefore = p['price_before'];
+                      final priceAfter = p['price_after'];
+
+                      return Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.black12),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    isArabic
+                                        ? (p['name_ar'] ?? '').toString()
+                                        : ((p['name_en'] ?? '').toString().isEmpty
+                                            ? (p['name_ar'] ?? '').toString()
+                                            : p['name_en'].toString()),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      if (priceBefore != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 8),
+                                          child: Text(
+                                            '$priceBefore',
+                                            style: const TextStyle(
+                                              decoration:
+                                                  TextDecoration.lineThrough,
+                                              color: Colors.black38,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      Text(
+                                        '$priceAfter ﷼',
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (pdf.isNotEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        '📄 PDF',
+                                        style: TextStyle(fontSize: 11, color: Colors.green),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed:
+                                  isUploadingFile ? null : () => _updatePdfFor(p),
+                              icon: const Icon(Icons.upload_file),
+                              tooltip: isArabic ? 'تغيير PDF' : 'Change PDF',
+                            ),
+                            IconButton(
+                              onPressed: () => _deletePackage(p['id'] as int),
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
