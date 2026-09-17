@@ -114,6 +114,15 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
 
   Future<void> _addPackage() async {
     if (nameArCtrl.text.trim().isEmpty || priceAfterCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic
+                ? 'من فضلك اكتب الاسم والسعر الحالي على الأقل'
+                : 'Please enter at least the name and current price',
+          ),
+        ),
+      );
       return;
     }
     try {
@@ -138,9 +147,129 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isArabic ? 'حصلت مشكلة' : 'Something went wrong')),
+        SnackBar(
+          content: Text(
+            isArabic ? 'فشلت الإضافة: $e' : 'Failed to add: $e',
+          ),
+        ),
       );
     }
+  }
+
+  Future<void> _editPackage(Map<String, dynamic> package) async {
+    final editNameAr = TextEditingController(text: (package['name_ar'] ?? '').toString());
+    final editNameEn = TextEditingController(text: (package['name_en'] ?? '').toString());
+    final editDesc = TextEditingController(text: (package['description_ar'] ?? '').toString());
+    final editPriceBefore = TextEditingController(
+      text: package['price_before'] == null ? '' : '${package['price_before']}',
+    );
+    final editPriceAfter = TextEditingController(
+      text: '${package['price_after'] ?? ''}',
+    );
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(isArabic ? 'تعديل الباقة' : 'Edit package'),
+          content: SizedBox(
+            width: 400,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: editNameAr,
+                    decoration: InputDecoration(
+                      labelText: isArabic ? 'الاسم (عربي)' : 'Name (Arabic)',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: editNameEn,
+                    decoration: InputDecoration(
+                      labelText: isArabic ? 'الاسم (إنجليزي)' : 'Name (English)',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: editDesc,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: isArabic ? 'الوصف' : 'Description',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: editPriceBefore,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: isArabic ? 'قبل الخصم' : 'Before',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: editPriceAfter,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: isArabic ? 'السعر الحالي' : 'Current',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(isArabic ? 'حفظ' : 'Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (saved == true) {
+      try {
+        await Supabase.instance.client.from('service_packages').update({
+          'name_ar': editNameAr.text.trim(),
+          'name_en': editNameEn.text.trim(),
+          'description_ar': editDesc.text.trim(),
+          'price_before': double.tryParse(editPriceBefore.text.trim()),
+          'price_after': double.tryParse(editPriceAfter.text.trim()) ?? 0,
+        }).eq('id', package['id'] as int);
+        _load();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isArabic ? 'فشل الحفظ: $e' : 'Failed to save: $e'),
+          ),
+        );
+      }
+    }
+
+    editNameAr.dispose();
+    editNameEn.dispose();
+    editDesc.dispose();
+    editPriceBefore.dispose();
+    editPriceAfter.dispose();
   }
 
   Future<void> _deletePackage(int id) async {
@@ -193,22 +322,32 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
           ),
           const SizedBox(height: 20),
 
-          // ADD NEW PACKAGE
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.black12),
-            ),
-            child: Column(
+          // ADD NEW PACKAGE (قابل للطي)
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: false,
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+              backgroundColor: Colors.grey.shade50,
+              collapsedBackgroundColor: Colors.grey.shade50,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: const BorderSide(color: Colors.black12),
+              ),
+              collapsedShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: const BorderSide(color: Colors.black12),
+              ),
+              title: Text(
+                isArabic ? 'إضافة باقة جديدة' : 'Add a new package',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isArabic ? 'إضافة باقة جديدة' : 'Add a new package',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 10),
                 Row(
                   children: [
                     Expanded(
@@ -323,6 +462,9 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                   ),
                 ),
               ],
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -404,6 +546,11 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                                     ),
                                 ],
                               ),
+                            ),
+                            IconButton(
+                              onPressed: () => _editPackage(p),
+                              icon: const Icon(Icons.edit_outlined),
+                              tooltip: isArabic ? 'تعديل' : 'Edit',
                             ),
                             IconButton(
                               onPressed:
