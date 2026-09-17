@@ -3,6 +3,7 @@ import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/constants.dart';
 import '../shared/favorites_compare.dart';
 import '../models/car.dart';
@@ -11,6 +12,9 @@ import '../screens/static_pages.dart';
 import '../screens/branches_page.dart';
 import '../screens/car_details_page.dart';
 import '../screens/favorites_page.dart';
+import '../screens/auth_page.dart';
+import '../screens/my_requests_page.dart';
+import 'auth.dart';
 
 // ============================================================
 // CONNECTIVITY BANNER (WEB ONLY)
@@ -214,6 +218,74 @@ InkWell(
     ),
   ),
 
+  const SizedBox(width: 12),
+
+  ValueListenableBuilder<User?>(
+    valueListenable: currentUser,
+    builder: (context, user, _) {
+      if (user == null) {
+        return HoverLift(
+          scale: 1.1,
+          borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () {
+              Navigator.of(context).push(
+                smoothRoute(AuthPage(isArabic: isArabic)),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Icon(
+                Icons.person_outline_rounded,
+                color: transparent ? Colors.white : Colors.black87,
+                size: 22,
+              ),
+            ),
+          ),
+        );
+      }
+
+      return PopupMenuButton<String>(
+        icon: Icon(
+          Icons.account_circle_rounded,
+          color: transparent ? Colors.white : Colors.black87,
+          size: 24,
+        ),
+        onSelected: (value) {
+          switch (value) {
+            case 'requests':
+              Navigator.of(context).push(
+                smoothRoute(MyRequestsPage(isArabic: isArabic)),
+              );
+              break;
+            case 'logout':
+              signOutUser();
+              break;
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            enabled: false,
+            child: Text(
+              currentUserName ?? '',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: 'requests',
+            child: Text(isArabic ? 'طلباتي' : 'My Requests'),
+          ),
+          PopupMenuItem(
+            value: 'logout',
+            child: Text(isArabic ? 'تسجيل الخروج' : 'Log out'),
+          ),
+        ],
+      );
+    },
+  ),
+
   const SizedBox(width: 15),
 
   InkWell(
@@ -286,6 +358,24 @@ if (isMobile)
         case 'whatsapp':
           openWhatsApp();
           break;
+        case 'favorites':
+          Navigator.of(context).push(
+            smoothRoute(FavoritesPage(isArabic: isArabic)),
+          );
+          break;
+        case 'login':
+          Navigator.of(context).push(
+            smoothRoute(AuthPage(isArabic: isArabic)),
+          );
+          break;
+        case 'requests':
+          Navigator.of(context).push(
+            smoothRoute(MyRequestsPage(isArabic: isArabic)),
+          );
+          break;
+        case 'logout':
+          signOutUser();
+          break;
       }
     },
     itemBuilder: (context) => [
@@ -301,6 +391,33 @@ if (isMobile)
           isArabic ? 'المعرض' : 'CARS',
         ),
       ),
+      PopupMenuItem(
+        value: 'favorites',
+        child: Text(
+          isArabic ? 'المفضلة' : 'Favorites',
+        ),
+      ),
+      if (currentUser.value == null)
+        PopupMenuItem(
+          value: 'login',
+          child: Text(
+            isArabic ? 'تسجيل الدخول' : 'Sign in',
+          ),
+        )
+      else ...[
+        PopupMenuItem(
+          value: 'requests',
+          child: Text(
+            isArabic ? 'طلباتي' : 'My Requests',
+          ),
+        ),
+        PopupMenuItem(
+          value: 'logout',
+          child: Text(
+            isArabic ? 'تسجيل الخروج' : 'Log out',
+          ),
+        ),
+      ],
       PopupMenuItem(
         value: 'language',
         child: Text(

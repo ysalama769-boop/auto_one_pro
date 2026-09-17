@@ -920,6 +920,7 @@ class _FinancingRequestDialogState extends State<_FinancingRequestDialog> {
             hasObligations == true ? obligationsTypeCtrl.text.trim() : '',
         'employer': employerCtrl.text.trim(),
         'selected_color': selectedColorName ?? '',
+        'user_id': Supabase.instance.client.auth.currentUser?.id,
       });
 
       if (!mounted) return;

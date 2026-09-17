@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'env.dart';
 import 'shared/favorites_compare.dart';
+import 'shared/auth.dart';
 import 'shared/repository.dart';
 import 'shared/widgets.dart';
 import 'screens/home_page.dart';
@@ -22,6 +23,10 @@ Future<void> main() async {
   );
 
   loadFavorites();
+  initAuthListener();
+  if (isLoggedIn) {
+    await loadFavoritesFromAccount();
+  }
 
   runApp(const AutoOneApp());
 }
