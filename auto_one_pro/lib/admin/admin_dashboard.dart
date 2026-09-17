@@ -13,6 +13,7 @@ import '../admin/admin_homepage.dart';
 import '../admin/admin_cars.dart';
 import '../admin/admin_financing_partners.dart';
 import '../admin/admin_reviews.dart';
+import '../admin/admin_services.dart';
 
 // ============================================================
 // ADMIN DASHBOARD (TABS: BOOKINGS + INVENTORY)
@@ -427,6 +428,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
         width: 150,
         pageBuilder: () => AdminReviewsPage(isArabic: isArabic),
         roles: const ['admin', 'editor', 'sales'],
+      ),
+      _AdminTabDef(
+        label: isArabic ? 'باقات الخدمات' : 'Service Packages',
+        icon: Icons.miscellaneous_services_outlined,
+        width: 150,
+        pageBuilder: () => AdminServicesPage(isArabic: isArabic),
+        roles: const ['admin', 'editor'],
       ),
       _AdminTabDef(
         label: isArabic ? 'المستخدمين' : 'Users',
