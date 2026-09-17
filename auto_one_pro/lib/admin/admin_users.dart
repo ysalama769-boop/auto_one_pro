@@ -61,11 +61,10 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   Future<void> _openForm({Map<String, dynamic>? existing}) async {
     final nameCtrl =
         TextEditingController(text: existing?['name']?.toString() ?? '');
-    final usernameCtrl =
-        TextEditingController(text: existing?['username']?.toString() ?? '');
-    final passwordCtrl =
-        TextEditingController(text: existing?['password']?.toString() ?? '');
+    final emailCtrl =
+        TextEditingController(text: existing?['email']?.toString() ?? '');
     String role = (existing?['role'] ?? 'sales') as String;
+    final isPending = existing != null && existing['user_id'] == null;
 
     final saved = await showDialog<bool>(
       context: context,
@@ -73,13 +72,24 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
         builder: (context, setDialogState) => AlertDialog(
           title: Text(
             existing == null
-                ? (isArabic ? 'مستخدم جديد' : 'New user')
+                ? (isArabic ? 'اعتماد إيميل جديد' : 'Approve a new email')
                 : (isArabic ? 'تعديل مستخدم' : 'Edit user'),
           ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (existing == null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      isArabic
+                          ? 'ضيف إيميل الشخص، وهو هيقدر يفعّل حسابه بنفسه (بكلمة سر من اختياره) لما يدخل على صفحة لوحة التحكم.'
+                          : "Add the person's email — they'll activate their own account (with a password of their choice) when they visit the admin login page.",
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ),
                 TextField(
                   controller: nameCtrl,
                   decoration: InputDecoration(
@@ -88,16 +98,11 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                 ),
                 const SizedBox(height: 10),
                 TextField(
-                  controller: usernameCtrl,
+                  controller: emailCtrl,
+                  enabled: existing == null, // الإيميل ثابت بعد الإنشاء
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    labelText: isArabic ? 'اسم المستخدم' : 'Username',
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: passwordCtrl,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'كلمة السر' : 'Password',
+                    labelText: isArabic ? 'الإيميل' : 'Email',
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -118,6 +123,19 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                     }
                   },
                 ),
+                if (isPending) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    isArabic
+                        ? 'لسه ماعملش تفعيل — منتظر يدخل بنفسه.'
+                        : 'Not activated yet — waiting for them to sign in.',
+                    style: const TextStyle(
+                      color: Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -140,31 +158,29 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
     );
 
     if (saved != true) return;
-    if (nameCtrl.text.trim().isEmpty ||
-        usernameCtrl.text.trim().isEmpty ||
-        passwordCtrl.text.trim().isEmpty) {
+    if (nameCtrl.text.trim().isEmpty || emailCtrl.text.trim().isEmpty) {
       return;
     }
 
-    final payload = {
-      'name': nameCtrl.text.trim(),
-      'username': usernameCtrl.text.trim(),
-      'password': passwordCtrl.text.trim(),
-      'role': role,
-    };
-
     try {
       if (existing == null) {
-        await Supabase.instance.client.from('admin_users').insert(payload);
+        await Supabase.instance.client.from('admin_users').insert({
+          'name': nameCtrl.text.trim(),
+          'email': emailCtrl.text.trim().toLowerCase(),
+          'role': role,
+        });
         await logActivity(
           isArabic
-              ? 'أضاف مستخدم جديد: ${nameCtrl.text.trim()} (${_roleLabel(role)})'
-              : 'Added new user: ${nameCtrl.text.trim()} (${_roleLabel(role)})',
+              ? 'اعتمد إيميل جديد: ${nameCtrl.text.trim()} (${_roleLabel(role)})'
+              : 'Approved new email: ${nameCtrl.text.trim()} (${_roleLabel(role)})',
         );
       } else {
         await Supabase.instance.client
             .from('admin_users')
-            .update(payload)
+            .update({
+              'name': nameCtrl.text.trim(),
+              'role': role,
+            })
             .eq('id', existing['id'] as int);
         await logActivity(
           isArabic
@@ -179,8 +195,8 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
         SnackBar(
           content: Text(
             isArabic
-                ? 'حصلت مشكلة (يمكن اسم المستخدم مستخدم قبل كده)'
-                : 'Something went wrong (username might be taken)',
+                ? 'حصلت مشكلة (يمكن الإيميل ده متسجّل قبل كده)'
+                : 'Something went wrong (email might already be used)',
           ),
         ),
       );
@@ -240,7 +256,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
         foregroundColor: Colors.white,
         onPressed: () => _openForm(),
         icon: const Icon(Icons.person_add_alt_1_rounded),
-        label: Text(isArabic ? 'مستخدم جديد' : 'New user'),
+        label: Text(isArabic ? 'اعتماد إيميل جديد' : 'Approve new email'),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.red))
@@ -259,6 +275,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                     final role = (user['role'] ?? 'sales') as String;
                     final isCurrentUser =
                         currentAdminUser.value?['id'] == user['id'];
+                    final isPending = user['user_id'] == null;
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
@@ -310,10 +327,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                                   ],
                                 ),
                                 Text(
-                                  '@${user['username'] ?? ''} · ${_roleLabel(role)}',
-                                  style: const TextStyle(
+                                  '${user['email'] ?? ''} · ${_roleLabel(role)}'
+                                  '${isPending ? (isArabic ? ' · لسه معلّق' : ' · Pending') : ''}',
+                                  style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.black54,
+                                    color: isPending
+                                        ? Colors.orange
+                                        : Colors.black54,
+                                    fontWeight: isPending
+                                        ? FontWeight.w700
+                                        : FontWeight.normal,
                                   ),
                                 ),
                               ],
