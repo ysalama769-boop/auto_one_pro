@@ -198,6 +198,67 @@ InkWell(
 
   const SizedBox(width: 10),
 
+  HeaderButton(
+    title: isArabic ? 'الخدمات' : 'SERVICES',
+    active: false,
+    lightText: transparent,
+    onTap: () {
+      Navigator.of(context).push(
+        smoothRoute(ServicesPage(isArabic: isArabic)),
+      );
+    },
+  ),
+
+  const SizedBox(width: 10),
+
+  PopupMenuButton<String>(
+    color: Colors.white,
+    onSelected: (value) {
+      if (value == 'about') {
+        Navigator.of(context).push(
+          smoothRoute(AboutAutoOnePage(isArabic: isArabic)),
+        );
+      } else if (value == 'branches') {
+        Navigator.of(context).push(
+          smoothRoute(BranchesPage(isArabic: isArabic)),
+        );
+      }
+    },
+    itemBuilder: (context) => [
+      PopupMenuItem(
+        value: 'about',
+        child: Text(isArabic ? 'نبذة عننا' : 'About Us'),
+      ),
+      PopupMenuItem(
+        value: 'branches',
+        child: Text(isArabic ? 'الفروع' : 'Branches'),
+      ),
+    ],
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            isArabic ? 'نبذة عننا' : 'ABOUT US',
+            style: TextStyle(
+              color: transparent ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+          Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: transparent ? Colors.white : Colors.black87,
+            size: 18,
+          ),
+        ],
+      ),
+    ),
+  ),
+
+  const SizedBox(width: 10),
+
   HoverLift(
     scale: 1.1,
     borderRadius: BorderRadius.circular(8),
@@ -374,6 +435,21 @@ if (isMobile)
             smoothRoute(MyRequestsPage(isArabic: isArabic)),
           );
           break;
+        case 'services':
+          Navigator.of(context).push(
+            smoothRoute(ServicesPage(isArabic: isArabic)),
+          );
+          break;
+        case 'about':
+          Navigator.of(context).push(
+            smoothRoute(AboutAutoOnePage(isArabic: isArabic)),
+          );
+          break;
+        case 'branches':
+          Navigator.of(context).push(
+            smoothRoute(BranchesPage(isArabic: isArabic)),
+          );
+          break;
         case 'logout':
           signOutUser();
           break;
@@ -390,6 +466,24 @@ if (isMobile)
         value: 'cars',
         child: Text(
           isArabic ? 'المعرض' : 'CARS',
+        ),
+      ),
+      PopupMenuItem(
+        value: 'services',
+        child: Text(
+          isArabic ? 'الخدمات' : 'Services',
+        ),
+      ),
+      PopupMenuItem(
+        value: 'about',
+        child: Text(
+          isArabic ? 'نبذة عننا' : 'About Us',
+        ),
+      ),
+      PopupMenuItem(
+        value: 'branches',
+        child: Text(
+          isArabic ? 'الفروع' : 'Branches',
         ),
       ),
       PopupMenuItem(

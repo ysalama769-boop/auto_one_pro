@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/constants.dart';
 import '../shared/widgets.dart';
+import '../admin/admin_shared.dart';
 
 // ============================================================
 // SERVICES PAGE (باقات الخدمات - صفحة مستقلة للزبائن)
@@ -51,6 +52,9 @@ class _ServicesPageState extends State<ServicesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bannerUrl =
+        (homepageSettings.value?['services_banner'] ?? '').toString().trim();
+
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -63,6 +67,15 @@ class _ServicesPageState extends State<ServicesPage> {
         body: SingleChildScrollView(
           child: Column(
             children: [
+              if (bannerUrl.isNotEmpty)
+                AspectRatio(
+                  aspectRatio: 16 / 5,
+                  child: carImageAdaptive(
+                    bannerUrl,
+                    fit: BoxFit.contain,
+                    showWatermark: false,
+                  ),
+                ),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 24),
