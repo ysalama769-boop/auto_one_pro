@@ -498,6 +498,7 @@ onPressed: () async {
       'whatsapp': whatsappController.text.trim(),
       'email': emailController.text.trim(),
       'status': 'pending',
+      'user_id': Supabase.instance.client.auth.currentUser?.id,
     }).select().single();
     bookingId = inserted['id'] as int?;
     bookingSaved = true;

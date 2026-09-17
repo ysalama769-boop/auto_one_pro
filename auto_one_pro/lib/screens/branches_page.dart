@@ -63,6 +63,7 @@ class _BranchesPageState extends State<BranchesPage> {
         'request_type': 'contact',
         'status': 'new',
         'notes': notes,
+        'user_id': Supabase.instance.client.auth.currentUser?.id,
       });
 
       if (!mounted) return;
