@@ -16,30 +16,41 @@ class AdminGate extends StatefulWidget {
 
 
 class _AdminGateState extends State<AdminGate> {
-  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final nameController = TextEditingController();
   String? errorText;
   bool obscure = true;
   bool isSubmitting = false;
+  bool isFirstTimeSetup = false;
 
   bool get isArabic => widget.isArabic;
 
   @override
   void dispose() {
-    usernameController.dispose();
+    emailController.dispose();
     passwordController.dispose();
+    nameController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    final username = usernameController.text.trim();
+    if (isFirstTimeSetup) {
+      await _firstTimeSetup();
+    } else {
+      await _signIn();
+    }
+  }
+
+  Future<void> _signIn() async {
+    final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       setState(() {
         errorText = isArabic
-            ? 'اكتب اسم المستخدم وكلمة السر'
-            : 'Enter username and password';
+            ? 'اكتب الإيميل وكلمة السر'
+            : 'Enter email and password';
       });
       return;
     }
@@ -50,43 +61,139 @@ class _AdminGateState extends State<AdminGate> {
     });
 
     try {
-      final response = await Supabase.instance.client
-          .from('admin_users')
-          .select()
-          .eq('username', username)
-          .eq('password', password)
-          .maybeSingle();
+      // ١) تسجيل الدخول عن طريق Supabase Auth الحقيقي (تشفير كامل،
+      // مفيش كلمة سر بتتبعت أو تتخزن كنص عادي في أي مكان).
+      final authResponse = await Supabase.instance.client.auth
+          .signInWithPassword(email: email, password: password);
 
-      if (response == null) {
+      final user = authResponse.user;
+      if (user == null) {
         setState(() {
           isSubmitting = false;
           errorText = isArabic
-              ? 'اسم المستخدم أو كلمة السر غلط'
-              : 'Wrong username or password';
+              ? 'الإيميل أو كلمة السر غلط'
+              : 'Wrong email or password';
         });
         return;
       }
 
-      currentAdminUser.value = response;
+      // ٢) نتأكّد إن الحساب ده فعلاً "أدمن" — عن طريق جدول admin_users
+      // المربوط بمعرّف المستخدم (مش بكلمة سر تانية). سياسة القاعدة
+      // (RLS) بتسمح بس إنه يقرا صفّه هو بس، مش كل الأدمنز.
+      final adminRow = await Supabase.instance.client
+          .from('admin_users')
+          .select()
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (adminRow == null) {
+        // الحساب سليم بس مش أدمن — نسجّل خروج فورًا عشان محدش
+        // يفضل جلسة داخلة من غير صلاحية.
+        await Supabase.instance.client.auth.signOut();
+        setState(() {
+          isSubmitting = false;
+          errorText = isArabic
+              ? 'الحساب ده مش عنده صلاحية دخول لوحة التحكم'
+              : 'This account has no admin access';
+        });
+        return;
+      }
+
+      currentAdminUser.value = adminRow;
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         smoothRoute(AdminDashboard(isArabic: isArabic)),
       );
+    } on AuthException catch (e) {
+      setState(() {
+        isSubmitting = false;
+        errorText = e.message;
+      });
     } catch (e) {
-      // فallback: لو قاعدة بيانات المستخدمين لسه متعملتلهاش SQL،
-      // نسمح بالدخول بالرقم السري القديم كـ Admin مؤقتًا
-      if (password == kAdminPassword) {
-        currentAdminUser.value = {
-          'name': isArabic ? 'المدير' : 'Admin',
-          'role': 'admin',
-        };
-        if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          smoothRoute(AdminDashboard(isArabic: isArabic)),
-        );
+      setState(() {
+        isSubmitting = false;
+        errorText =
+            isArabic ? 'حصلت مشكلة في الاتصال' : 'Connection problem';
+      });
+    }
+  }
+
+  // أول تسجيل دخول لأدمن جديد — المدير الأساسي بيكون سبق وضاف
+  // إيميله في جدول admin_users (بدون user_id بعد)، وهنا بس بيعمل
+  // حساب Supabase Auth حقيقي ونربطه بنفس الصف.
+  Future<void> _firstTimeSetup() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final name = nameController.text.trim();
+
+    if (email.isEmpty || password.isEmpty || name.isEmpty) {
+      setState(() {
+        errorText = isArabic
+            ? 'اكتب الاسم والإيميل وكلمة السر'
+            : 'Enter name, email and password';
+      });
+      return;
+    }
+
+    setState(() {
+      isSubmitting = true;
+      errorText = null;
+    });
+
+    try {
+      // نتأكّد الأول إن الإيميل ده معتمد فعلاً من المدير الأساسي
+      // (يعني موجود في admin_users بدون user_id لسه)
+      final pendingRow = await Supabase.instance.client
+          .from('admin_users')
+          .select()
+          .eq('email', email)
+          .filter('user_id', 'is', null)
+          .maybeSingle();
+
+      if (pendingRow == null) {
+        setState(() {
+          isSubmitting = false;
+          errorText = isArabic
+              ? 'الإيميل ده مش معتمد من المدير — اطلب منه يضيفك الأول'
+              : 'This email is not approved by the admin yet';
+        });
         return;
       }
+
+      final authResponse = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+      );
+
+      final user = authResponse.user;
+      if (user == null) {
+        setState(() {
+          isSubmitting = false;
+          errorText = isArabic ? 'فشل إنشاء الحساب' : 'Failed to create account';
+        });
+        return;
+      }
+
+      final updatedRow = await Supabase.instance.client
+          .from('admin_users')
+          .update({'user_id': user.id, 'name': name})
+          .eq('id', pendingRow['id'] as int)
+          .select()
+          .single();
+
+      currentAdminUser.value = updatedRow;
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        smoothRoute(AdminDashboard(isArabic: isArabic)),
+      );
+    } on AuthException catch (e) {
+      setState(() {
+        isSubmitting = false;
+        errorText = e.message;
+      });
+    } catch (e) {
       setState(() {
         isSubmitting = false;
         errorText =
@@ -124,12 +231,30 @@ class _AdminGateState extends State<AdminGate> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  if (isFirstTimeSetup) ...[
+                    TextField(
+                      controller: nameController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: isArabic ? 'اسمك' : 'Your name',
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        filled: true,
+                        fillColor: Colors.white10,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   TextField(
-                    controller: usernameController,
+                    controller: emailController,
                     autofocus: true,
+                    keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: isArabic ? 'اسم المستخدم' : 'Username',
+                      hintText: isArabic ? 'الإيميل' : 'Email',
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
                       fillColor: Colors.white10,
@@ -146,7 +271,7 @@ class _AdminGateState extends State<AdminGate> {
                     style: const TextStyle(color: Colors.white),
                     onSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
-                      hintText: isArabic ? 'الرقم السري' : 'Password',
+                      hintText: isArabic ? 'كلمة السر' : 'Password',
                       hintStyle: const TextStyle(color: Colors.white38),
                       errorText: errorText,
                       filled: true,
@@ -193,13 +318,35 @@ class _AdminGateState extends State<AdminGate> {
                               ),
                             )
                           : Text(
-                              isArabic ? 'دخول' : 'Enter',
+                              isFirstTimeSetup
+                                  ? (isArabic ? 'تفعيل الحساب' : 'Activate account')
+                                  : (isArabic ? 'دخول' : 'Enter'),
                               style:
                                   const TextStyle(fontWeight: FontWeight.w700),
                             ),
                     ),
                   ),
                   const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: isSubmitting
+                        ? null
+                        : () {
+                            setState(() {
+                              isFirstTimeSetup = !isFirstTimeSetup;
+                              errorText = null;
+                            });
+                          },
+                    child: Text(
+                      isFirstTimeSetup
+                          ? (isArabic
+                              ? 'عندك حساب بالفعل؟ سجّل دخولك'
+                              : 'Already have an account? Sign in')
+                          : (isArabic
+                              ? 'أول مرة تدخل؟ فعّل حسابك'
+                              : 'First time? Activate your account'),
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(
@@ -216,4 +363,3 @@ class _AdminGateState extends State<AdminGate> {
     );
   }
 }
-
