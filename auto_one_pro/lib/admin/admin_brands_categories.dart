@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:html' as html;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -21,6 +23,58 @@ class _AdminBrandsCategoriesPageState
   List<Map<String, dynamic>> brands = [];
   List<Map<String, dynamic>> categories = [];
   bool isLoading = true;
+  bool isUploadingLogo = false;
+
+  Future<void> _pickAndUploadLogo(
+    TextEditingController target,
+    StateSetter setDialogState,
+  ) async {
+    final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
+    uploadInput.click();
+
+    uploadInput.onChange.listen((event) async {
+      final files = uploadInput.files;
+      if (files == null || files.isEmpty) return;
+      final file = files[0];
+
+      setDialogState(() => isUploadingLogo = true);
+
+      try {
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(file);
+        await reader.onLoad.first;
+        final bytes = reader.result as Uint8List;
+
+        final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
+        final path =
+            'brands/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+
+        await Supabase.instance.client.storage
+            .from('car_images')
+            .uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: true));
+
+        final publicUrl = Supabase.instance.client.storage
+            .from('car_images')
+            .getPublicUrl(path);
+
+        setDialogState(() => target.text = publicUrl);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                widget.isArabic
+                    ? 'فشل رفع الصورة: $e'
+                    : 'Failed to upload image: $e',
+              ),
+            ),
+          );
+        }
+      } finally {
+        setDialogState(() => isUploadingLogo = false);
+      }
+    });
+  }
 
   bool get isArabic => widget.isArabic;
 
@@ -84,7 +138,8 @@ class _AdminBrandsCategoriesPageState
 
     final saved = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
         title: Text(
           existing == null
               ? (isArabic ? 'إضافة' : 'Add')
@@ -115,14 +170,34 @@ class _AdminBrandsCategoriesPageState
               ),
               if (showBrands) ...[
                 const SizedBox(height: 10),
-                TextField(
-                  controller: logoCtrl,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'رابط اللوجو' : 'Logo URL',
-                    hintText: isArabic
-                        ? 'الصق رابط صورة اللوجو (يبدأ بـ https://)'
-                        : 'Paste the logo image URL (starts with https://)',
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: logoCtrl,
+                        decoration: InputDecoration(
+                          labelText: isArabic ? 'رابط اللوجو' : 'Logo URL',
+                          hintText: isArabic
+                              ? 'الصق رابط صورة اللوجو (يبدأ بـ https://)'
+                              : 'Paste the logo image URL (starts with https://)',
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: isUploadingLogo
+                          ? null
+                          : () => _pickAndUploadLogo(logoCtrl, setDialogState),
+                      icon: isUploadingLogo
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.upload_file),
+                      tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+                    ),
+                  ],
                 ),
               ],
             ],
@@ -138,6 +213,7 @@ class _AdminBrandsCategoriesPageState
             child: Text(isArabic ? 'حفظ' : 'Save'),
           ),
         ],
+      ),
       ),
     );
 
