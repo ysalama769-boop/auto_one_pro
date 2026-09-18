@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/constants.dart';
 import '../shared/widgets.dart';
+import '../shared/auth.dart';
 
 // ============================================================
 // MY REQUESTS PAGE (طلباتي - حجوزات وتمويل سابقة للزبون المسجّل)
@@ -24,6 +25,7 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
   void initState() {
     super.initState();
     _load();
+    markCustomerNotificationsSeen();
   }
 
   Future<void> _load() async {

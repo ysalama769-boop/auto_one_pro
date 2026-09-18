@@ -285,6 +285,72 @@ InkWell(
   ValueListenableBuilder<User?>(
     valueListenable: currentUser,
     builder: (context, user, _) {
+      if (user == null) return const SizedBox.shrink();
+
+      return ValueListenableBuilder<int>(
+        valueListenable: customerNotificationsCount,
+        builder: (context, count, _) {
+          return HoverLift(
+            scale: 1.1,
+            borderRadius: BorderRadius.circular(8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () {
+                Navigator.of(context).push(
+                  smoothRoute(MyRequestsPage(isArabic: isArabic)),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.notifications_outlined,
+                      color: transparent ? Colors.white : Colors.black87,
+                      size: 22,
+                    ),
+                    if (count > 0)
+                      Positioned(
+                        top: -4,
+                        right: -4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          constraints: const BoxConstraints(minWidth: 16),
+                          child: Text(
+                            count > 9 ? '9+' : '$count',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  ),
+
+  const SizedBox(width: 8),
+
+  ValueListenableBuilder<User?>(
+    valueListenable: currentUser,
+    builder: (context, user, _) {
       if (user == null) {
         return HoverLift(
           scale: 1.1,

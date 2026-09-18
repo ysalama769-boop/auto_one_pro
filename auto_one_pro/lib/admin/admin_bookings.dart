@@ -125,7 +125,7 @@ class _AdminBookingsBodyState extends State<AdminBookingsBody> {
     try {
       await Supabase.instance.client
           .from('bookings')
-          .update({'status': newStatus}).eq('id', id);
+          .update({'status': newStatus, 'seen': false}).eq('id', id);
       _loadBookings();
 
       // نجهز رسالة للعميل ونفتح واتساب أو الإيميل عشان تدوسي إرسال
