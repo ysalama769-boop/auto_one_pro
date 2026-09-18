@@ -800,7 +800,10 @@ class _CarFormPageState extends State<CarFormPage> {
 
         final brandFolder = brandCtrl.text.trim().isEmpty
             ? 'other'
-            : brandCtrl.text.trim().toLowerCase();
+            : brandCtrl.text.trim().toLowerCase().replaceAll(
+                  RegExp(r'[^\w\-]'),
+                  '_',
+                );
         final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         final path =
             '$brandFolder/${DateTime.now().millisecondsSinceEpoch}_$safeName';
