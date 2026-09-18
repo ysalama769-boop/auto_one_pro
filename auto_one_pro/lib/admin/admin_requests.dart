@@ -57,7 +57,7 @@ class _AdminRequestsPageState extends State<AdminRequestsPage> {
     try {
       await Supabase.instance.client
           .from('customer_requests')
-          .update({'status': newStatus}).eq('id', id);
+          .update({'status': newStatus, 'seen': false}).eq('id', id);
       await logActivity(
         isArabic
             ? 'غيّر حالة طلب رقم $id إلى ${_statusLabel(newStatus)}'

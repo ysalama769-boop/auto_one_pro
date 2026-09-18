@@ -17,9 +17,17 @@ StreamSubscription<AuthState>? _authSubscription;
 // تسجيل الدخول (دخول / خروج / تجديد الجلسة).
 void initAuthListener() {
   currentUser.value = Supabase.instance.client.auth.currentUser;
+  if (currentUser.value != null) {
+    loadCustomerNotificationsCount();
+  }
   _authSubscription ??=
       Supabase.instance.client.auth.onAuthStateChange.listen((data) {
     currentUser.value = data.session?.user;
+    if (currentUser.value != null) {
+      loadCustomerNotificationsCount();
+    } else {
+      customerNotificationsCount.value = 0;
+    }
   });
 }
 
@@ -83,4 +91,59 @@ String? get currentUserName {
   final fullName = user.userMetadata?['full_name'] as String?;
   if (fullName != null && fullName.trim().isNotEmpty) return fullName.trim();
   return user.email;
+}
+
+// ============================================================
+// إشعارات الزبون (تغييرات حالة الطلبات/الحجوزات اللي لسه ماشافهاش)
+// ============================================================
+final ValueNotifier<int> customerNotificationsCount = ValueNotifier<int>(0);
+
+Future<void> loadCustomerNotificationsCount() async {
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null) {
+    customerNotificationsCount.value = 0;
+    return;
+  }
+  try {
+    final results = await Future.wait([
+      Supabase.instance.client
+          .from('bookings')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('seen', false),
+      Supabase.instance.client
+          .from('customer_requests')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('seen', false),
+    ]);
+    final bookingsCount = (results[0] as List).length;
+    final requestsCount = (results[1] as List).length;
+    customerNotificationsCount.value = bookingsCount + requestsCount;
+  } catch (e) {
+    debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل عدد إشعارات الزبون: $e');
+  }
+}
+
+// بتتنادى لما الزبون يفتح صفحة "طلباتي" — تعلّم كل حاجاته كـ"متشافة"
+Future<void> markCustomerNotificationsSeen() async {
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null) return;
+  try {
+    await Future.wait([
+      Supabase.instance.client
+          .from('bookings')
+          .update({'seen': true})
+          .eq('user_id', user.id)
+          .eq('seen', false),
+      Supabase.instance.client
+          .from('customer_requests')
+          .update({'seen': true})
+          .eq('user_id', user.id)
+          .eq('seen', false),
+    ]);
+    customerNotificationsCount.value = 0;
+  } catch (e) {
+    debugPrint('AUTO_ONE_DEBUG: تعذّر تحديث حالة الإشعارات: $e');
+  }
 }
