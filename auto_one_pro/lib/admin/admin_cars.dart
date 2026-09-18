@@ -582,6 +582,7 @@ class _CarFormPageState extends State<CarFormPage> {
 
   // الألوان المتاحة في المتجر كله، وإيه اللي متحدد للسيارة دي
   List<Map<String, dynamic>> allColors = [];
+  List<Map<String, dynamic>> allBrands = [];
   Set<int> selectedColorIds = {};
   // لكل لون: قايمة صور خارجية وقايمة صور داخلية منفصلة (معرض كامل
   // مش صورة واحدة بس)
@@ -713,6 +714,12 @@ class _CarFormPageState extends State<CarFormPage> {
       final colorsResponse =
           await Supabase.instance.client.from('colors').select();
       allColors = List<Map<String, dynamic>>.from(colorsResponse as List);
+
+      final brandsResponse = await Supabase.instance.client
+          .from('brands')
+          .select()
+          .order('name_en');
+      allBrands = List<Map<String, dynamic>>.from(brandsResponse as List);
 
       if (isEditing) {
         final carId = widget.existingCar!['id'] as int;
@@ -2041,6 +2048,59 @@ class _CarFormPageState extends State<CarFormPage> {
                 label: isArabic ? 'الماركة' : 'Brand',
                 required: true,
               ),
+              if (allBrands.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  isArabic
+                      ? 'دوس على الماركة عشان تتأكد إن الاسم مطابق بالظبط (بيمنع مشكلة "السيارة مش بتظهر" لما تدوس على الماركة في الموقع)'
+                      : 'Tap a brand to make sure the name matches exactly',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: allBrands.map((b) {
+                    final nameEn = (b['name_en'] ?? '').toString();
+                    final nameAr = (b['name_ar'] ?? '').toString();
+                    final value = nameEn.isNotEmpty ? nameEn : nameAr;
+                    if (value.isEmpty) return const SizedBox.shrink();
+                    final isSelected =
+                        brandCtrl.text.trim().toLowerCase() ==
+                            value.toLowerCase();
+
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () {
+                        setState(() {
+                          brandCtrl.text = value;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.red
+                              : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          isArabic && nameAr.isNotEmpty ? nameAr : value,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 10),
+              ],
               Text(
                 isArabic ? 'نوع السيارة' : 'Body type',
                 style: const TextStyle(
