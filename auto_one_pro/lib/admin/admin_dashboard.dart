@@ -19,6 +19,7 @@ import '../admin/admin_services.dart';
 // ADMIN DASHBOARD (TABS: BOOKINGS + INVENTORY)
 // ============================================================
 class _AdminTabDef {
+  final String id;
   final String label;
   final IconData icon;
   final double width;
@@ -27,6 +28,7 @@ class _AdminTabDef {
   final int badgeCount;
 
   _AdminTabDef({
+    this.id = '',
     required this.label,
     required this.icon,
     required this.width,
@@ -58,15 +60,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
   String? bestSellingCar;
   int totalRequests = 0;
   int newRequests = 0;
+  int pendingReviews = 0;
   String? topRequestedCar;
   String? mostViewedCar;
 
   bool get isArabic => widget.isArabic;
 
+  Timer? _statsRefreshTimer;
+
   @override
   void initState() {
     super.initState();
     _loadStats();
+    // نحدّث العداد كل 60 ثانية تلقائيًا عشان الجرس يفضل محدّث من
+    // غير ما تحتاج تعمل Refresh للصفحة بنفسك.
+    _statsRefreshTimer = Timer.periodic(
+      const Duration(seconds: 60),
+      (_) => _loadStats(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _statsRefreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadStats() async {
@@ -83,10 +100,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
         Supabase.instance.client
             .from('customer_requests')
             .select('status, car_name, car_brand'),
+        Supabase.instance.client
+            .from('customer_reviews')
+            .select('status'),
       ]);
       final bookingsResponse = results[0];
       final carsResponse = results[1];
       final requestsResponse = results[2];
+      final reviewsResponse = results[3];
 
       final bookingsList =
           List<Map<String, dynamic>>.from(bookingsResponse as List);
@@ -144,6 +165,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
         }
       }
 
+      final reviewsList =
+          List<Map<String, dynamic>>.from(reviewsResponse as List);
+      final pendingReviewsCount =
+          reviewsList.where((r) => (r['status'] ?? 'pending') == 'pending').length;
+
       if (!mounted) return;
       setState(() {
         totalBookings = bookingsList.length;
@@ -152,6 +178,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         bestSellingCar = topCar;
         totalRequests = requestsList.length;
         newRequests = newReqs.length;
+        pendingReviews = pendingReviewsCount;
         topRequestedCar = topRequested;
         mostViewedCar = mostViewed;
         isLoadingStats = false;
@@ -230,6 +257,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           foregroundColor: kHeaderTextColor,
           title: Text(isArabic ? 'لوحة التحكم' : 'Admin Dashboard'),
           actions: [
+            _notificationsBell(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Image.asset(
@@ -374,11 +402,114 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
+  // بيفتح التاب بالـ id بتاعه لو موجود ضمن التابات المسموحة للدور
+  // الحالي (يعني مش هيحاول يفتح تاب الأدمن مش شايفه أصلاً).
+  void _openTabById(String id) {
+    final tabs = _visibleTabs();
+    final index = tabs.indexWhere((t) => t.id == id);
+    if (index != -1) {
+      setState(() => currentTab = index);
+    }
+  }
+
+  Widget _notificationsBell() {
+    final total = pendingBookings + newRequests + pendingReviews;
+
+    return PopupMenuButton<String>(
+      tooltip: isArabic ? 'الإشعارات' : 'Notifications',
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          const Icon(Icons.notifications_outlined),
+          if (total > 0)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                constraints: const BoxConstraints(minWidth: 18),
+                child: Text(
+                  total > 99 ? '99+' : '$total',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      onSelected: (id) => _openTabById(id),
+      itemBuilder: (context) {
+        final items = <PopupMenuEntry<String>>[];
+
+        if (total == 0) {
+          items.add(
+            PopupMenuItem(
+              enabled: false,
+              child: Text(
+                isArabic ? 'مفيش إشعارات جديدة' : 'No new notifications',
+                style: const TextStyle(color: Colors.black45),
+              ),
+            ),
+          );
+          return items;
+        }
+
+        if (pendingBookings > 0) {
+          items.add(
+            PopupMenuItem(
+              value: 'bookings',
+              child: Text(
+                isArabic
+                    ? '$pendingBookings حجز قيد الانتظار'
+                    : '$pendingBookings pending bookings',
+              ),
+            ),
+          );
+        }
+        if (newRequests > 0) {
+          items.add(
+            PopupMenuItem(
+              value: 'requests',
+              child: Text(
+                isArabic
+                    ? '$newRequests طلب عميل جديد'
+                    : '$newRequests new customer requests',
+              ),
+            ),
+          );
+        }
+        if (pendingReviews > 0) {
+          items.add(
+            PopupMenuItem(
+              value: 'reviews',
+              child: Text(
+                isArabic
+                    ? '$pendingReviews تقييم بانتظار المراجعة'
+                    : '$pendingReviews reviews awaiting review',
+              ),
+            ),
+          );
+        }
+        return items;
+      },
+    );
+  }
+
   List<_AdminTabDef> _visibleTabs() {
     final role = (currentAdminUser.value?['role'] ?? 'admin') as String;
 
     final all = <_AdminTabDef>[
       _AdminTabDef(
+        id: 'bookings',
         label: isArabic ? 'الحجوزات' : 'Bookings',
         icon: Icons.event_note_rounded,
         width: 130,
@@ -394,6 +525,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         roles: const ['admin', 'inventory', 'editor'],
       ),
       _AdminTabDef(
+        id: 'requests',
         label: isArabic ? 'طلبات العملاء' : 'Requests',
         icon: Icons.support_agent_rounded,
         width: 140,
@@ -423,11 +555,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
         roles: const ['admin', 'editor'],
       ),
       _AdminTabDef(
+        id: 'reviews',
         label: isArabic ? 'تقييمات العملاء' : 'Reviews',
         icon: Icons.rate_review_outlined,
         width: 150,
         pageBuilder: () => AdminReviewsPage(isArabic: isArabic),
         roles: const ['admin', 'editor', 'sales'],
+        badgeCount: pendingReviews,
       ),
       _AdminTabDef(
         label: isArabic ? 'باقات الخدمات' : 'Service Packages',
