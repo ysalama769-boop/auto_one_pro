@@ -562,6 +562,7 @@ class _CarFormPageState extends State<CarFormPage> {
 
   late bool isAvailable;
   late bool isOffer;
+  late bool wasOfferInitially;
   late bool isFeatured;
   late final TextEditingController oldPriceCtrl;
   late final TextEditingController discountPercentCtrl;
@@ -658,6 +659,7 @@ class _CarFormPageState extends State<CarFormPage> {
 
     isAvailable = (car?['is_available'] ?? true) as bool;
     isOffer = (car?['is_offer'] ?? false) as bool;
+    wasOfferInitially = isOffer;
     isFeatured = (car?['is_featured'] ?? false) as bool;
     oldPriceCtrl =
         TextEditingController(text: car?['old_price']?.toString() ?? '');
@@ -1894,6 +1896,38 @@ class _CarFormPageState extends State<CarFormPage> {
               onConflict: 'car_id,image',
               ignoreDuplicates: true,
             );
+      }
+
+      // ============================================================
+      // إشعار تلقائي للزبائن (سيارة جديدة / عرض جديد)
+      // ============================================================
+      final carDisplayName =
+          '${brandCtrl.text.trim()} ${nameCtrl.text.trim()}'.trim();
+      try {
+        if (isOffer && !wasOfferInitially) {
+          // بقت عليها عرض دلوقتي (سواء سيارة جديدة أو قديمة اتحطلها خصم)
+          await Supabase.instance.client.from('announcements').insert({
+            'title': isArabic ? 'عرض جديد!' : 'New offer!',
+            'body': isArabic
+                ? 'في عرض جديد على $carDisplayName، شوفه دلوقتي.'
+                : 'A new offer is live on $carDisplayName, check it out now.',
+            'type': 'offer',
+            'car_id': carId,
+          });
+        } else if (!isEditing) {
+          // سيارة جديدة تمامًا من غير عرض
+          await Supabase.instance.client.from('announcements').insert({
+            'title': isArabic ? 'سيارة جديدة!' : 'New car!',
+            'body': isArabic
+                ? 'ضفنا $carDisplayName لمعرضنا، شوف تفاصيلها دلوقتي.'
+                : 'We added $carDisplayName to our showroom, check it out now.',
+            'type': 'car',
+            'car_id': carId,
+          });
+        }
+      } catch (e) {
+        // إشعار فشل مش لازم يوقف حفظ السيارة نفسها
+        debugPrint('AUTO_ONE_DEBUG: تعذّر إرسال إشعار السيارة: $e');
       }
 
       if (!mounted) return;
