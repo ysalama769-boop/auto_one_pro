@@ -237,9 +237,7 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
                                 width: 5,
                                 decoration: BoxDecoration(
                                   color: color,
-                                  borderRadius: const BorderRadius.horizontal(
-                                    start: Radius.circular(16),
-                                  ),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
                               Expanded(
