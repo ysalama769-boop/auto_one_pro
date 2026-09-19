@@ -467,12 +467,46 @@ InkWell(
 ],
 
 if (isMobile)
-  PopupMenuButton<String>(
-    icon: const Icon(
-      Icons.menu,
-      color: Colors.white,
-      size: 30,
-    ),
+  ValueListenableBuilder<int>(
+    valueListenable: customerNotificationsCount,
+    builder: (context, notifCount, _) {
+      return PopupMenuButton<String>(
+        icon: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const Icon(
+              Icons.menu,
+              color: Colors.white,
+              size: 30,
+            ),
+            if (notifCount > 0)
+              Positioned(
+                top: -2,
+                right: -2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  constraints: const BoxConstraints(minWidth: 16),
+                  child: Text(
+                    notifCount > 9 ? '9+' : '$notifCount',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
     onSelected: (value) {
       switch (value) {
         case 'home':
@@ -500,6 +534,11 @@ if (isMobile)
         case 'requests':
           Navigator.of(context).push(
             smoothRoute(MyRequestsPage(isArabic: isArabic)),
+          );
+          break;
+        case 'notifications':
+          Navigator.of(context).push(
+            smoothRoute(NotificationsPage(isArabic: isArabic)),
           );
           break;
         case 'services':
@@ -568,6 +607,18 @@ if (isMobile)
         )
       else ...[
         PopupMenuItem(
+          value: 'notifications',
+          child: Text(
+            isArabic
+                ? notifCount > 0
+                    ? 'الإشعارات ($notifCount)'
+                    : 'الإشعارات'
+                : notifCount > 0
+                    ? 'Notifications ($notifCount)'
+                    : 'Notifications',
+          ),
+        ),
+        PopupMenuItem(
           value: 'requests',
           child: Text(
             isArabic ? 'طلباتي' : 'My Requests',
@@ -593,6 +644,8 @@ if (isMobile)
         ),
       ),
     ],
+  );
+    },
   ),
 
              
