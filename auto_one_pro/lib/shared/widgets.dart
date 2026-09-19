@@ -15,6 +15,7 @@ import '../screens/car_details_page.dart';
 import '../screens/favorites_page.dart';
 import '../screens/auth_page.dart';
 import '../screens/my_requests_page.dart';
+import '../screens/notifications_page.dart';
 import 'auth.dart';
 
 // ============================================================
@@ -297,7 +298,7 @@ InkWell(
               borderRadius: BorderRadius.circular(8),
               onTap: () {
                 Navigator.of(context).push(
-                  smoothRoute(MyRequestsPage(isArabic: isArabic)),
+                  smoothRoute(NotificationsPage(isArabic: isArabic)),
                 );
               },
               child: Padding(

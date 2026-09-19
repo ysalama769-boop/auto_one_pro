@@ -105,6 +105,14 @@ Future<void> loadCustomerNotificationsCount() async {
     return;
   }
   try {
+    // آخر مرة الزبون فتح فيها صفحة الإشعارات (لمعرفة الإعلانات الجديدة)
+    final readState = await Supabase.instance.client
+        .from('user_notification_reads')
+        .select('last_seen_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+    final lastSeenAt = readState?['last_seen_at']?.toString();
+
     final results = await Future.wait([
       Supabase.instance.client
           .from('bookings')
@@ -116,16 +124,25 @@ Future<void> loadCustomerNotificationsCount() async {
           .select('id')
           .eq('user_id', user.id)
           .eq('seen', false),
+      lastSeenAt == null
+          ? Supabase.instance.client.from('announcements').select('id')
+          : Supabase.instance.client
+              .from('announcements')
+              .select('id')
+              .gt('created_at', lastSeenAt),
     ]);
     final bookingsCount = (results[0] as List).length;
     final requestsCount = (results[1] as List).length;
-    customerNotificationsCount.value = bookingsCount + requestsCount;
+    final announcementsCount = (results[2] as List).length;
+    customerNotificationsCount.value =
+        bookingsCount + requestsCount + announcementsCount;
   } catch (e) {
     debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل عدد إشعارات الزبون: $e');
   }
 }
 
-// بتتنادى لما الزبون يفتح صفحة "طلباتي" — تعلّم كل حاجاته كـ"متشافة"
+// بتتنادى لما الزبون يفتح صفحة الإشعارات — تعلّم كل حاجاته
+// كـ"متشافة" (طلبات + إعلانات).
 Future<void> markCustomerNotificationsSeen() async {
   final user = Supabase.instance.client.auth.currentUser;
   if (user == null) return;
@@ -141,6 +158,10 @@ Future<void> markCustomerNotificationsSeen() async {
           .update({'seen': true})
           .eq('user_id', user.id)
           .eq('seen', false),
+      Supabase.instance.client.from('user_notification_reads').upsert({
+        'user_id': user.id,
+        'last_seen_at': DateTime.now().toUtc().toIso8601String(),
+      }),
     ]);
     customerNotificationsCount.value = 0;
   } catch (e) {
