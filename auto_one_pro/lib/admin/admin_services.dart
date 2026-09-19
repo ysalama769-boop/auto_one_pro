@@ -126,14 +126,29 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
       return;
     }
     try {
+      final packageName = nameArCtrl.text.trim();
       await Supabase.instance.client.from('service_packages').insert({
-        'name_ar': nameArCtrl.text.trim(),
+        'name_ar': packageName,
         'name_en': nameEnCtrl.text.trim(),
         'description_ar': descArCtrl.text.trim(),
         'price_before': double.tryParse(priceBeforeCtrl.text.trim()),
         'price_after': double.tryParse(priceAfterCtrl.text.trim()) ?? 0,
         'pdf_url': pdfCtrl.text.trim().isEmpty ? null : pdfCtrl.text.trim(),
       });
+
+      // إشعار تلقائي للزبائن بالباقة الجديدة
+      try {
+        await Supabase.instance.client.from('announcements').insert({
+          'title': isArabic ? 'خدمة جديدة!' : 'New service!',
+          'body': isArabic
+              ? 'ضفنا باقة "$packageName" لخدماتنا، شوف تفاصيلها دلوقتي.'
+              : 'We added the "$packageName" package to our services, check it out now.',
+          'type': 'service',
+        });
+      } catch (e) {
+        debugPrint('AUTO_ONE_DEBUG: تعذّر إرسال إشعار الخدمة: $e');
+      }
+
       nameArCtrl.clear();
       nameEnCtrl.clear();
       descArCtrl.clear();

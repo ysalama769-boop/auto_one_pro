@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/constants.dart';
 import '../shared/auth.dart';
+import '../shared/widgets.dart';
+import '../models/car.dart';
 import 'my_requests_page.dart';
+import 'car_details_page.dart';
 
 // ============================================================
 // NOTIFICATIONS PAGE (إعلانات + تحديثات طلبات الزبون)
@@ -98,6 +101,32 @@ class _NotificationsPageState extends State<NotificationsPage> {
       return '${date.day} ${months[date.month - 1]} ${date.year}';
     } catch (e) {
       return '';
+    }
+  }
+
+  Future<void> _openLinkedCar(int carId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('cars')
+          .select()
+          .eq('id', carId)
+          .single();
+      final car = Car.fromMap(response);
+      if (!mounted) return;
+      Navigator.of(context).push(
+        smoothRoute(CarDetailsPage(car: car, isArabic: isArabic)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic
+                ? 'السيارة دي مش متاحة دلوقتي'
+                : 'This car is no longer available',
+          ),
+        ),
+      );
     }
   }
 
@@ -217,8 +246,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   final type = (a['type'] ?? 'general').toString();
                   final color = _typeColor(type);
                   final createdAt = (a['created_at'] ?? '').toString();
+                  final carId = a['car_id'] as int?;
 
-                  return Container(
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: carId != null ? () => _openLinkedCar(carId) : null,
+                    child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -302,6 +335,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           ),
                         ),
                       ],
+                    ),
                     ),
                   );
                 }),
