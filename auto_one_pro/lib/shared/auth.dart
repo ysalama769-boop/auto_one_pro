@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'favorites_compare.dart';
+import 'push_notifications.dart';
 
 // ============================================================
 // AUTH STATE (حساب الزبون - إيميل وباسوورد عن طريق Supabase Auth)
@@ -47,6 +48,7 @@ Future<String?> signUpWithEmail({
     if (response.user != null) {
       currentUser.value = response.user;
       await mergeLocalFavoritesIntoAccount();
+      await registerForPushNotifications();
     }
     return null; // null يعني نجاح
   } on AuthException catch (e) {
@@ -69,6 +71,7 @@ Future<String?> signInWithEmail({
       currentUser.value = response.user;
       await mergeLocalFavoritesIntoAccount();
       await loadFavoritesFromAccount();
+      await registerForPushNotifications();
     }
     return null;
   } on AuthException catch (e) {
@@ -79,6 +82,7 @@ Future<String?> signInWithEmail({
 }
 
 Future<void> signOutUser() async {
+  await unregisterPushNotifications();
   await Supabase.instance.client.auth.signOut();
   currentUser.value = null;
   // نرجع نحمّل المفضلة المحلية (المتصفح) بعد الخروج
