@@ -14,6 +14,7 @@ import '../admin/admin_cars.dart';
 import '../admin/admin_financing_partners.dart';
 import '../admin/admin_reviews.dart';
 import '../admin/admin_services.dart';
+import '../admin/admin_announcements.dart';
 
 // ============================================================
 // ADMIN DASHBOARD (TABS: BOOKINGS + INVENTORY)
@@ -564,10 +565,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
         badgeCount: pendingReviews,
       ),
       _AdminTabDef(
+        id: 'service_packages',
         label: isArabic ? 'باقات الخدمات' : 'Service Packages',
         icon: Icons.miscellaneous_services_outlined,
         width: 150,
         pageBuilder: () => AdminServicesPage(isArabic: isArabic),
+        roles: const ['admin', 'editor'],
+      ),
+      _AdminTabDef(
+        id: 'announcements',
+        label: isArabic ? 'الإعلانات' : 'Announcements',
+        icon: Icons.campaign_outlined,
+        width: 140,
+        pageBuilder: () => AdminAnnouncementsPage(isArabic: isArabic),
         roles: const ['admin', 'editor'],
       ),
       _AdminTabDef(
