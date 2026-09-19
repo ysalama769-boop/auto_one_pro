@@ -8,6 +8,7 @@ import '../shared/repository.dart';
 import '../shared/widgets.dart';
 import '../screens/car_details_page.dart';
 import '../screens/static_pages.dart';
+import '../admin/admin_shared.dart';
 
 // ============================================================
 // HOME PAGE
@@ -630,9 +631,12 @@ Container(
 
       // TITLE
       Text(
-        widget.isArabic
-            ? 'لماذا AUTO ONE؟'
-            : 'WHY AUTO ONE?',
+        siteText(
+          key: 'why_title',
+          isArabic: widget.isArabic,
+          defaultAr: 'لماذا AUTO ONE؟',
+          defaultEn: 'WHY AUTO ONE?',
+        ),
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontSize: 30,
@@ -645,9 +649,12 @@ Container(
 
       // SUBTITLE
       Text(
-        widget.isArabic
-            ? 'تجربة مختلفة في اختيار وشراء سيارتك'
-            : 'A different experience in choosing and buying your car',
+        siteText(
+          key: 'why_subtitle',
+          isArabic: widget.isArabic,
+          defaultAr: 'تجربة مختلفة في اختيار وشراء سيارتك',
+          defaultEn: 'A different experience in choosing and buying your car',
+        ),
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontSize: 15,
@@ -671,36 +678,54 @@ Container(
 
               _whyAutoOneCard(
                 icon: Icons.directions_car_filled_rounded,
-                title: widget.isArabic
-                    ? 'اختيارات متنوعة'
-                    : 'WIDE SELECTION',
-                description: widget.isArabic
-                    ? 'مجموعة متنوعة من السيارات والموديلات لتختار ما يناسبك.'
-                    : 'A wide selection of cars and models to match your needs.',
+                title: siteText(
+                  key: 'why_card1_title',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'اختيارات متنوعة',
+                  defaultEn: 'WIDE SELECTION',
+                ),
+                description: siteText(
+                  key: 'why_card1_desc',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'مجموعة متنوعة من السيارات والموديلات لتختار ما يناسبك.',
+                  defaultEn: 'A wide selection of cars and models to match your needs.',
+                ),
                 isSmall: isSmall,
                 onTap: () => _showBodyTypeSheet(context),
               ),
 
               _whyAutoOneCard(
                 icon: Icons.price_check_rounded,
-                title: widget.isArabic
-                    ? 'أسعار منافسة'
-                    : 'COMPETITIVE PRICES',
-                description: widget.isArabic
-                    ? 'أسعار مدروسة وعروض مميزة على مجموعة من السيارات.'
-                    : 'Competitive prices and special offers on selected cars.',
+                title: siteText(
+                  key: 'why_card2_title',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'أسعار منافسة',
+                  defaultEn: 'COMPETITIVE PRICES',
+                ),
+                description: siteText(
+                  key: 'why_card2_desc',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'أسعار مدروسة وعروض مميزة على مجموعة من السيارات.',
+                  defaultEn: 'Competitive prices and special offers on selected cars.',
+                ),
                 isSmall: isSmall,
                 onTap: () => widget.onOpenCars('__OFFERS__'),
               ),
 
               _whyAutoOneCard(
                 icon: Icons.handshake_rounded,
-                title: widget.isArabic
-                    ? 'خدمة موثوقة'
-                    : 'RELIABLE SERVICE',
-                description: widget.isArabic
-                    ? 'نهتم بتقديم تجربة واضحة ومريحة من البداية للنهاية.'
-                    : 'A clear and comfortable experience from start to finish.',
+                title: siteText(
+                  key: 'why_card3_title',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'خدمة موثوقة',
+                  defaultEn: 'RELIABLE SERVICE',
+                ),
+                description: siteText(
+                  key: 'why_card3_desc',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'نهتم بتقديم تجربة واضحة ومريحة من البداية للنهاية.',
+                  defaultEn: 'A clear and comfortable experience from start to finish.',
+                ),
                 isSmall: isSmall,
                 onTap: () {
                   Navigator.of(context).push(
@@ -713,12 +738,18 @@ Container(
 
               _whyAutoOneCard(
                 icon: Icons.support_agent_rounded,
-                title: widget.isArabic
-                    ? 'تواصل سريع'
-                    : 'FAST SUPPORT',
-                description: widget.isArabic
-                    ? 'تواصل معنا بسهولة واحصل على المساعدة التي تحتاجها.'
-                    : 'Easy communication and quick support when you need it.',
+                title: siteText(
+                  key: 'why_card4_title',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'تواصل سريع',
+                  defaultEn: 'FAST SUPPORT',
+                ),
+                description: siteText(
+                  key: 'why_card4_desc',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'تواصل معنا بسهولة واحصل على المساعدة التي تحتاجها.',
+                  defaultEn: 'Reach out easily and get the help you need.',
+                ),
                 isSmall: isSmall,
                 onTap: () => _showQuickContactSheet(context),
               ),
@@ -2003,9 +2034,12 @@ class _FinancingPartnersCarouselState
       child: Column(
         children: [
           Text(
-            widget.isArabic
-                ? 'معتمدون لدى جهات التمويل'
-                : 'APPROVED BY FINANCING PARTNERS',
+            siteText(
+              key: 'financing_title',
+              isArabic: widget.isArabic,
+              defaultAr: 'معتمدون لدى جهات التمويل',
+              defaultEn: 'APPROVED BY FINANCING PARTNERS',
+            ),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 26,
@@ -2015,9 +2049,14 @@ class _FinancingPartnersCarouselState
           ),
           const SizedBox(height: 14),
           Text(
-            widget.isArabic
-                ? 'نالت AUTO ONE ثقة جهات التمويل الرائدة، ونسهّل عليك إجراءات التمويل عند شراء سيارتك.'
-                : 'AUTO ONE is trusted by leading financing partners, making your car financing journey easier.',
+            siteText(
+              key: 'financing_desc',
+              isArabic: widget.isArabic,
+              defaultAr:
+                  'نالت AUTO ONE ثقة جهات التمويل الرائدة، ونسهّل عليك إجراءات التمويل عند شراء سيارتك.',
+              defaultEn:
+                  'AUTO ONE is trusted by leading financing partners, making your car financing journey easier.',
+            ),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14, color: Colors.black54),
           ),
@@ -2220,7 +2259,12 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
       child: Column(
         children: [
           Text(
-            widget.isArabic ? 'ماذا يقول عملاؤنا؟' : 'WHAT OUR CUSTOMERS SAY',
+            siteText(
+              key: 'reviews_title',
+              isArabic: widget.isArabic,
+              defaultAr: 'ماذا يقول عملاؤنا؟',
+              defaultEn: 'WHAT OUR CUSTOMERS SAY',
+            ),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 26,

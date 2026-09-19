@@ -37,6 +37,23 @@ Future<void> logActivity(String action) async {
 final ValueNotifier<Map<String, dynamic>?> homepageSettings =
     ValueNotifier(null);
 
+// نص قابل للتعديل من لوحة التحكم، وليه قيمة افتراضية لو الأدمن
+// لسه ما كتبش حاجة. key_ar و key_en المفروض يكونوا موجودين
+// كأعمدة في homepage_settings.
+String siteText({
+  required String key,
+  required bool isArabic,
+  required String defaultAr,
+  required String defaultEn,
+}) {
+  final ar = (homepageSettings.value?['${key}_ar'] ?? '').toString();
+  final en = (homepageSettings.value?['${key}_en'] ?? '').toString();
+  if (isArabic) {
+    return ar.isNotEmpty ? ar : defaultAr;
+  }
+  return en.isNotEmpty ? en : (ar.isNotEmpty ? ar : defaultEn);
+}
+
 
 Future<void> loadHomepageSettings() async {
   try {

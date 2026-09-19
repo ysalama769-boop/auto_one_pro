@@ -49,6 +49,41 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
   final List<TextEditingController> stepEnCtrls =
       List.generate(5, (_) => TextEditingController());
 
+  // نصوص إضافية قابلة للتعديل (عناوين ووصف أقسام الصفحة الرئيسية
+  // وصفحة الخدمات) — كل عنصر هنا اتخزن كعمودين (key_ar, key_en).
+  static const List<Map<String, String>> extraTextGroups = [
+    {
+      'group': 'لماذا AUTO ONE',
+      'key': 'why_title',
+      'label': 'العنوان الرئيسي',
+    },
+    {
+      'group': 'لماذا AUTO ONE',
+      'key': 'why_subtitle',
+      'label': 'الوصف تحت العنوان',
+    },
+    {'group': 'لماذا AUTO ONE', 'key': 'why_card1_title', 'label': 'عنوان الكارت الأول'},
+    {'group': 'لماذا AUTO ONE', 'key': 'why_card1_desc', 'label': 'وصف الكارت الأول'},
+    {'group': 'لماذا AUTO ONE', 'key': 'why_card2_title', 'label': 'عنوان الكارت الثاني'},
+    {'group': 'لماذا AUTO ONE', 'key': 'why_card2_desc', 'label': 'وصف الكارت الثاني'},
+    {'group': 'لماذا AUTO ONE', 'key': 'why_card3_title', 'label': 'عنوان الكارت الثالث'},
+    {'group': 'لماذا AUTO ONE', 'key': 'why_card3_desc', 'label': 'وصف الكارت الثالث'},
+    {'group': 'لماذا AUTO ONE', 'key': 'why_card4_title', 'label': 'عنوان الكارت الرابع'},
+    {'group': 'لماذا AUTO ONE', 'key': 'why_card4_desc', 'label': 'وصف الكارت الرابع'},
+    {'group': 'جهات التمويل', 'key': 'financing_title', 'label': 'العنوان'},
+    {'group': 'جهات التمويل', 'key': 'financing_desc', 'label': 'الوصف'},
+    {'group': 'تقييمات العملاء', 'key': 'reviews_title', 'label': 'العنوان'},
+    {'group': 'صفحة الخدمات', 'key': 'services_title', 'label': 'العنوان'},
+    {'group': 'صفحة الخدمات', 'key': 'services_desc', 'label': 'الوصف'},
+  ];
+
+  final Map<String, TextEditingController> extraArCtrls = {
+    for (final g in extraTextGroups) g['key']!: TextEditingController(),
+  };
+  final Map<String, TextEditingController> extraEnCtrls = {
+    for (final g in extraTextGroups) g['key']!: TextEditingController(),
+  };
+
   bool get isArabic => widget.isArabic;
 
   @override
@@ -80,6 +115,12 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
       c.dispose();
     }
     for (final c in stepEnCtrls) {
+      c.dispose();
+    }
+    for (final c in extraArCtrls.values) {
+      c.dispose();
+    }
+    for (final c in extraEnCtrls.values) {
       c.dispose();
     }
     super.dispose();
@@ -129,6 +170,12 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
             (response?['step${i + 1}_ar'] ?? '').toString();
         stepEnCtrls[i].text =
             (response?['step${i + 1}_en'] ?? '').toString();
+      }
+
+      for (final g in extraTextGroups) {
+        final key = g['key']!;
+        extraArCtrls[key]!.text = (response?['${key}_ar'] ?? '').toString();
+        extraEnCtrls[key]!.text = (response?['${key}_en'] ?? '').toString();
       }
 
       setState(() => isLoading = false);
@@ -227,6 +274,10 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
           'step${i + 1}_ar': stepArCtrls[i].text.trim(),
         for (var i = 0; i < 5; i++)
           'step${i + 1}_en': stepEnCtrls[i].text.trim(),
+        for (final g in extraTextGroups)
+          '${g['key']}_ar': extraArCtrls[g['key']]!.text.trim(),
+        for (final g in extraTextGroups)
+          '${g['key']}_en': extraEnCtrls[g['key']]!.text.trim(),
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', 1);
 
@@ -523,6 +574,48 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
                   : 'Step ${i + 1} (English)',
             ),
           ],
+
+          const SizedBox(height: 24),
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: false,
+              tilePadding: EdgeInsets.zero,
+              title: Text(
+                isArabic ? 'نصوص إضافية (عناوين ووصف الأقسام)' : 'Additional texts',
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+              ),
+              children: [
+                for (final groupName in extraTextGroups
+                    .map((g) => g['group']!)
+                    .toSet()) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 6),
+                    child: Text(
+                      groupName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                  for (final g in extraTextGroups.where(
+                    (g) => g['group'] == groupName,
+                  )) ...[
+                    _aboutTextField(
+                      extraArCtrls[g['key']]!,
+                      '${g['label']} (عربي)',
+                    ),
+                    _aboutTextField(
+                      extraEnCtrls[g['key']]!,
+                      '${g['label']} (English)',
+                    ),
+                  ],
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

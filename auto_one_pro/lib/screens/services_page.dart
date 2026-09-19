@@ -82,7 +82,12 @@ class _ServicesPageState extends State<ServicesPage> {
                 child: Column(
                   children: [
                     Text(
-                      isArabic ? 'باقاتنا وخدماتنا' : 'Our Packages & Services',
+                      siteText(
+                        key: 'services_title',
+                        isArabic: isArabic,
+                        defaultAr: 'باقاتنا وخدماتنا',
+                        defaultEn: 'Our Packages & Services',
+                      ),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 28,
@@ -92,9 +97,14 @@ class _ServicesPageState extends State<ServicesPage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      isArabic
-                          ? 'اختار الباقة اللي تناسبك من خدماتنا المتنوعة بأسعار مميزة.'
-                          : 'Choose the package that suits you from our varied services at great prices.',
+                      siteText(
+                        key: 'services_desc',
+                        isArabic: isArabic,
+                        defaultAr:
+                            'اختار الباقة اللي تناسبك من خدماتنا المتنوعة بأسعار مميزة.',
+                        defaultEn:
+                            'Choose the package that suits you from our varied services at great prices.',
+                      ),
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 14, color: Colors.black54),
                     ),
