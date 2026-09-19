@@ -1919,7 +1919,7 @@ floatingActionButtonLocation:
         child: Column(
           children: [
         Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
 
         child: Center(
           child: ConstrainedBox(
