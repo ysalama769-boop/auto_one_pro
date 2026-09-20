@@ -732,14 +732,25 @@ AutoOneFooter(isArabic: widget.isArabic),
 }) {
   final content = Container(
     width: isSmall ? 320 : 260,
-    padding: const EdgeInsets.all(24),
+    padding: const EdgeInsets.all(26),
 
     decoration: BoxDecoration(
-      color: const Color(0xFF151515),
-      borderRadius: BorderRadius.circular(20),
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF1C1C1C), Color(0xFF121212)],
+      ),
+      borderRadius: BorderRadius.circular(22),
       border: Border.all(
         color: Colors.white12,
       ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.35),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        ),
+      ],
     ),
 
     child: Column(
@@ -751,22 +762,33 @@ AutoOneFooter(isArabic: widget.isArabic),
         // =================================================
 
         Container(
-          width: 58,
-          height: 58,
+          width: 64,
+          height: 64,
 
           decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFE23636), Color(0xFFB01F1F)],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.red.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
 
           child: Icon(
             icon,
             color: Colors.white,
-            size: 28,
+            size: 30,
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
 
         // =================================================
         // TITLE
@@ -777,13 +799,13 @@ AutoOneFooter(isArabic: widget.isArabic),
           textAlign: TextAlign.center,
 
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 16.5,
             fontWeight: FontWeight.w900,
             color: Colors.white,
           ),
         ),
 
-        const SizedBox(height: 9),
+        const SizedBox(height: 10),
 
         // =================================================
         // DESCRIPTION
@@ -795,12 +817,12 @@ AutoOneFooter(isArabic: widget.isArabic),
 
           style: const TextStyle(
             fontSize: 13,
-            height: 1.5,
+            height: 1.6,
             color: Colors.white60,
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
 
         // =================================================
         // RED LINE
