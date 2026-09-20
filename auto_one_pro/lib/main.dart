@@ -317,7 +317,7 @@ class _AutoOneShellState extends State<AutoOneShell> {
             showCars: showCars,
 
             onHome: openHome,
-           onCars: () => openCars(),
+           onCars: ([brand]) => openCars(brand),
 
             onLanguage: widget.onLanguageChanged,
             onAdminAccess: () {

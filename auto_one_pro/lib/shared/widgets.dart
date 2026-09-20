@@ -15,6 +15,7 @@ import '../screens/car_details_page.dart';
 import '../screens/favorites_page.dart';
 import '../screens/comparison_page.dart';
 import '../screens/request_car_page.dart';
+import '../screens/brands_page.dart';
 import '../screens/auth_page.dart';
 import '../screens/my_requests_page.dart';
 import '../screens/notifications_page.dart';
@@ -99,7 +100,7 @@ class AutoOneHeader extends StatelessWidget {
   final bool transparent;
 
   final VoidCallback onHome;
-  final VoidCallback onCars;
+  final void Function([String? brand]) onCars;
   final VoidCallback onLanguage;
   final VoidCallback onAdminAccess;
 
@@ -192,62 +193,68 @@ InkWell(
 
   const SizedBox(width: 10),
 
-  HeaderButton(
-    title: isArabic ? 'المعرض' : 'CARS',
-    active: showCars,
-    lightText: transparent,
-    onTap: onCars,
-  ),
-
-  const SizedBox(width: 10),
-
-  HeaderButton(
-    title: isArabic ? 'طلب سيارة' : 'REQUEST A CAR',
-    active: false,
-    lightText: transparent,
-    onTap: () {
-      Navigator.of(context).push(
-        smoothRoute(RequestCarPage(isArabic: isArabic)),
-      );
-    },
-  ),
-
-  const SizedBox(width: 10),
-
-  HeaderButton(
-    title: isArabic ? 'الخدمات' : 'SERVICES',
-    active: false,
-    lightText: transparent,
-    onTap: () {
-      Navigator.of(context).push(
-        smoothRoute(ServicesPage(isArabic: isArabic)),
-      );
-    },
-  ),
-
-  const SizedBox(width: 10),
-
   PopupMenuButton<String>(
     color: Colors.white,
+    constraints: const BoxConstraints(minWidth: 300, maxWidth: 320),
     onSelected: (value) {
-      if (value == 'about') {
-        Navigator.of(context).push(
-          smoothRoute(AboutAutoOnePage(isArabic: isArabic)),
-        );
-      } else if (value == 'branches') {
-        Navigator.of(context).push(
-          smoothRoute(BranchesPage(isArabic: isArabic)),
-        );
+      switch (value) {
+        case 'all_cars':
+          onCars();
+          break;
+        case 'request_car':
+          Navigator.of(context).push(
+            smoothRoute(RequestCarPage(isArabic: isArabic)),
+          );
+          break;
+        case 'compare':
+          Navigator.of(context).push(
+            smoothRoute(ComparisonPage(isArabic: isArabic)),
+          );
+          break;
+        case 'brands':
+          Navigator.of(context).push(
+            smoothRoute(
+              BrandsPage(
+                isArabic: isArabic,
+                onBrandTap: (brand) => onCars(brand),
+              ),
+            ),
+          );
+          break;
       }
     },
     itemBuilder: (context) => [
-      PopupMenuItem(
-        value: 'about',
-        child: Text(isArabic ? 'نبذة عننا' : 'About Us'),
+      _megaMenuItem(
+        value: 'all_cars',
+        icon: Icons.directions_car_filled_rounded,
+        title: isArabic ? 'كل السيارات' : 'All Cars',
+        subtitle: isArabic
+            ? 'تصفح مجموعتنا من ماركات السيارات'
+            : 'Browse our range of car brands',
       ),
-      PopupMenuItem(
-        value: 'branches',
-        child: Text(isArabic ? 'الفروع' : 'Branches'),
+      _megaMenuItem(
+        value: 'request_car',
+        icon: Icons.assignment_outlined,
+        title: isArabic ? 'طلب سيارة' : 'Request a Car',
+        subtitle: isArabic
+            ? 'قدّم طلبك للحصول على سيارة وسنساعدك في الحصول على سيارتك المثالية'
+            : "Submit your request and we'll help you find your ideal car",
+      ),
+      _megaMenuItem(
+        value: 'compare',
+        icon: Icons.compare_arrows_rounded,
+        title: isArabic ? 'المقارنة' : 'Compare',
+        subtitle: isArabic
+            ? 'قارن بين موديلات السيارات المختلفة من حيث الأسعار والمواصفات والمميزات'
+            : 'Compare different car models by price, specs and features',
+      ),
+      _megaMenuItem(
+        value: 'brands',
+        icon: Icons.verified_rounded,
+        title: isArabic ? 'الماركات' : 'Brands',
+        subtitle: isArabic
+            ? 'استعرض الماركات المتوفرة وشاهد جميع الموديلات لكل ماركة'
+            : 'Browse available brands and see all models for each',
       ),
     ],
     child: Padding(
@@ -256,7 +263,87 @@ InkWell(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            isArabic ? 'نبذة عننا' : 'ABOUT US',
+            isArabic ? 'سياراتنا' : 'OUR CARS',
+            style: TextStyle(
+              color: transparent ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+          Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: transparent ? Colors.white : Colors.black87,
+            size: 18,
+          ),
+        ],
+      ),
+    ),
+  ),
+
+  const SizedBox(width: 10),
+
+  PopupMenuButton<String>(
+    color: Colors.white,
+    constraints: const BoxConstraints(minWidth: 260, maxWidth: 300),
+    onSelected: (value) {
+      switch (value) {
+        case 'about':
+          Navigator.of(context).push(
+            smoothRoute(AboutAutoOnePage(isArabic: isArabic)),
+          );
+          break;
+        case 'services':
+          Navigator.of(context).push(
+            smoothRoute(ServicesPage(isArabic: isArabic)),
+          );
+          break;
+        case 'terms':
+          Navigator.of(context).push(
+            smoothRoute(TermsPage(isArabic: isArabic)),
+          );
+          break;
+        case 'privacy':
+          Navigator.of(context).push(
+            smoothRoute(PrivacyPolicyPage(isArabic: isArabic)),
+          );
+          break;
+      }
+    },
+    itemBuilder: (context) => [
+      _megaMenuItem(
+        value: 'about',
+        icon: Icons.info_outline_rounded,
+        title: isArabic ? 'من نحن' : 'Who We Are',
+        subtitle: isArabic
+            ? 'تعرّف على المجموعة وقيمنا'
+            : 'Get to know our group and values',
+      ),
+      _megaMenuItem(
+        value: 'services',
+        icon: Icons.miscellaneous_services_outlined,
+        title: isArabic ? 'خدماتنا' : 'Our Services',
+        subtitle: isArabic
+            ? 'استكشف مجموعة خدماتنا'
+            : 'Explore our range of services',
+      ),
+      _megaMenuItem(
+        value: 'terms',
+        icon: Icons.description_outlined,
+        title: isArabic ? 'الشروط والأحكام' : 'Terms & Conditions',
+      ),
+      _megaMenuItem(
+        value: 'privacy',
+        icon: Icons.privacy_tip_outlined,
+        title: isArabic ? 'سياسة الخصوصية' : 'Privacy Policy',
+      ),
+    ],
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            isArabic ? 'عن أوتو ون' : 'ABOUT AUTO ONE',
             style: TextStyle(
               color: transparent ? Colors.white : Colors.black87,
               fontWeight: FontWeight.w700,
@@ -604,6 +691,26 @@ if (isMobile)
             smoothRoute(BranchesPage(isArabic: isArabic)),
           );
           break;
+        case 'brands':
+          Navigator.of(context).push(
+            smoothRoute(
+              BrandsPage(
+                isArabic: isArabic,
+                onBrandTap: (brand) => onCars(brand),
+              ),
+            ),
+          );
+          break;
+        case 'terms':
+          Navigator.of(context).push(
+            smoothRoute(TermsPage(isArabic: isArabic)),
+          );
+          break;
+        case 'privacy':
+          Navigator.of(context).push(
+            smoothRoute(PrivacyPolicyPage(isArabic: isArabic)),
+          );
+          break;
         case 'logout':
           signOutUser();
           break;
@@ -619,7 +726,13 @@ if (isMobile)
       PopupMenuItem(
         value: 'cars',
         child: Text(
-          isArabic ? 'المعرض' : 'CARS',
+          isArabic ? 'سياراتنا' : 'OUR CARS',
+        ),
+      ),
+      PopupMenuItem(
+        value: 'brands',
+        child: Text(
+          isArabic ? 'الماركات' : 'Brands',
         ),
       ),
       PopupMenuItem(
@@ -637,13 +750,25 @@ if (isMobile)
       PopupMenuItem(
         value: 'about',
         child: Text(
-          isArabic ? 'نبذة عننا' : 'About Us',
+          isArabic ? 'من نحن' : 'Who We Are',
         ),
       ),
       PopupMenuItem(
         value: 'branches',
         child: Text(
           isArabic ? 'الفروع' : 'Branches',
+        ),
+      ),
+      PopupMenuItem(
+        value: 'terms',
+        child: Text(
+          isArabic ? 'الشروط والأحكام' : 'Terms & Conditions',
+        ),
+      ),
+      PopupMenuItem(
+        value: 'privacy',
+        child: Text(
+          isArabic ? 'سياسة الخصوصية' : 'Privacy Policy',
         ),
       ),
       PopupMenuItem(
@@ -721,6 +846,68 @@ if (isMobile)
 // ============================================================
 // HEADER BUTTON
 // ============================================================
+
+// ============================================================
+// MEGA MENU ITEM (عنصر قائمة منسدلة باسم + شعار تحته)
+// ============================================================
+PopupMenuItem<String> _megaMenuItem({
+  required String value,
+  required IconData icon,
+  required String title,
+  String? subtitle,
+}) {
+  return PopupMenuItem<String>(
+    value: value,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: Colors.red, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13.5,
+                    color: Colors.black87,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
 class HeaderButton extends StatelessWidget {
   final String title;
