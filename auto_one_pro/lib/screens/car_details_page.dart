@@ -53,7 +53,9 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
   }
 
   void _resetZoom() {
-    _zoomController.value = Matrix4.identity();
+    setState(() {
+      _zoomController.value = Matrix4.identity();
+    });
   }
 
   void _zoomBy(double factor) {
@@ -117,15 +119,27 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.5),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Icon(icon, color: Colors.white, size: 20),
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.withValues(alpha: 0.6),
+            blurRadius: 14,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.red.withValues(alpha: 0.85),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
         ),
       ),
     );
@@ -238,20 +252,32 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
             Positioned(
               top: 0,
               bottom: 0,
-              left: 12,
+              left: 6,
               child: Center(
-                child: Material(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: _goToNext,
-                    child: const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Icon(
-                        Icons.chevron_left,
-                        color: Colors.white,
-                        size: 28,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withValues(alpha: 0.6),
+                        blurRadius: 16,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.red.withValues(alpha: 0.85),
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: _goToNext,
+                      child: const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(
+                          Icons.chevron_left,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
                     ),
                   ),
@@ -261,20 +287,32 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
             Positioned(
               top: 0,
               bottom: 0,
-              right: 12,
+              right: 6,
               child: Center(
-                child: Material(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: _goToPrevious,
-                    child: const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Icon(
-                        Icons.chevron_right,
-                        color: Colors.white,
-                        size: 28,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withValues(alpha: 0.6),
+                        blurRadius: 16,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.red.withValues(alpha: 0.85),
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: _goToPrevious,
+                      child: const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(
+                          Icons.chevron_right,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
                     ),
                   ),
