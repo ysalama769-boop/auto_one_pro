@@ -385,7 +385,6 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -394,22 +393,24 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.title,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+            child: Text(
+              widget.title,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
-          const SizedBox(height: 10),
           GestureDetector(
             onTap: openFullScreen,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.zero,
               child: SizedBox(
                 width: double.infinity,
-                height: 200,
+                height: 300,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -417,7 +418,7 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
                       images[safeIndex],
                       width: double.infinity,
                       height: double.infinity,
-                      fit: BoxFit.contain,
+                      fit: BoxFit.cover,
                       showWatermark: false,
                     ),
                     if (images.length > 1) ...[
@@ -498,7 +499,9 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
           ),
           if (images.length > 1) ...[
             const SizedBox(height: 10),
-            SizedBox(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: SizedBox(
               height: 58,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
@@ -529,6 +532,7 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
                   );
                 },
               ),
+            ),
             ),
           ],
         ],
