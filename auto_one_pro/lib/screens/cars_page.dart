@@ -1269,17 +1269,13 @@ String _searchAlias(Car car) {
             children: [
               Expanded(
               child: Container(
-                 height: 48,
+                 height: 38,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+                    color: Colors.red.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.25),
+                    ),
                   ),
                   child: TextField(
                     controller: controller,
@@ -1295,8 +1291,14 @@ String _searchAlias(Car car) {
                       hintText: widget.isArabic
                           ? 'ابحث عن سيارة...'
                           : 'Search for a car...',
-                      prefixIcon:
-                          const Icon(Icons.search_rounded),
+                      hintStyle: const TextStyle(fontSize: 13),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Colors.red,
+                        size: 20,
+                      ),
                       border: InputBorder.none,
                     ),
                   ),
@@ -1398,60 +1400,6 @@ String _searchAlias(Car car) {
                       setState(() => sortOption = value);
                     },
                   ),
-                ),
-              ),
-
-              SizedBox(
-                width: 130,
-                height: 44,
-                child: TextField(
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: widget.isArabic ? 'أقل سعر' : 'Min price',
-                    filled: true,
-                    fillColor: Colors.white,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      minPrice = double.tryParse(value);
-                    });
-                  },
-                ),
-              ),
-
-              SizedBox(
-                width: 130,
-                height: 44,
-                child: TextField(
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: widget.isArabic ? 'أعلى سعر' : 'Max price',
-                    filled: true,
-                    fillColor: Colors.white,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      maxPrice = double.tryParse(value);
-                    });
-                  },
                 ),
               ),
             ],

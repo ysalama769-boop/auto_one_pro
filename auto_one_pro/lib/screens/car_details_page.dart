@@ -2005,7 +2005,7 @@ floatingActionButtonLocation:
         child: Column(
           children: [
         Padding(
-        padding: EdgeInsets.zero,
+        padding: const EdgeInsets.all(8),
 
         child: Center(
           child: ConstrainedBox(
