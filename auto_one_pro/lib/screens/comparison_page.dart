@@ -210,15 +210,18 @@ class _ComparisonPageState extends State<ComparisonPage> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedCars = compareCarIds.value
-        .map((id) => cars.where((c) => c.id == id))
-        .where((iterable) => iterable.isNotEmpty)
-        .map((iterable) => iterable.first)
-        .toList();
+    return ValueListenableBuilder<List<int>>(
+      valueListenable: compareCarIds,
+      builder: (context, compareIds, _) {
+        final selectedCars = compareIds
+            .map((id) => cars.where((c) => c.id == id))
+            .where((iterable) => iterable.isNotEmpty)
+            .map((iterable) => iterable.first)
+            .toList();
 
-    final emptySlots = (3 - selectedCars.length).clamp(0, 3);
+        final emptySlots = (3 - selectedCars.length).clamp(0, 3);
 
-    return Directionality(
+        return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: const Color(0xfff6f6f8),
@@ -388,6 +391,8 @@ class _ComparisonPageState extends State<ComparisonPage> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 }
