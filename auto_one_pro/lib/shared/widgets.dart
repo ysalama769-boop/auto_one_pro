@@ -13,6 +13,7 @@ import '../screens/branches_page.dart';
 import '../screens/services_page.dart';
 import '../screens/car_details_page.dart';
 import '../screens/favorites_page.dart';
+import '../screens/comparison_page.dart';
 import '../screens/auth_page.dart';
 import '../screens/my_requests_page.dart';
 import '../screens/notifications_page.dart';
@@ -254,6 +255,29 @@ InkWell(
             size: 18,
           ),
         ],
+      ),
+    ),
+  ),
+
+  const SizedBox(width: 10),
+
+  HoverLift(
+    scale: 1.1,
+    borderRadius: BorderRadius.circular(8),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () {
+        Navigator.of(context).push(
+          smoothRoute(ComparisonPage(isArabic: isArabic)),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          Icons.compare_arrows_rounded,
+          color: transparent ? Colors.white : Colors.black87,
+          size: 20,
+        ),
       ),
     ),
   ),
@@ -526,6 +550,11 @@ if (isMobile)
             smoothRoute(FavoritesPage(isArabic: isArabic)),
           );
           break;
+        case 'compare':
+          Navigator.of(context).push(
+            smoothRoute(ComparisonPage(isArabic: isArabic)),
+          );
+          break;
         case 'login':
           Navigator.of(context).push(
             smoothRoute(AuthPage(isArabic: isArabic)),
@@ -596,6 +625,12 @@ if (isMobile)
         value: 'favorites',
         child: Text(
           isArabic ? 'المفضلة' : 'Favorites',
+        ),
+      ),
+      PopupMenuItem(
+        value: 'compare',
+        child: Text(
+          isArabic ? 'مقارنة السيارات' : 'Compare Cars',
         ),
       ),
       if (currentUser.value == null)

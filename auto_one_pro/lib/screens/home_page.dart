@@ -1262,69 +1262,73 @@ class _BrandStripState extends State<BrandStrip> {
 
                 return Padding(
                   padding: const EdgeInsetsDirectional.only(
-                    end: 14,
+                    end: 18,
                   ),
                   child: HoverLift(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(100),
                     child: InkWell(
                     onTap: () => widget.onBrandTap(matchKey),
-                    borderRadius: BorderRadius.circular(18),
-                    child: Container(
-                      width: 145,
-                      height: 130,
-                      padding: const EdgeInsets.all(13),
-                      decoration: BoxDecoration(
-                        color: const Color(0xfffafafa),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: Colors.black12,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
+                    borderRadius: BorderRadius.circular(100),
+                    child: SizedBox(
+                      width: 110,
                       child: Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: logo.isEmpty
-                                  ? const Icon(
-                                      Icons.directions_car_filled_rounded,
-                                      size: 40,
-                                      color: Colors.red,
-                                    )
-                                  : carImageAdaptive(
-                                      logo,
-                                      fit: BoxFit.contain,
-                                      showWatermark: false,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return const Icon(
-                                          Icons
-                                              .directions_car_filled_rounded,
-                                          size: 40,
-                                          color: Colors.red,
-                                        );
-                                      },
-                                    ),
+                          Container(
+                            width: 92,
+                            height: 92,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Colors.white, Color(0xfffafafa)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.red.withValues(alpha: 0.28),
+                                  blurRadius: 22,
+                                  spreadRadius: 1,
+                                ),
+                                const BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
                             ),
+                            child: logo.isEmpty
+                                ? const Icon(
+                                    Icons.directions_car_filled_rounded,
+                                    size: 34,
+                                    color: Colors.red,
+                                  )
+                                : carImageAdaptive(
+                                    logo,
+                                    fit: BoxFit.contain,
+                                    showWatermark: false,
+                                    errorBuilder:
+                                        (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.directions_car_filled_rounded,
+                                        size: 34,
+                                        color: Colors.red,
+                                      );
+                                    },
+                                  ),
                           ),
 
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
 
                           Text(
                             label,
                             textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
                               color: Colors.black87,
                             ),
                           ),
@@ -2265,6 +2269,105 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
     );
   }
 
+  Widget _reviewCard(Map<String, dynamic> r) {
+    final name = (r['customer_name'] ?? '').toString();
+    final text = (r['review_text'] ?? '').toString();
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final avatarRadius = 24.0;
+
+    final card = Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(top: avatarRadius, left: 6, right: 6),
+      padding: const EdgeInsets.fromLTRB(12, 20, 12, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.format_quote_rounded,
+            color: Colors.red.withValues(alpha: 0.35),
+            size: 20,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black54,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => _showFullReview(name, text),
+            child: card,
+          ),
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: CircleAvatar(
+                radius: avatarRadius,
+                backgroundColor: _avatarColor(name),
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final reviews = approvedReviewsCache;
@@ -2301,11 +2404,12 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
             builder: (context, constraints) {
               final perPage = constraints.maxWidth >= 700 ? 4 : 2;
               final pageCount = (reviews.length / perPage).ceil();
+              final cardAreaHeight = perPage == 2 ? 230.0 : 190.0;
 
               return Column(
                 children: [
                   SizedBox(
-                    height: 190,
+                    height: cardAreaHeight,
                     child: Row(
                       children: [
                         if (pageCount > 1)
@@ -2336,145 +2440,9 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
                                   .toList();
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: pageItems.map((r) {
-                                  final name =
-                                      (r['customer_name'] ?? '').toString();
-                                  final text =
-                                      (r['review_text'] ?? '').toString();
-                                  final initial = name.isNotEmpty
-                                      ? name[0].toUpperCase()
-                                      : '?';
-
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 32),
-                                      child: Stack(
-                                        clipBehavior: Clip.none,
-                                        children: [
-                                          Material(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                            child: InkWell(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              onTap: () =>
-                                                  _showFullReview(name, text),
-                                              child: Container(
-                                                margin:
-                                                    const EdgeInsets.symmetric(
-                                                  horizontal: 6,
-                                                ),
-                                                padding:
-                                                    const EdgeInsets.fromLTRB(
-                                                  12,
-                                                  20,
-                                                  12,
-                                                  16,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                    16,
-                                                  ),
-                                                  border: Border.all(
-                                                    color: Colors.black
-                                                        .withValues(
-                                                      alpha: 0.06,
-                                                    ),
-                                                  ),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.black
-                                                          .withValues(
-                                                        alpha: 0.05,
-                                                      ),
-                                                      blurRadius: 14,
-                                                      offset:
-                                                          const Offset(0, 6),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Column(
-                                                  children: [
-                                                    Icon(
-                                                      Icons
-                                                          .format_quote_rounded,
-                                                      color: Colors.red
-                                                          .withValues(
-                                                        alpha: 0.35,
-                                                      ),
-                                                      size: 20,
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      name,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow
-                                                          .ellipsis,
-                                                      style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w800,
-                                                        fontSize: 13,
-                                                        color: Colors.red,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    Text(
-                                                      text,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      maxLines: 4,
-                                                      overflow: TextOverflow
-                                                          .ellipsis,
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        color:
-                                                            Colors.black54,
-                                                        height: 1.6,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: -20,
-                                            left: 0,
-                                            right: 0,
-                                            child: Center(
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.all(3),
-                                                decoration: const BoxDecoration(
-                                                  color: Colors.white,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: CircleAvatar(
-                                                  radius: 24,
-                                                  backgroundColor:
-                                                      _avatarColor(name),
-                                                  child: Text(
-                                                    initial,
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                      fontSize: 16,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
+                                children: pageItems
+                                    .map((r) => Expanded(child: _reviewCard(r)))
+                                    .toList(),
                               );
                             },
                           ),

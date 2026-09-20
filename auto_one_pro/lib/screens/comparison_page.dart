@@ -155,7 +155,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
                                       style: const TextStyle(fontSize: 12),
                                     ),
                                     onTap: () {
-                                      toggleCompare(car.id);
+                                      toggleCompare(car.id!);
                                       Navigator.of(context).pop();
                                     },
                                   );
@@ -261,7 +261,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
                                   right: -8,
                                   child: InkWell(
                                     onTap: () => setState(() {
-                                      toggleCompare(car.id);
+                                      toggleCompare(car.id!);
                                     }),
                                     child: Container(
                                       padding: const EdgeInsets.all(3),
