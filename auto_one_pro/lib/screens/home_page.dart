@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -1970,20 +1971,123 @@ class _FinancingPartnersCarousel extends StatefulWidget {
 }
 
 class _FinancingPartnersCarouselState
-    extends State<_FinancingPartnersCarousel> {
-  late final PageController controller;
-  int currentPage = 0;
+    extends State<_FinancingPartnersCarousel>
+    with SingleTickerProviderStateMixin {
+  final ScrollController _scrollController = ScrollController();
+  Ticker? _ticker;
+  Duration _lastElapsed = Duration.zero;
+  double _offset = 0;
+  bool _isPaused = false;
+
+  static const double _itemWidth = 132;
+  static const double _speed = 45; // pixels per second
 
   @override
   void initState() {
     super.initState();
-    controller = PageController();
+    _ticker = createTicker(_onTick)..start();
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    _ticker?.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onTick(Duration elapsed) {
+    final partners = financingPartnersCache;
+    if (!_scrollController.hasClients || partners.isEmpty) {
+      _lastElapsed = elapsed;
+      return;
+    }
+    if (_lastElapsed == Duration.zero) {
+      _lastElapsed = elapsed;
+      return;
+    }
+    final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0;
+    _lastElapsed = elapsed;
+    if (_isPaused || dt <= 0) return;
+
+    final oneSetWidth = _itemWidth * partners.length;
+    if (oneSetWidth <= 0) return;
+
+    _offset += _speed * dt;
+    if (_offset >= oneSetWidth) {
+      _offset -= oneSetWidth;
+    }
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(_offset);
+    }
+  }
+
+  Widget _buildLogoItem(Map<String, dynamic> p) {
+    final logo = (p['logo_url'] ?? '').toString();
+    final name = widget.isArabic
+        ? (p['name_ar'] ?? '').toString()
+        : ((p['name_en'] ?? '').toString().isEmpty
+            ? (p['name_ar'] ?? '').toString()
+            : p['name_en'].toString());
+
+    return SizedBox(
+      width: _itemWidth,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 84,
+            height: 84,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white,
+                  Color(0xfffafafa),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.red.withValues(alpha: 0.25),
+                  blurRadius: 20,
+                  spreadRadius: 1,
+                ),
+                const BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: logo.isEmpty
+                ? const Icon(
+                    Icons.account_balance_rounded,
+                    color: Colors.red,
+                    size: 28,
+                  )
+                : carImageAdaptive(
+                    logo,
+                    fit: BoxFit.contain,
+                    showWatermark: false,
+                  ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -1991,16 +2095,10 @@ class _FinancingPartnersCarouselState
     final partners = financingPartnersCache;
     if (partners.isEmpty) return const SizedBox.shrink();
 
-    return LayoutBuilder(
-      builder: (context, outerConstraints) {
-        final perPage = outerConstraints.maxWidth >= 900
-            ? 5
-            : outerConstraints.maxWidth >= 600
-                ? 3
-                : 2;
-        final pageCount = (partners.length / perPage).ceil();
+    // Duplicate the list so the scroll can loop seamlessly.
+    final loopItems = [...partners, ...partners];
 
-        return Padding(
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
@@ -2034,148 +2132,42 @@ class _FinancingPartnersCarouselState
           const SizedBox(height: 30),
           SizedBox(
             height: 170,
-            child: Row(
-              children: [
-                if (pageCount > 1)
-                  IconButton(
-                    onPressed: () {
-                      if (currentPage > 0) {
-                        controller.previousPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOut,
-                        );
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.chevron_left_rounded,
-                      color: Colors.red,
+            child: MouseRegion(
+              onEnter: (_) => _isPaused = true,
+              onExit: (_) => _isPaused = false,
+              child: ShaderMask(
+                shaderCallback: (bounds) {
+                  return const LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black,
+                      Colors.black,
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.06, 0.94, 1.0],
+                  ).createShader(bounds);
+                },
+                blendMode: BlendMode.dstIn,
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children:
+                          loopItems.map((p) => _buildLogoItem(p)).toList(),
                     ),
-                  ),
-                Expanded(
-                  child: PageView.builder(
-                    controller: controller,
-                    itemCount: pageCount,
-                    onPageChanged: (i) => setState(() => currentPage = i),
-                    itemBuilder: (context, pageIndex) {
-                      final pageItems = partners
-                          .skip(pageIndex * perPage)
-                          .take(perPage)
-                          .toList();
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: pageItems.map((p) {
-                          final logo = (p['logo_url'] ?? '').toString();
-                          final name = widget.isArabic
-                              ? (p['name_ar'] ?? '').toString()
-                              : ((p['name_en'] ?? '').toString().isEmpty
-                                  ? (p['name_ar'] ?? '').toString()
-                                  : p['name_en'].toString());
-
-                          return Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 84,
-                                  height: 84,
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: const LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Colors.white,
-                                        Color(0xfffafafa),
-                                      ],
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color:
-                                            Colors.red.withValues(alpha: 0.25),
-                                        blurRadius: 20,
-                                        spreadRadius: 1,
-                                      ),
-                                      const BoxShadow(
-                                        color: Colors.black12,
-                                        blurRadius: 8,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: logo.isEmpty
-                                      ? const Icon(
-                                          Icons.account_balance_rounded,
-                                          color: Colors.red,
-                                          size: 28,
-                                        )
-                                      : carImageAdaptive(
-                                          logo,
-                                          fit: BoxFit.contain,
-                                          showWatermark: false,
-                                        ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  name,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    },
                   ),
                 ),
-                if (pageCount > 1)
-                  IconButton(
-                    onPressed: () {
-                      if (currentPage < pageCount - 1) {
-                        controller.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOut,
-                        );
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.red,
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
-          if (pageCount > 1) ...[
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(pageCount, (i) {
-                final isActive = i == currentPage;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: isActive ? 20 : 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: isActive ? Colors.red : Colors.black12,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                );
-              }),
-            ),
-          ],
         ],
       ),
-    );
-      },
     );
   }
 }
