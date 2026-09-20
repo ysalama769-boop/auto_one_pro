@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/widgets.dart';
+import '../shared/constants.dart';
 
 // ============================================================
 // ADMIN GATE (تسجيل دخول حقيقي عن طريق Supabase Auth)
@@ -10,6 +11,60 @@ import '../shared/widgets.dart';
 // (نفس نظام تسجيل دخول الزباين)، وصلاحية "أدمن" بتتأكد من جدول
 // admin_users المربوط بحساب المستخدم، مش من كلمة سر مكتوبة في الكود.
 
+
+// ============================================================
+// ADMIN SECTION SCAFFOLD (صفحة منفصلة لأي قسم فرعي في لوحة
+// التحكم — فيها زرار رجوع وزرار داشبورد)
+// ============================================================
+class AdminSectionScaffold extends StatelessWidget {
+  final bool isArabic;
+  final String title;
+  final Widget body;
+
+  const AdminSectionScaffold({
+    super.key,
+    required this.isArabic,
+    required this.title,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: const Color(0xfff5f5f5),
+        appBar: AppBar(
+          backgroundColor: kHeaderColor,
+          foregroundColor: kHeaderTextColor,
+          title: Text(title),
+          leading: IconButton(
+            icon: Icon(
+              isArabic
+                  ? Icons.arrow_forward_rounded
+                  : Icons.arrow_back_rounded,
+            ),
+            tooltip: isArabic ? 'رجوع' : 'Back',
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () =>
+                  Navigator.of(context).popUntil((route) => route.isFirst),
+              icon: const Icon(Icons.dashboard_rounded, color: Colors.white),
+              label: Text(
+                isArabic ? 'الداشبورد' : 'Dashboard',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: body,
+      ),
+    );
+  }
+}
 
 // ============================================================
 // المستخدم الحالي المسجّل دخوله في لوحة التحكم + سجل التعديلات

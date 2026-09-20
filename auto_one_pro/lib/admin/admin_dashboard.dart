@@ -40,58 +40,6 @@ class _AdminTabDef {
 }
 
 
-// ============================================================
-// ADMIN SECTION SCAFFOLD (صفحة منفصلة لكل قسم — رجوع + داشبورد)
-// ============================================================
-class _AdminSectionScaffold extends StatelessWidget {
-  final bool isArabic;
-  final String title;
-  final Widget body;
-
-  const _AdminSectionScaffold({
-    required this.isArabic,
-    required this.title,
-    required this.body,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: const Color(0xfff5f5f5),
-        appBar: AppBar(
-          backgroundColor: kHeaderColor,
-          foregroundColor: kHeaderTextColor,
-          title: Text(title),
-          leading: IconButton(
-            icon: Icon(
-              isArabic
-                  ? Icons.arrow_forward_rounded
-                  : Icons.arrow_back_rounded,
-            ),
-            tooltip: isArabic ? 'رجوع' : 'Back',
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          actions: [
-            TextButton.icon(
-              onPressed: () =>
-                  Navigator.of(context).popUntil((route) => route.isFirst),
-              icon: const Icon(Icons.dashboard_rounded, color: Colors.white),
-              label: Text(
-                isArabic ? 'الداشبورد' : 'Dashboard',
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        body: body,
-      ),
-    );
-  }
-}
-
 class AdminDashboard extends StatefulWidget {
   final bool isArabic;
 
@@ -525,7 +473,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => _AdminSectionScaffold(
+        builder: (context) => AdminSectionScaffold(
           isArabic: isArabic,
           title: tabs[index].label,
           body: _builtTabPages[index]!,

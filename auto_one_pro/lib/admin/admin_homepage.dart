@@ -314,310 +314,438 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
       return const Center(child: CircularProgressIndicator(color: Colors.red));
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xfff5f5f5),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'adminHomepageSaveFAB',
-        backgroundColor: Colors.red,
-        foregroundColor: Colors.white,
-        onPressed: isSaving ? null : _save,
-        icon: isSaving
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : const Icon(Icons.save_outlined),
-        label: Text(isArabic ? 'حفظ' : 'Save'),
+    final sections = <Map<String, dynamic>>[
+      {
+        'label': isArabic ? 'النصوص الرئيسية' : 'Hero Texts',
+        'icon': Icons.title_rounded,
+        'body': _heroSectionBody,
+      },
+      {
+        'label': isArabic ? 'صور البانر (سلايدر)' : 'Banner Slider',
+        'icon': Icons.view_carousel_rounded,
+        'body': _bannersSectionBody,
+      },
+      {
+        'label': isArabic ? 'بانرات الصفحات' : 'Page Banners',
+        'icon': Icons.image_outlined,
+        'body': _pageBannersSectionBody,
+      },
+      {
+        'label': isArabic ? 'محتوى "عن أوتو ون"' : 'About Page',
+        'icon': Icons.info_outline_rounded,
+        'body': _aboutSectionBody,
+      },
+      {
+        'label': isArabic ? 'خطوات طريقة الشراء' : 'How to Buy Steps',
+        'icon': Icons.format_list_numbered_rounded,
+        'body': _stepsSectionBody,
+      },
+      {
+        'label': isArabic ? 'نصوص إضافية' : 'Additional Texts',
+        'icon': Icons.text_snippet_outlined,
+        'body': _extraTextsSectionBody,
+      },
+    ];
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 220,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
+        childAspectRatio: 1.15,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-        children: [
-          Text(
-            isArabic ? 'النصوص الرئيسية' : 'Hero texts',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: heroTitleArCtrl,
-            decoration: InputDecoration(
-              labelText: isArabic ? 'العنوان (عربي)' : 'Title (Arabic)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: heroTitleEnCtrl,
-            decoration: InputDecoration(
-              labelText: isArabic ? 'العنوان (إنجليزي)' : 'Title (English)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: heroSubtitleArCtrl,
-            decoration: InputDecoration(
-              labelText: isArabic ? 'العنوان الفرعي (عربي)' : 'Subtitle (Arabic)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: heroSubtitleEnCtrl,
-            decoration: InputDecoration(
-              labelText:
-                  isArabic ? 'العنوان الفرعي (إنجليزي)' : 'Subtitle (English)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  isArabic ? 'صور البانر (سلايدر)' : 'Banner images (slider)',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                  ),
+      itemCount: sections.length,
+      itemBuilder: (context, i) {
+        final section = sections[i];
+        return _homepageSectionCard(
+          label: section['label'] as String,
+          icon: section['icon'] as IconData,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => AdminSectionScaffold(
+                  isArabic: isArabic,
+                  title: section['label'] as String,
+                  body: (section['body'] as Widget Function())(),
                 ),
               ),
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    bannerControllers.add(TextEditingController());
-                  });
-                },
-                icon: const Icon(Icons.add_rounded),
-                label: Text(isArabic ? 'إضافة صورة' : 'Add image'),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _homepageSectionCard({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 1,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: Colors.red, size: 26),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13.5,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            isArabic
-                ? 'لو مفيش صور، السلايدر مش هيظهر خالص في الصفحة الرئيسية.'
-                : 'If empty, no slider will show on the homepage.',
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+        ),
+      ),
+    );
+  }
+
+  // زرار حفظ عام يتحط آخر أي قسم فرعي — بيحفظ كل بيانات الصفحة
+  // الرئيسية مرة واحدة (نفس _save()، مش بس القسم المفتوح).
+  Widget _saveButtonInline() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: isSaving ? null : _save,
+          icon: isSaving
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.save_outlined),
+          label: Text(isArabic ? 'حفظ' : 'Save'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
           ),
-          const SizedBox(height: 10),
-          for (var i = 0; i < bannerControllers.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: bannerControllers[i],
-                      decoration: InputDecoration(
-                        hintText: isArabic
-                            ? 'رابط صورة البانر'
-                            : 'Banner image URL',
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
+  Widget _heroSectionBody() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      children: [
+        TextField(
+          controller: heroTitleArCtrl,
+          decoration: InputDecoration(
+            labelText: isArabic ? 'العنوان (عربي)' : 'Title (Arabic)',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: heroTitleEnCtrl,
+          decoration: InputDecoration(
+            labelText: isArabic ? 'العنوان (إنجليزي)' : 'Title (English)',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: heroSubtitleArCtrl,
+          decoration: InputDecoration(
+            labelText: isArabic ? 'العنوان الفرعي (عربي)' : 'Subtitle (Arabic)',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: heroSubtitleEnCtrl,
+          decoration: InputDecoration(
+            labelText:
+                isArabic ? 'العنوان الفرعي (إنجليزي)' : 'Subtitle (English)',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        _saveButtonInline(),
+      ],
+    );
+  }
+
+  Widget _bannersSectionBody() {
+    return StatefulBuilder(
+      builder: (context, setSectionState) {
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    isArabic ? 'صور البانر (سلايدر)' : 'Banner images (slider)',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      bannerControllers.add(TextEditingController());
+                    });
+                    setSectionState(() {});
+                  },
+                  icon: const Icon(Icons.add_rounded),
+                  label: Text(isArabic ? 'إضافة صورة' : 'Add image'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              isArabic
+                  ? 'لو مفيش صور، السلايدر مش هيظهر خالص في الصفحة الرئيسية.'
+                  : 'If empty, no slider will show on the homepage.',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 10),
+            for (var i = 0; i < bannerControllers.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: bannerControllers[i],
+                        decoration: InputDecoration(
+                          hintText: isArabic
+                              ? 'رابط صورة البانر'
+                              : 'Banner image URL',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        bannerControllers[i].dispose();
-                        bannerControllers.removeAt(i);
-                      });
-                    },
-                    icon: const Icon(
-                      Icons.remove_circle_outline_rounded,
-                      color: Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          const SizedBox(height: 24),
-          Container(height: 1, color: Colors.black12),
-          const SizedBox(height: 24),
-
-          Text(
-            isArabic ? 'صورة بانر صفحة الفروع' : 'Branches page banner image',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: branchesBannerCtrl,
-                  decoration: InputDecoration(
-                    hintText:
-                        isArabic ? 'رابط صورة البانر' : 'Banner image URL',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed:
-                    isUploadingImage ? null : _pickAndUploadBranchesBanner,
-                icon: const Icon(Icons.upload_file),
-                tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          Text(
-            isArabic ? 'صورة بانر صفحة الخدمات' : 'Services page banner image',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: servicesBannerCtrl,
-                  decoration: InputDecoration(
-                    hintText:
-                        isArabic ? 'رابط صورة البانر' : 'Banner image URL',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed:
-                    isUploadingImage ? null : _pickAndUploadServicesBanner,
-                icon: const Icon(Icons.upload_file),
-                tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
-              ),
-            ],
-          ),
-
-          Text(
-            isArabic ? 'محتوى صفحة "عن أوتو ون"' : 'About page content',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-          ),
-          const SizedBox(height: 10),
-          _aboutTextField(
-            aboutIntroArCtrl,
-            isArabic ? 'نبذة عن المعرض (عربي)' : 'About intro (Arabic)',
-          ),
-          _aboutTextField(
-            aboutIntroEnCtrl,
-            isArabic ? 'نبذة عن المعرض (إنجليزي)' : 'About intro (English)',
-          ),
-          _aboutTextField(
-            aboutOfferArCtrl,
-            isArabic ? 'اللي بنقدمه (عربي)' : 'What we offer (Arabic)',
-          ),
-          _aboutTextField(
-            aboutOfferEnCtrl,
-            isArabic ? 'اللي بنقدمه (إنجليزي)' : 'What we offer (English)',
-          ),
-          _aboutTextField(
-            aboutAvailableArCtrl,
-            isArabic ? 'السيارات المتوفرة (عربي)' : 'Available cars (Arabic)',
-          ),
-          _aboutTextField(
-            aboutAvailableEnCtrl,
-            isArabic
-                ? 'السيارات المتوفرة (إنجليزي)'
-                : 'Available cars (English)',
-          ),
-          _aboutTextField(
-            aboutGoalArCtrl,
-            isArabic ? 'هدفنا وخدمتنا (عربي)' : 'Our goal (Arabic)',
-          ),
-          _aboutTextField(
-            aboutGoalEnCtrl,
-            isArabic ? 'هدفنا وخدمتنا (إنجليزي)' : 'Our goal (English)',
-          ),
-
-          const SizedBox(height: 24),
-          Text(
-            isArabic ? 'خطوات "طريقة الشراء"' : '"How to Buy" steps',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-          ),
-          const SizedBox(height: 10),
-          for (var i = 0; i < 5; i++) ...[
-            _aboutTextField(
-              stepArCtrls[i],
-              isArabic
-                  ? 'الخطوة ${i + 1} (عربي)'
-                  : 'Step ${i + 1} (Arabic)',
-            ),
-            _aboutTextField(
-              stepEnCtrls[i],
-              isArabic
-                  ? 'الخطوة ${i + 1} (إنجليزي)'
-                  : 'Step ${i + 1} (English)',
-            ),
-          ],
-
-          const SizedBox(height: 24),
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              initiallyExpanded: false,
-              tilePadding: EdgeInsets.zero,
-              title: Text(
-                isArabic ? 'نصوص إضافية (عناوين ووصف الأقسام)' : 'Additional texts',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-              ),
-              children: [
-                for (final groupName in extraTextGroups
-                    .map((g) => g['group']!)
-                    .toSet()) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 6),
-                    child: Text(
-                      groupName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          bannerControllers[i].dispose();
+                          bannerControllers.removeAt(i);
+                        });
+                        setSectionState(() {});
+                      },
+                      icon: const Icon(
+                        Icons.remove_circle_outline_rounded,
+                        color: Colors.red,
                       ),
                     ),
-                  ),
-                  for (final g in extraTextGroups.where(
-                    (g) => g['group'] == groupName,
-                  )) ...[
-                    _aboutTextField(
-                      extraArCtrls[g['key']]!,
-                      '${g['label']} (عربي)',
-                    ),
-                    _aboutTextField(
-                      extraEnCtrls[g['key']]!,
-                      '${g['label']} (English)',
-                    ),
                   ],
-                ],
-              ],
+                ),
+              ),
+            _saveButtonInline(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _pageBannersSectionBody() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      children: [
+        Text(
+          isArabic ? 'صورة بانر صفحة الفروع' : 'Branches page banner image',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: branchesBannerCtrl,
+                decoration: InputDecoration(
+                  hintText:
+                      isArabic ? 'رابط صورة البانر' : 'Banner image URL',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
             ),
+            IconButton(
+              onPressed:
+                  isUploadingImage ? null : _pickAndUploadBranchesBanner,
+              icon: const Icon(Icons.upload_file),
+              tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          isArabic ? 'صورة بانر صفحة الخدمات' : 'Services page banner image',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: servicesBannerCtrl,
+                decoration: InputDecoration(
+                  hintText:
+                      isArabic ? 'رابط صورة البانر' : 'Banner image URL',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed:
+                  isUploadingImage ? null : _pickAndUploadServicesBanner,
+              icon: const Icon(Icons.upload_file),
+              tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+            ),
+          ],
+        ),
+        _saveButtonInline(),
+      ],
+    );
+  }
+
+  Widget _aboutSectionBody() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      children: [
+        _aboutTextField(
+          aboutIntroArCtrl,
+          isArabic ? 'نبذة عن المعرض (عربي)' : 'About intro (Arabic)',
+        ),
+        _aboutTextField(
+          aboutIntroEnCtrl,
+          isArabic ? 'نبذة عن المعرض (إنجليزي)' : 'About intro (English)',
+        ),
+        _aboutTextField(
+          aboutOfferArCtrl,
+          isArabic ? 'اللي بنقدمه (عربي)' : 'What we offer (Arabic)',
+        ),
+        _aboutTextField(
+          aboutOfferEnCtrl,
+          isArabic ? 'اللي بنقدمه (إنجليزي)' : 'What we offer (English)',
+        ),
+        _aboutTextField(
+          aboutAvailableArCtrl,
+          isArabic ? 'السيارات المتوفرة (عربي)' : 'Available cars (Arabic)',
+        ),
+        _aboutTextField(
+          aboutAvailableEnCtrl,
+          isArabic
+              ? 'السيارات المتوفرة (إنجليزي)'
+              : 'Available cars (English)',
+        ),
+        _aboutTextField(
+          aboutGoalArCtrl,
+          isArabic ? 'هدفنا وخدمتنا (عربي)' : 'Our goal (Arabic)',
+        ),
+        _aboutTextField(
+          aboutGoalEnCtrl,
+          isArabic ? 'هدفنا وخدمتنا (إنجليزي)' : 'Our goal (English)',
+        ),
+        _saveButtonInline(),
+      ],
+    );
+  }
+
+  Widget _stepsSectionBody() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      children: [
+        for (var i = 0; i < 5; i++) ...[
+          _aboutTextField(
+            stepArCtrls[i],
+            isArabic ? 'الخطوة ${i + 1} (عربي)' : 'Step ${i + 1} (Arabic)',
+          ),
+          _aboutTextField(
+            stepEnCtrls[i],
+            isArabic
+                ? 'الخطوة ${i + 1} (إنجليزي)'
+                : 'Step ${i + 1} (English)',
           ),
         ],
-      ),
+        _saveButtonInline(),
+      ],
+    );
+  }
+
+  Widget _extraTextsSectionBody() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      children: [
+        for (final groupName in extraTextGroups
+            .map((g) => g['group']!)
+            .toSet()) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 6),
+            child: Text(
+              groupName,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+          for (final g in extraTextGroups.where(
+            (g) => g['group'] == groupName,
+          )) ...[
+            _aboutTextField(
+              extraArCtrls[g['key']]!,
+              '${g['label']} (عربي)',
+            ),
+            _aboutTextField(
+              extraEnCtrls[g['key']]!,
+              '${g['label']} (English)',
+            ),
+          ],
+        ],
+        _saveButtonInline(),
+      ],
     );
   }
 
