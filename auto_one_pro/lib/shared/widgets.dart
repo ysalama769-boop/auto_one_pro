@@ -14,6 +14,7 @@ import '../screens/services_page.dart';
 import '../screens/car_details_page.dart';
 import '../screens/favorites_page.dart';
 import '../screens/comparison_page.dart';
+import '../screens/request_car_page.dart';
 import '../screens/auth_page.dart';
 import '../screens/my_requests_page.dart';
 import '../screens/notifications_page.dart';
@@ -196,6 +197,19 @@ InkWell(
     active: showCars,
     lightText: transparent,
     onTap: onCars,
+  ),
+
+  const SizedBox(width: 10),
+
+  HeaderButton(
+    title: isArabic ? 'طلب سيارة' : 'REQUEST A CAR',
+    active: false,
+    lightText: transparent,
+    onTap: () {
+      Navigator.of(context).push(
+        smoothRoute(RequestCarPage(isArabic: isArabic)),
+      );
+    },
   ),
 
   const SizedBox(width: 10),
@@ -575,6 +589,11 @@ if (isMobile)
             smoothRoute(ServicesPage(isArabic: isArabic)),
           );
           break;
+        case 'request_car':
+          Navigator.of(context).push(
+            smoothRoute(RequestCarPage(isArabic: isArabic)),
+          );
+          break;
         case 'about':
           Navigator.of(context).push(
             smoothRoute(AboutAutoOnePage(isArabic: isArabic)),
@@ -607,6 +626,12 @@ if (isMobile)
         value: 'services',
         child: Text(
           isArabic ? 'الخدمات' : 'Services',
+        ),
+      ),
+      PopupMenuItem(
+        value: 'request_car',
+        child: Text(
+          isArabic ? 'طلب سيارة' : 'Request a Car',
         ),
       ),
       PopupMenuItem(

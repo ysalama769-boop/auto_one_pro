@@ -77,6 +77,8 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
         return isArabic ? 'حجز سيارة' : 'Car booking';
       case 'financing':
         return isArabic ? 'طلب تمويل' : 'Financing request';
+      case 'car_request':
+        return isArabic ? 'طلب سيارة' : 'Car request';
       case 'contact':
         return isArabic ? 'استفسار' : 'Inquiry';
       default:
@@ -139,6 +141,8 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
         return Icons.event_available_rounded;
       case 'financing':
         return Icons.account_balance_wallet_outlined;
+      case 'car_request':
+        return Icons.directions_car_filled_rounded;
       case 'contact':
         return Icons.chat_bubble_outline_rounded;
       default:

@@ -115,6 +115,8 @@ class _AdminRequestsPageState extends State<AdminRequestsPage> {
         return isArabic ? 'تمويل' : 'Financing';
       case 'test_drive':
         return isArabic ? 'تجربة قيادة' : 'Test drive';
+      case 'car_request':
+        return isArabic ? 'طلب سيارة' : 'Car request';
       default:
         return isArabic ? 'استفسار' : 'Inquiry';
     }
