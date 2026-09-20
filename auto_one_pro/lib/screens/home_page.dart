@@ -443,177 +443,7 @@ Container(
   height: 20,
 ),
 
-          // ====================================================
-          // FEATURES
-          // ====================================================
-
-          Container(
-            width: double.infinity,
-            color: Colors.white,
-
-            padding:
-                const EdgeInsets.symmetric(
-              vertical: 35,
-              horizontal: 20,
-            ),
-
-            child: Wrap(
-              alignment:
-                  WrapAlignment.center,
-
-              spacing: 80,
-              runSpacing: 30,
-
-              children: [
-             HomeFeature(
-  icon: Icons.directions_car_filled,
-  title: widget.isArabic
-      ? 'سيارات مختارة بعناية'
-      : 'CAREFULLY SELECTED CARS',
-  description: widget.isArabic
-      ? 'موديلات مميزة تناسب احتياجاتك'
-      : 'Selected models for your needs',
-),
-
-HomeFeature(
-  icon: Icons.price_check,
-  title: widget.isArabic
-      ? 'أسعار تنافسية'
-      : 'COMPETITIVE PRICES',
-  description: widget.isArabic
-      ? 'عروض وقيمة أفضل مقابل السعر'
-      : 'Better value for your money',
-),
-
-HomeFeature(
-  icon: Icons.support_agent,
-  title: widget.isArabic
-      ? 'تجربة شراء أسهل'
-      : 'EASY BUYING EXPERIENCE',
-  description: widget.isArabic
-      ? 'تواصل سريع ومساعدة في اختيار سيارتك'
-      : 'Quick support to help you choose your car',
-),
-              ],
-            ),
-          ),
-
           const SizedBox(height: 50),
-          // ====================================================
-// FEATURED CARS
-// ====================================================
-
-Container(
-  width: double.infinity,
-  padding: const EdgeInsets.symmetric(
-    vertical: 55,
-    horizontal: 30,
-  ),
-  color: const Color(0xFFF7F7F7),
-
-  child: Column(
-    children: [
-      Text(
-        widget.isArabic
-            ? 'سيارات مميزة'
-            : 'FEATURED CARS',
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w900,
-          color: Colors.black,
-        ),
-      ),
-
-      const SizedBox(height: 10),
-
-      Text(
-        widget.isArabic
-            ? 'اختيارات مميزة من سيارات AUTO ONE'
-            : 'A selection of featured cars from AUTO ONE',
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 15,
-          color: Colors.black54,
-        ),
-      ),
-
-      const SizedBox(height: 35),
-
-      LayoutBuilder(
-  builder: (context, constraints) {
-
-   final List<Car> featuredCars = cars.where((c) => c.isFeatured).toList();
-
-// لو لسه محدش حدد أي سيارة كمميزة من لوحة التحكم، نعرض آخر السيارات
-// كإجراء احتياطي عشان القسم ميفضلش فاضي
-if (featuredCars.isEmpty && cars.isNotEmpty) {
-  featuredCars.addAll(cars.take(5));
-}
-
-    // بقت بتتسحب لجنب زي شريط الماركات، بدل ما تتلف على أكتر من صف.
-    // السهمين متحطين فوق الشريط نفسه (Stack) على الحافة اليمين
-    // والشمال، مش قسم منفصل فوقه.
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        styledHorizontalScrollbar(
-          controller: _featuredCarsScrollController,
-          child: SingleChildScrollView(
-            controller: _featuredCarsScrollController,
-            scrollDirection: Axis.horizontal,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Row(
-                children: featuredCars.map((car) {
-                  return Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 16),
-                    child: SizedBox(
-                      width: 260,
-                      child: FeaturedCarCard(
-                        car: car,
-                        isArabic: widget.isArabic,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ),
-        // السهمين بقوا صغيرين وف نفس مستوى شريط السحب (Scrollbar)
-        // تحت، مش قاعدين فوق صورة الكارت.
-        Positioned(
-          right: 0,
-          bottom: 0,
-          child: Transform.scale(
-            scale: 0.5,
-            child: CarouselArrow(
-              icon: Icons.arrow_back_ios_new,
-              onTap: () => _scrollBy(_featuredCarsScrollController, 320),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          bottom: 0,
-          child: Transform.scale(
-            scale: 0.5,
-            child: CarouselArrow(
-              icon: Icons.arrow_forward_ios,
-              onTap: () => _scrollBy(_featuredCarsScrollController, -320),
-            ),
-          ),
-        ),
-      ],
-    );
-        },
-      ),
-    ],
-  ),
-),
-const SizedBox(height: 35),
-
 // ====================================================
 // WHY AUTO ONE
 // ====================================================
@@ -755,6 +585,121 @@ Container(
               ),
             ],
           );
+        },
+      ),
+    ],
+  ),
+),
+const SizedBox(height: 35),
+
+          // ====================================================
+// FEATURED CARS
+// ====================================================
+
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.symmetric(
+    vertical: 55,
+    horizontal: 30,
+  ),
+  color: const Color(0xFFF7F7F7),
+
+  child: Column(
+    children: [
+      Text(
+        widget.isArabic
+            ? 'سيارات مميزة'
+            : 'FEATURED CARS',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w900,
+          color: Colors.black,
+        ),
+      ),
+
+      const SizedBox(height: 10),
+
+      Text(
+        widget.isArabic
+            ? 'اختيارات مميزة من سيارات AUTO ONE'
+            : 'A selection of featured cars from AUTO ONE',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 15,
+          color: Colors.black54,
+        ),
+      ),
+
+      const SizedBox(height: 35),
+
+      LayoutBuilder(
+  builder: (context, constraints) {
+
+   final List<Car> featuredCars = cars.where((c) => c.isFeatured).toList();
+
+// لو لسه محدش حدد أي سيارة كمميزة من لوحة التحكم، نعرض آخر السيارات
+// كإجراء احتياطي عشان القسم ميفضلش فاضي
+if (featuredCars.isEmpty && cars.isNotEmpty) {
+  featuredCars.addAll(cars.take(5));
+}
+
+    // بقت بتتسحب لجنب زي شريط الماركات، بدل ما تتلف على أكتر من صف.
+    // السهمين متحطين فوق الشريط نفسه (Stack) على الحافة اليمين
+    // والشمال، مش قسم منفصل فوقه.
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        styledHorizontalScrollbar(
+          controller: _featuredCarsScrollController,
+          child: SingleChildScrollView(
+            controller: _featuredCarsScrollController,
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                children: featuredCars.map((car) {
+                  return Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 16),
+                    child: SizedBox(
+                      width: 260,
+                      child: FeaturedCarCard(
+                        car: car,
+                        isArabic: widget.isArabic,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+        // السهمين بقوا صغيرين وف نفس مستوى شريط السحب (Scrollbar)
+        // تحت، مش قاعدين فوق صورة الكارت.
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: Transform.scale(
+            scale: 0.5,
+            child: CarouselArrow(
+              icon: Icons.arrow_back_ios_new,
+              onTap: () => _scrollBy(_featuredCarsScrollController, 320),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          bottom: 0,
+          child: Transform.scale(
+            scale: 0.5,
+            child: CarouselArrow(
+              icon: Icons.arrow_forward_ios,
+              onTap: () => _scrollBy(_featuredCarsScrollController, -320),
+            ),
+          ),
+        ),
+      ],
+    );
         },
       ),
     ],
