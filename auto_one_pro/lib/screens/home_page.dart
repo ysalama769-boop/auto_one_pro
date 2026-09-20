@@ -2042,7 +2042,10 @@ class _FinancingPartnersCarouselState
                         );
                       }
                     },
-                    icon: const Icon(Icons.chevron_right_rounded),
+                    icon: const Icon(
+                      Icons.chevron_left_rounded,
+                      color: Colors.red,
+                    ),
                   ),
                 Expanded(
                   child: PageView.builder(
@@ -2064,8 +2067,8 @@ class _FinancingPartnersCarouselState
                                   ? (p['name_ar'] ?? '').toString()
                                   : p['name_en'].toString());
 
-                          return Container(
-                            width: 130,
+                          return Expanded(
+                            child: Container(
                             margin: const EdgeInsets.symmetric(horizontal: 6),
                             padding: const EdgeInsets.symmetric(
                               vertical: 18,
@@ -2125,6 +2128,7 @@ class _FinancingPartnersCarouselState
                                 ),
                               ],
                             ),
+                            ),
                           );
                         }).toList(),
                       );
@@ -2141,7 +2145,10 @@ class _FinancingPartnersCarouselState
                         );
                       }
                     },
-                    icon: const Icon(Icons.chevron_left_rounded),
+                    icon: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.red,
+                    ),
                   ),
               ],
             ),
@@ -2187,7 +2194,6 @@ class _ReviewsCarousel extends StatefulWidget {
 class _ReviewsCarouselState extends State<_ReviewsCarousel> {
   late final PageController controller;
   int currentPage = 0;
-  static const int perPage = 5;
 
   @override
   void initState() {
@@ -2214,12 +2220,55 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
     return colors[name.codeUnitAt(0) % colors.length];
   }
 
+  void _showFullReview(String name, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: _avatarColor(name),
+              child: Text(
+                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                name,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 14, height: 1.7),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(widget.isArabic ? 'إغلاق' : 'Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final reviews = approvedReviewsCache;
     if (reviews.isEmpty) return const SizedBox.shrink();
-
-    final pageCount = (reviews.length / perPage).ceil();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -2248,171 +2297,229 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
             style: const TextStyle(fontSize: 14, color: Colors.black54),
           ),
           const SizedBox(height: 30),
-          SizedBox(
-            height: 190,
-            child: Row(
-              children: [
-                if (pageCount > 1)
-                  IconButton(
-                    onPressed: () {
-                      if (currentPage > 0) {
-                        controller.previousPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOut,
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.chevron_right_rounded),
-                  ),
-                Expanded(
-                  child: PageView.builder(
-                    controller: controller,
-                    itemCount: pageCount,
-                    onPageChanged: (i) => setState(() => currentPage = i),
-                    itemBuilder: (context, pageIndex) {
-                      final pageItems = reviews
-                          .skip(pageIndex * perPage)
-                          .take(perPage)
-                          .toList();
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: pageItems.map((r) {
-                          final name = (r['customer_name'] ?? '').toString();
-                          final text = (r['review_text'] ?? '').toString();
-                          final initial =
-                              name.isNotEmpty ? name[0].toUpperCase() : '?';
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final perPage = constraints.maxWidth >= 700 ? 4 : 2;
+              final pageCount = (reviews.length / perPage).ceil();
 
-                          return Expanded(
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                              ),
-                              padding: const EdgeInsets.fromLTRB(
-                                12,
-                                32,
-                                12,
-                                16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.black.withValues(alpha: 0.06),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 14,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Positioned(
-                                    top: -32,
-                                    left: 0,
-                                    right: 0,
-                                    child: Center(
-                                      child: Container(
-                                        padding: const EdgeInsets.all(3),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: CircleAvatar(
-                                          radius: 24,
-                                          backgroundColor: _avatarColor(name),
-                                          child: Text(
-                                            initial,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w900,
-                                              fontSize: 16,
+              return Column(
+                children: [
+                  SizedBox(
+                    height: 190,
+                    child: Row(
+                      children: [
+                        if (pageCount > 1)
+                          IconButton(
+                            onPressed: () {
+                              if (currentPage > 0) {
+                                controller.previousPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOut,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.chevron_left_rounded,
+                              color: Colors.red,
+                            ),
+                          ),
+                        Expanded(
+                          child: PageView.builder(
+                            controller: controller,
+                            itemCount: pageCount,
+                            onPageChanged: (i) =>
+                                setState(() => currentPage = i),
+                            itemBuilder: (context, pageIndex) {
+                              final pageItems = reviews
+                                  .skip(pageIndex * perPage)
+                                  .take(perPage)
+                                  .toList();
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: pageItems.map((r) {
+                                  final name =
+                                      (r['customer_name'] ?? '').toString();
+                                  final text =
+                                      (r['review_text'] ?? '').toString();
+                                  final initial = name.isNotEmpty
+                                      ? name[0].toUpperCase()
+                                      : '?';
+
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 32),
+                                      child: Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          Material(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            child: InkWell(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              onTap: () =>
+                                                  _showFullReview(name, text),
+                                              child: Container(
+                                                margin:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 6,
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.fromLTRB(
+                                                  12,
+                                                  20,
+                                                  12,
+                                                  16,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                    16,
+                                                  ),
+                                                  border: Border.all(
+                                                    color: Colors.black
+                                                        .withValues(
+                                                      alpha: 0.06,
+                                                    ),
+                                                  ),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withValues(
+                                                        alpha: 0.05,
+                                                      ),
+                                                      blurRadius: 14,
+                                                      offset:
+                                                          const Offset(0, 6),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Column(
+                                                  children: [
+                                                    Icon(
+                                                      Icons
+                                                          .format_quote_rounded,
+                                                      color: Colors.red
+                                                          .withValues(
+                                                        alpha: 0.35,
+                                                      ),
+                                                      size: 20,
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      name,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow
+                                                          .ellipsis,
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                        fontSize: 13,
+                                                        color: Colors.red,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Text(
+                                                      text,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      maxLines: 4,
+                                                      overflow: TextOverflow
+                                                          .ellipsis,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color:
+                                                            Colors.black54,
+                                                        height: 1.6,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        ),
+                                          Positioned(
+                                            top: -20,
+                                            left: 0,
+                                            right: 0,
+                                            child: Center(
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.all(3),
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.white,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: CircleAvatar(
+                                                  radius: 24,
+                                                  backgroundColor:
+                                                      _avatarColor(name),
+                                                  child: Text(
+                                                    initial,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.w900,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                  Column(
-                                    children: [
-                                      const SizedBox(height: 12),
-                                      Icon(
-                                        Icons.format_quote_rounded,
-                                        color: Colors.red.withValues(alpha: 0.35),
-                                        size: 20,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        name,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 13,
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        text,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 4,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.black54,
-                                          height: 1.6,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                                  );
+                                }).toList(),
+                              );
+                            },
+                          ),
+                        ),
+                        if (pageCount > 1)
+                          IconButton(
+                            onPressed: () {
+                              if (currentPage < pageCount - 1) {
+                                controller.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOut,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Colors.red,
                             ),
-                          );
-                        }).toList(),
-                      );
-                    },
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                if (pageCount > 1)
-                  IconButton(
-                    onPressed: () {
-                      if (currentPage < pageCount - 1) {
-                        controller.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOut,
+                  if (pageCount > 1) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(pageCount, (i) {
+                        final isActive = i == currentPage;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          width: isActive ? 20 : 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: isActive ? Colors.red : Colors.black12,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         );
-                      }
-                    },
-                    icon: const Icon(Icons.chevron_left_rounded),
-                  ),
-              ],
-            ),
+                      }),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
-          if (pageCount > 1) ...[
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(pageCount, (i) {
-                final isActive = i == currentPage;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: isActive ? 20 : 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: isActive ? Colors.red : Colors.black12,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                );
-              }),
-            ),
-          ],
         ],
       ),
     );
