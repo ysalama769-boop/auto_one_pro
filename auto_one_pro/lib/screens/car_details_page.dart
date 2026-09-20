@@ -408,9 +408,10 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
             onTap: openFullScreen,
             child: ClipRRect(
               borderRadius: BorderRadius.zero,
-              child: SizedBox(
+              child: Container(
                 width: double.infinity,
                 height: 300,
+                color: const Color(0xfff2f2f2),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -418,7 +419,7 @@ class _ColorPhotoGalleryState extends State<_ColorPhotoGallery> {
                       images[safeIndex],
                       width: double.infinity,
                       height: double.infinity,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                       showWatermark: false,
                     ),
                     if (images.length > 1) ...[
