@@ -2294,9 +2294,9 @@ LayoutBuilder(
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(flex: 5, child: imageBlock),
-          const SizedBox(width: 28),
           Expanded(flex: 6, child: infoBlock),
+          const SizedBox(width: 28),
+          Expanded(flex: 5, child: imageBlock),
         ],
       );
     }
@@ -2304,9 +2304,9 @@ LayoutBuilder(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        imageBlock,
-        const SizedBox(height: 20),
         infoBlock,
+        const SizedBox(height: 20),
+        imageBlock,
       ],
     );
   },
