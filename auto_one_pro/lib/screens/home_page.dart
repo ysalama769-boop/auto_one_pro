@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -32,6 +33,22 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
  int currentImage = 0;
  final ScrollController _featuredCarsScrollController = ScrollController();
+
+ // إحساس الـ parallax الخفيف على صورة الهيرو مع تحريك الماوس
+ Offset _heroParallax = Offset.zero;
+
+ void _onHeroHover(Offset localPosition, Size size) {
+   if (size.width == 0 || size.height == 0) return;
+   final dx = (localPosition.dx / size.width - 0.5) * 2; // -1..1
+   final dy = (localPosition.dy / size.height - 0.5) * 2; // -1..1
+   setState(() {
+     _heroParallax = Offset(dx * 10, dy * 10);
+   });
+ }
+
+ void _resetHeroParallax() {
+   setState(() => _heroParallax = Offset.zero);
+ }
 
 int get safeImageIndex {
   if (images.isEmpty) return 0;
@@ -265,27 +282,53 @@ final List<Map<String, String>> slideButtons = [
                     width: double.infinity,
                     height: isSmall ? 350 : 600,
 
-                    child: Image.asset(
-                      images[safeImageIndex],
+                    child: ClipRect(
+                      child: LayoutBuilder(
+                        builder: (context, imgConstraints) {
+                          final imgSize = imgConstraints.biggest;
+                          return MouseRegion(
+                            onHover: (event) =>
+                                _onHeroHover(event.localPosition, imgSize),
+                            onExit: (_) => _resetHeroParallax(),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Transform.scale(
+                                  scale: 1.06,
+                                  child: Transform.translate(
+                                    offset: _heroParallax,
+                                    child: Image.asset(
+                                      images[safeImageIndex],
 
-                      width: double.infinity,
-                      height: double.infinity,
+                                      width: double.infinity,
+                                      height: double.infinity,
 
-                      fit: BoxFit.cover,
+                                      fit: BoxFit.cover,
 
-                      errorBuilder:
-                          (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[100],
-                          child: const Center(
-                            child: Icon(
-                              Icons.directions_car,
-                              size: 90,
-                              color: Colors.grey,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          color: Colors.grey[100],
+                                          child: const Center(
+                                            child: Icon(
+                                              Icons.directions_car,
+                                              size: 90,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const Positioned.fill(
+                                  child: _FloatingParticles(),
+                                ),
+                              ],
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -322,13 +365,12 @@ final List<Map<String, String>> slideButtons = [
 
                         const SizedBox(height: 22),
 
-                        Text(
-                          widget.isArabic
+                        _TypewriterText(
+                          key: ValueKey('hero_title_$currentImage'),
+                          text: widget.isArabic
                               ? slideTexts[currentImage]['ar']!
                               : slideTexts[currentImage]['en']!,
-
                           textAlign: TextAlign.center,
-
                           style: const TextStyle(
                             fontSize: 26,
                             height: 1.3,
@@ -2486,4 +2528,175 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
       ),
     );
   }
+}
+
+// ============================================================
+// TYPEWRITER TEXT (تأثير كتابة تدريجية لعنوان الهيرو)
+// ============================================================
+class _TypewriterText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+  final TextAlign textAlign;
+
+  const _TypewriterText({
+    super.key,
+    required this.text,
+    required this.style,
+    this.textAlign = TextAlign.center,
+  });
+
+  @override
+  State<_TypewriterText> createState() => _TypewriterTextState();
+}
+
+class _TypewriterTextState extends State<_TypewriterText> {
+  String _visible = '';
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTyping();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTyping() {
+    var i = 0;
+    _timer = Timer.periodic(const Duration(milliseconds: 28), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      i++;
+      setState(() {
+        _visible = widget.text.substring(0, i.clamp(0, widget.text.length));
+      });
+      if (i >= widget.text.length) {
+        t.cancel();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // بنحجز مساحة النص كامل بشفافية صفر عشان الأسطر متقفزش وهي بتتكتب
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Opacity(
+          opacity: 0,
+          child: Text(
+            widget.text,
+            textAlign: widget.textAlign,
+            style: widget.style,
+          ),
+        ),
+        Text(
+          _visible,
+          textAlign: widget.textAlign,
+          style: widget.style,
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================
+// FLOATING PARTICLES (جسيمات ضوئية خفيفة فوق صورة الهيرو)
+// ============================================================
+class _FloatingParticles extends StatefulWidget {
+  const _FloatingParticles();
+
+  @override
+  State<_FloatingParticles> createState() => _FloatingParticlesState();
+}
+
+class _FloatingParticlesState extends State<_FloatingParticles>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  final List<_HeroParticle> _particles =
+      List.generate(16, (i) => _HeroParticle.random(i));
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 14),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          return CustomPaint(
+            painter: _HeroParticlesPainter(_particles, _controller.value),
+            size: Size.infinite,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _HeroParticle {
+  final double dx; // موقع أفقي نسبي 0..1
+  final double speed; // سرعة نسبية
+  final double size; // قطر الجسيم
+  final double phase; // إزاحة زمنية عشان الجسيمات متبقاش متزامنة
+
+  _HeroParticle({
+    required this.dx,
+    required this.speed,
+    required this.size,
+    required this.phase,
+  });
+
+  factory _HeroParticle.random(int seed) {
+    final rnd = math.Random(seed * 97 + 13);
+    return _HeroParticle(
+      dx: rnd.nextDouble(),
+      speed: 0.4 + rnd.nextDouble() * 0.9,
+      size: 1.5 + rnd.nextDouble() * 2.5,
+      phase: rnd.nextDouble(),
+    );
+  }
+}
+
+class _HeroParticlesPainter extends CustomPainter {
+  final List<_HeroParticle> particles;
+  final double t;
+
+  _HeroParticlesPainter(this.particles, this.t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    for (final p in particles) {
+      final progress = (t * p.speed + p.phase) % 1.0;
+      final y = size.height * (1 - progress);
+      final x = size.width * p.dx +
+          math.sin(progress * 2 * math.pi) * 10;
+      final fade = math.sin(progress * math.pi).clamp(0.0, 1.0);
+      paint.color = Colors.white.withValues(alpha: 0.5 * fade);
+      canvas.drawCircle(Offset(x, y), p.size, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _HeroParticlesPainter oldDelegate) => true;
 }
