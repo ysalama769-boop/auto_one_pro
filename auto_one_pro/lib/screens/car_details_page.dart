@@ -11,6 +11,7 @@ import '../shared/repository.dart';
 import '../shared/favorites_compare.dart';
 import '../shared/widgets.dart';
 import '../screens/car_booking_page.dart';
+import '../screens/comparison_page.dart';
 
 // ============================================================
 // FULLSCREEN GALLERY (LIGHTBOX)
@@ -1155,12 +1156,16 @@ class FinancingCalculatorCard extends StatefulWidget {
 class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
   double downPaymentPercent = 20;
   int months = 36;
+  double finalPaymentPercent = 40;
 
-  static const List<int> monthOptions = [12, 24, 36, 48, 60];
+  static const List<int> monthOptions = [24, 36, 48, 60];
+  static const List<double> finalPaymentOptions = [35, 40, 45];
 
+  // سعر التمويل بيبقى أعلى من سعر الكاش بمبلغ ثابت (4000 ريال)
   double get _carPrice {
     final digitsOnly = widget.price.replaceAll(RegExp(r'[^0-9.]'), '');
-    return double.tryParse(digitsOnly) ?? 0;
+    final cashPrice = double.tryParse(digitsOnly) ?? 0;
+    return cashPrice + 4000;
   }
 
   @override
@@ -1170,11 +1175,19 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
     final downPayment = price * (downPaymentPercent / 100);
     final financedAmount = price - downPayment;
 
-    // نسبة تمويل تقديرية بسيطة (مش عرض بنكي حقيقي)
-    const yearlyRate = 0.0399;
+    // نسبة الربح والتأمين السنوية (تقديرية، مش عرض بنكي حقيقي)
+    const profitRate = 0.05;
+    const insuranceRate = 0.04;
     final years = months / 12;
-    final totalWithProfit = financedAmount * (1 + (yearlyRate * years));
-    final monthlyInstallment = months > 0 ? totalWithProfit / months : 0;
+    final totalWithFees =
+        financedAmount * (1 + ((profitRate + insuranceRate) * years));
+
+    // الدفعة الأخيرة بتتحسب كنسبة من سعر السيارة، وبتتخصم من
+    // إجمالي المبلغ قبل ما نقسمه على عدد الشهور
+    final finalPaymentAmount = price * (finalPaymentPercent / 100);
+    final amountToInstall =
+        (totalWithFees - finalPaymentAmount).clamp(0, double.infinity);
+    final monthlyInstallment = months > 0 ? amountToInstall / months : 0;
 
     return Container(
       width: double.infinity,
@@ -1239,8 +1252,8 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
             child: Slider(
               value: downPaymentPercent,
               min: 0,
-              max: 80,
-              divisions: 16,
+              max: 50,
+              divisions: 10,
               onChanged: (value) {
                 setState(() => downPaymentPercent = value);
               },
@@ -1272,6 +1285,35 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
                 selectedColor: Colors.red,
                 backgroundColor: Colors.black.withValues(alpha: 0.05),
                 onSelected: (_) => setState(() => months = m),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 14),
+
+          // الدفعة الأخيرة
+          Text(
+            isArabic ? 'الدفعة الأخيرة' : 'Final payment',
+            style: const TextStyle(color: Colors.black54, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: finalPaymentOptions.map((p) {
+              final selected = p == finalPaymentPercent;
+              return ChoiceChip(
+                label: Text(
+                  '${p.round()}%',
+                  style: TextStyle(
+                    color: selected ? Colors.black87 : Colors.black54,
+                    fontSize: 12,
+                  ),
+                ),
+                selected: selected,
+                selectedColor: Colors.red,
+                backgroundColor: Colors.black.withValues(alpha: 0.05),
+                onSelected: (_) => setState(() => finalPaymentPercent = p),
               );
             }).toList(),
           ),
@@ -1325,6 +1367,7 @@ class _FinancingCalculatorCardState extends State<FinancingCalculatorCard> {
     );
   }
 }
+
 
 
 class CarDetailsPage extends StatefulWidget {
@@ -2146,15 +2189,11 @@ LayoutBuilder(
             InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () {
-                if (car.id != null) toggleCompare(car.id!);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      isArabic
-                          ? 'اتضافت للمقارنة'
-                          : 'Added to comparison',
-                    ),
-                  ),
+                if (car.id != null && !compareCarIds.value.contains(car.id)) {
+                  toggleCompare(car.id!);
+                }
+                Navigator.of(context).push(
+                  smoothRoute(ComparisonPage(isArabic: isArabic)),
                 );
               },
               child: Container(
@@ -2169,27 +2208,6 @@ LayoutBuilder(
                 child: const Icon(
                   Icons.compare_arrows_rounded,
                   color: Colors.amber,
-                ),
-              ),
-            ),
-
-            const SizedBox(width: 10),
-
-            InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => _submitFinancingRequest(context, car, isArabic),
-              child: Container(
-                width: 46,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.black12),
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet_outlined,
-                  color: Colors.black87,
                 ),
               ),
             ),
@@ -2832,6 +2850,23 @@ Container(
       FinancingCalculatorCard(
         price: car.price,
         isArabic: isArabic,
+      ),
+      const SizedBox(height: 12),
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () => _submitFinancingRequest(context, car, isArabic),
+          icon: const Icon(Icons.account_balance_wallet_outlined),
+          label: Text(isArabic ? 'اطلب تمويل لهذه السيارة' : 'Request financing for this car'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.red,
+            side: const BorderSide(color: Colors.red),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
       ),
     ],
   ),
