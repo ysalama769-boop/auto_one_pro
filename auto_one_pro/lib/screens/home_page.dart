@@ -204,116 +204,74 @@ final List<Map<String, String>> slideButtons = [
     return SingleChildScrollView(
       child: Column(
         children: [
-          const SizedBox(height: 35),
-
           // ====================================================
-          // CAROUSEL
+          // HERO (فيديو/صورة full-width بتملا الشاشة)
           // ====================================================
 
-        LayoutBuilder(
-    builder: (context, constraints) {
-      final isSmall = constraints.maxWidth < 850;
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final isSmall = width < 850;
+              final screenHeight = MediaQuery.of(context).size.height;
+              final heroHeight =
+                  (screenHeight - 75).clamp(420.0, 760.0);
 
-      return GestureDetector(
-        onHorizontalDragEnd: (details) {
-          final velocity = details.primaryVelocity ?? 0;
-
-          if (velocity < -100) {
-            nextImage();
-          } else if (velocity > 100) {
-            previousImage();
-          }
-        },
-
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 550),
-
-          transitionBuilder: (child, animation) {
-            final curved = CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            );
-
-            return FadeTransition(
-              opacity: curved,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.08, 0),
-                  end: Offset.zero,
-                ).animate(curved),
-                child: child,
-              ),
-            );
-          },
-
-          child: Container(
-            key: ValueKey(images[safeImageIndex]),
-            width: double.infinity,
-
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 20,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-
-            clipBehavior: Clip.antiAlias,
-
-            child: Flex(
-              direction: isSmall
-                  ? Axis.vertical
-                  : Axis.horizontal,
-
-              children: [
-
-                // =================================================
-                // الصورة
-                // =================================================
-
-                Expanded(
-                  flex: isSmall ? 0 : 7,
-
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: isSmall ? 350 : 600,
-
-                    child: ClipRect(
-                      child: LayoutBuilder(
-                        builder: (context, imgConstraints) {
-                          final imgSize = imgConstraints.biggest;
-                          return MouseRegion(
-                            onHover: (event) =>
-                                _onHeroHover(event.localPosition, imgSize),
-                            onExit: (_) => _resetHeroParallax(),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Transform.scale(
+              return GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  final velocity = details.primaryVelocity ?? 0;
+                  if (velocity < -100) {
+                    nextImage();
+                  } else if (velocity > 100) {
+                    previousImage();
+                  }
+                },
+                child: SizedBox(
+                  width: double.infinity,
+                  height: heroHeight,
+                  child: ClipRect(
+                    child: LayoutBuilder(
+                      builder: (context, imgConstraints) {
+                        final imgSize = imgConstraints.biggest;
+                        return MouseRegion(
+                          onHover: (event) => _onHeroHover(
+                            event.localPosition,
+                            imgSize,
+                          ),
+                          onExit: (_) => _resetHeroParallax(),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // =====================================
+                              // الصورة (بتتغيّر بفيد ناعم + parallax)
+                              // =====================================
+                              AnimatedSwitcher(
+                                duration:
+                                    const Duration(milliseconds: 700),
+                                transitionBuilder: (child, animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: child,
+                                  );
+                                },
+                                child: Transform.scale(
+                                  key: ValueKey(images[safeImageIndex]),
                                   scale: 1.06,
                                   child: Transform.translate(
                                     offset: _heroParallax,
                                     child: Image.asset(
                                       images[safeImageIndex],
-
                                       width: double.infinity,
                                       height: double.infinity,
-
                                       fit: BoxFit.cover,
-
                                       errorBuilder:
                                           (context, error, stackTrace) {
                                         return Container(
-                                          color: Colors.grey[100],
+                                          color: Colors.grey[850],
                                           child: const Center(
                                             child: Icon(
                                               Icons.directions_car,
-                                              size: 90,
-                                              color: Colors.grey,
+                                              size: 100,
+                                              color: Colors.white24,
                                             ),
                                           ),
                                         );
@@ -321,158 +279,231 @@ final List<Map<String, String>> slideButtons = [
                                     ),
                                   ),
                                 ),
-                                const Positioned.fill(
-                                  child: _FloatingParticles(),
+                              ),
+
+                              // جسيمات ضوئية خفيفة
+                              const Positioned.fill(
+                                child: _FloatingParticles(),
+                              ),
+
+                              // تعتيم تدريجي عشان النص يبان بوضوح
+                              const Positioned.fill(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color.fromRGBO(0, 0, 0, 0.10),
+                                        Color.fromRGBO(0, 0, 0, 0.30),
+                                        Color.fromRGBO(0, 0, 0, 0.78),
+                                      ],
+                                      stops: [0.0, 0.55, 1.0],
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // اللوجو أعلى الهيرو
+                              Positioned(
+                                top: 24,
+                                left: 0,
+                                right: 0,
+                                child: Center(
+                                  child: Opacity(
+                                    opacity: 0.92,
+                                    child: Image.asset(
+                                      'assets/logo-autoone.png',
+                                      width: isSmall ? 110 : 150,
+                                      height: isSmall ? 40 : 54,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // =====================================
+                              // العنوان + الوصف + زرار الدعوة للإجراء
+                              // =====================================
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: isSmall ? 92 : 122,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isSmall ? 24 : 70,
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _TypewriterText(
+                                        key: ValueKey(
+                                          'hero_title_$currentImage',
+                                        ),
+                                        text: widget.isArabic
+                                            ? slideTexts[currentImage]
+                                                ['ar']!
+                                            : slideTexts[currentImage]
+                                                ['en']!,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: isSmall ? 28 : 46,
+                                          height: 1.25,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          shadows: const [
+                                            Shadow(
+                                              color: Colors.black45,
+                                              blurRadius: 16,
+                                              offset: Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 14),
+
+                                      Text(
+                                        widget.isArabic
+                                            ? slideDescriptions[
+                                                currentImage]['ar']!
+                                            : slideDescriptions[
+                                                currentImage]['en']!,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: isSmall ? 14 : 17,
+                                          color: Colors.white
+                                              .withValues(alpha: 0.9),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 26),
+
+                                      ElevatedButton(
+                                        onPressed: () =>
+                                            widget.onOpenCars(null),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red,
+                                          foregroundColor: Colors.white,
+                                          padding:
+                                              const EdgeInsets.symmetric(
+                                            horizontal: 32,
+                                            vertical: 16,
+                                          ),
+                                          shape:
+                                              RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(
+                                              30,
+                                            ),
+                                          ),
+                                          elevation: 6,
+                                        ),
+                                        child: Text(
+                                          widget.isArabic
+                                              ? slideButtons[
+                                                  currentImage]['ar']!
+                                              : slideButtons[
+                                                  currentImage]['en']!,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              // أسهم التنقل يمين وشمال (ديسكتوب بس)
+                              if (!isSmall) ...[
+                                Positioned(
+                                  left: 20,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Center(
+                                    child: Transform.scale(
+                                      scale: 0.9,
+                                      child: CarouselArrow(
+                                        icon: Icons.arrow_back_ios_new,
+                                        onTap: previousImage,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 20,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Center(
+                                    child: Transform.scale(
+                                      scale: 0.9,
+                                      child: CarouselArrow(
+                                        icon: Icons.arrow_forward_ios,
+                                        onTap: nextImage,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
-                            ),
-                          );
-                        },
-                      ),
+
+                              // نقط التنقل أسفل الهيرو
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 28,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: List.generate(
+                                    images.length,
+                                    (index) {
+                                      final isActive =
+                                          index == currentImage;
+                                      return GestureDetector(
+                                        onTap: () => setState(
+                                          () => currentImage = index,
+                                        ),
+                                        child: AnimatedContainer(
+                                          duration: const Duration(
+                                            milliseconds: 250,
+                                          ),
+                                          margin:
+                                              const EdgeInsets.symmetric(
+                                            horizontal: 4,
+                                          ),
+                                          width: isActive ? 28 : 9,
+                                          height: 9,
+                                          decoration: BoxDecoration(
+                                            color: isActive
+                                                ? Colors.red
+                                                : Colors.white
+                                                    .withValues(
+                                                        alpha: 0.6),
+                                            borderRadius:
+                                                BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
-
-                // =================================================
-                // الجانب الأبيض + اللوجو
-                // =================================================
-
-                Expanded(
-                  flex: isSmall ? 0 : 4,
-
-                  child: Container(
-                    width: double.infinity,
-                    color: Colors.white,
-
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 25,
-                    ),
-
-                    child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
-
-                      children: [
-
-                        // اللوجو الحقيقي (بقى أكبر شوية)
-                       Image.asset(
-  'assets/logo-autoone.png',
-  width: isSmall ? 160 : 200,
-  height: isSmall ? 92 : 112,
-  fit: BoxFit.contain,
-),
-
-                        const SizedBox(height: 22),
-
-                        _TypewriterText(
-                          key: ValueKey('hero_title_$currentImage'),
-                          text: widget.isArabic
-                              ? slideTexts[currentImage]['ar']!
-                              : slideTexts[currentImage]['en']!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 26,
-                            height: 1.3,
-                            fontWeight: FontWeight.w900,
-                            color: Color.fromARGB(255, 149, 138, 138),
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        Container(
-                          height: 4,
-                          width: 80,
-
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent,
-                            borderRadius:
-                                BorderRadius.circular(20),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  ),
-
-          
-          const SizedBox(height: 25),
-
-          // ====================================================
-          // ARROWS
-          // ====================================================
-
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
-
-            children: [
-             Transform.scale(
-  scale: 0.7,
-  child: CarouselArrow(
-    icon: Icons.arrow_back_ios_new,
-    onTap: previousImage,
-  ),
-),
-
-Transform.scale(
-  scale: 0.7,
-  child: CarouselArrow(
-    icon: Icons.arrow_forward_ios,
-    onTap: nextImage,
-  ),
-),
-
-const SizedBox(width: 8),
-
-Text(
-  '${safeImageIndex + 1} / ${images.length}',
-  style: const TextStyle(
-    fontWeight: FontWeight.bold,
-    color: Colors.grey,
-  ),
-),
-
-const SizedBox(width: 8),
-
-
-            ],
+              );
+            },
           ),
 
-          const SizedBox(height: 18),
-
-Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: List.generate(
-    images.length,
-    (index) {
-      final isActive = index == currentImage;
-
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        margin: const EdgeInsets.symmetric(
-          horizontal: 4,
-        ),
-        width: isActive ? 24 : 8,
-        height: 8,
-        decoration: BoxDecoration(
-          color: isActive
-              ? Colors.red
-              : Colors.black26,
-          borderRadius: BorderRadius.circular(20),
-        ),
-      );
-    },
-  ),
-),
 BrandStrip(
   isArabic: widget.isArabic,
   onBrandTap: (brand) {
