@@ -2072,45 +2072,42 @@ class _FinancingPartnersCarouselState
                                   : p['name_en'].toString());
 
                           return Expanded(
-                            child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 18,
-                              horizontal: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.black.withValues(alpha: 0.06),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                SizedBox(
-                                  height: 56,
-                                  width: 90,
+                                Container(
+                                  width: 84,
+                                  height: 84,
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.white,
+                                        Color(0xfffafafa),
+                                      ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color:
+                                            Colors.red.withValues(alpha: 0.25),
+                                        blurRadius: 20,
+                                        spreadRadius: 1,
+                                      ),
+                                      const BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
                                   child: logo.isEmpty
-                                      ? Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.red
-                                                .withValues(alpha: 0.06),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: const Icon(
-                                            Icons.account_balance_rounded,
-                                            color: Colors.red,
-                                            size: 28,
-                                          ),
+                                      ? const Icon(
+                                          Icons.account_balance_rounded,
+                                          color: Colors.red,
+                                          size: 28,
                                         )
                                       : carImageAdaptive(
                                           logo,
@@ -2118,7 +2115,7 @@ class _FinancingPartnersCarouselState
                                           showWatermark: false,
                                         ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 10),
                                 Text(
                                   name,
                                   textAlign: TextAlign.center,
@@ -2131,7 +2128,6 @@ class _FinancingPartnersCarouselState
                                   ),
                                 ),
                               ],
-                            ),
                             ),
                           );
                         }).toList(),
@@ -2282,12 +2278,18 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: Colors.grey.withValues(alpha: 0.35),
+            blurRadius: 26,
+            spreadRadius: 1,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Colors.grey.shade300.withValues(alpha: 0.4),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -2402,9 +2404,9 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
           const SizedBox(height: 30),
           LayoutBuilder(
             builder: (context, constraints) {
-              final perPage = constraints.maxWidth >= 700 ? 4 : 2;
+              final perPage = constraints.maxWidth >= 700 ? 4 : 1;
               final pageCount = (reviews.length / perPage).ceil();
-              final cardAreaHeight = perPage == 2 ? 230.0 : 190.0;
+              final cardAreaHeight = perPage == 4 ? 190.0 : 210.0;
 
               return Column(
                 children: [
