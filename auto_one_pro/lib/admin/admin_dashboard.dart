@@ -40,6 +40,58 @@ class _AdminTabDef {
 }
 
 
+// ============================================================
+// ADMIN SECTION SCAFFOLD (صفحة منفصلة لكل قسم — رجوع + داشبورد)
+// ============================================================
+class _AdminSectionScaffold extends StatelessWidget {
+  final bool isArabic;
+  final String title;
+  final Widget body;
+
+  const _AdminSectionScaffold({
+    required this.isArabic,
+    required this.title,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: const Color(0xfff5f5f5),
+        appBar: AppBar(
+          backgroundColor: kHeaderColor,
+          foregroundColor: kHeaderTextColor,
+          title: Text(title),
+          leading: IconButton(
+            icon: Icon(
+              isArabic
+                  ? Icons.arrow_forward_rounded
+                  : Icons.arrow_back_rounded,
+            ),
+            tooltip: isArabic ? 'رجوع' : 'Back',
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () =>
+                  Navigator.of(context).popUntil((route) => route.isFirst),
+              icon: const Icon(Icons.dashboard_rounded, color: Colors.white),
+              label: Text(
+                isArabic ? 'الداشبورد' : 'Dashboard',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: body,
+      ),
+    );
+  }
+}
+
 class AdminDashboard extends StatefulWidget {
   final bool isArabic;
 
@@ -51,7 +103,6 @@ class AdminDashboard extends StatefulWidget {
 
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  int currentTab = 0;
   final Map<int, Widget> _builtTabPages = {};
 
   bool isLoadingStats = true;
@@ -197,47 +248,43 @@ class _AdminDashboardState extends State<AdminDashboard> {
     required Color color,
   }) {
     return Container(
-      width: 150,
-      padding: const EdgeInsets.all(14),
+      width: 160,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
-        ],
+        border: Border(top: BorderSide(color: color, width: 3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: Icon(icon, color: color, size: 18),
+          Row(
+            children: [
+              Icon(icon, color: color, size: 15),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: Colors.white60,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 18,
+            style: TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.w900,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.black54,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -348,56 +395,111 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
 
-            Container(
-              color: kHeaderColor,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (var i = 0; i < _visibleTabs().length; i++) ...[
-                      if (i > 0) const SizedBox(width: 10),
-                      SizedBox(
-                        width: _visibleTabs()[i].width,
-                        child: _adminTabButton(
-                          label: _visibleTabs()[i].label,
-                          icon: _visibleTabs()[i].icon,
-                          selected: currentTab == i,
-                          onTap: () => setState(() => currentTab = i),
-                          badgeCount: _visibleTabs()[i].badgeCount,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
             Expanded(
               child: Builder(
                 builder: (context) {
                   final tabs = _visibleTabs();
-                  // بنبني صفحة التاب بس أول مرة يتفتح، وبعدين بتفضل
-                  // محفوظة في الكاش عشان التنقل بين التابات يبقى فوري
-                  // من غير ما نعيد تحميل البيانات من Supabase تاني.
-                  if (currentTab < tabs.length &&
-                      !_builtTabPages.containsKey(currentTab)) {
-                    _builtTabPages[currentTab] =
-                        tabs[currentTab].pageBuilder();
-                  }
-                  return IndexedStack(
-                    index: currentTab,
-                    children: [
-                      for (var i = 0; i < tabs.length; i++)
-                        _builtTabPages[i] ?? const SizedBox.shrink(),
-                    ],
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 220,
+                      mainAxisSpacing: 14,
+                      crossAxisSpacing: 14,
+                      childAspectRatio: 1.15,
+                    ),
+                    itemCount: tabs.length,
+                    itemBuilder: (context, i) {
+                      final tab = tabs[i];
+                      return _sectionCard(
+                        label: tab.label,
+                        icon: tab.icon,
+                        badgeCount: tab.badgeCount,
+                        onTap: () => _openSection(i),
+                      );
+                    },
                   );
                 },
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionCard({
+    required String label,
+    required IconData icon,
+    required int badgeCount,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 1,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(icon, color: Colors.red, size: 26),
+                  ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      top: -6,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 20),
+                        child: Text(
+                          badgeCount > 99 ? '99+' : '$badgeCount',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13.5,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -409,8 +511,27 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final tabs = _visibleTabs();
     final index = tabs.indexWhere((t) => t.id == id);
     if (index != -1) {
-      setState(() => currentTab = index);
+      _openSection(index);
     }
+  }
+
+  // بيفتح قسم معيّن كصفحة منفصلة، فيها زرار "رجوع" (بيرجع خطوة)
+  // وزرار "الداشبورد" (بيرجع على طول للصفحة الرئيسية للوحة التحكم).
+  void _openSection(int index) {
+    final tabs = _visibleTabs();
+    if (index < 0 || index >= tabs.length) return;
+    if (!_builtTabPages.containsKey(index)) {
+      _builtTabPages[index] = tabs[index].pageBuilder();
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _AdminSectionScaffold(
+          isArabic: isArabic,
+          title: tabs[index].label,
+          body: _builtTabPages[index]!,
+        ),
+      ),
+    );
   }
 
   Widget _notificationsBell() {
@@ -597,70 +718,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     ];
 
     return all.where((t) => t.roles.contains(role)).toList();
-  }
-
-  Widget _adminTabButton({
-    required String label,
-    required IconData icon,
-    required bool selected,
-    required VoidCallback onTap,
-    int badgeCount = 0,
-  }) {
-    return HoverLift(
-      scale: 1.02,
-      borderRadius: BorderRadius.circular(10),
-      child: Material(
-        color: selected ? Colors.red : Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  color: selected ? Colors.white : Colors.black87,
-                  size: 18,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: selected ? Colors.white : Colors.black87,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-                if (badgeCount > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: selected ? Colors.white : Colors.red,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '$badgeCount',
-                      style: TextStyle(
-                        color: selected ? Colors.red : Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 
