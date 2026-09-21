@@ -19,6 +19,7 @@ import '../screens/brands_page.dart';
 import '../screens/auth_page.dart';
 import '../screens/my_requests_page.dart';
 import '../screens/notifications_page.dart';
+import '../screens/settings_page.dart';
 import 'auth.dart';
 
 // ============================================================
@@ -486,6 +487,16 @@ InkWell(
         ),
         onSelected: (value) {
           switch (value) {
+            case 'settings':
+              Navigator.of(context).push(
+                smoothRoute(
+                  SettingsPage(
+                    isArabic: isArabic,
+                    onLanguageChanged: onLanguage,
+                  ),
+                ),
+              );
+              break;
             case 'requests':
               Navigator.of(context).push(
                 smoothRoute(MyRequestsPage(isArabic: isArabic)),
@@ -508,6 +519,10 @@ InkWell(
           PopupMenuItem(
             value: 'requests',
             child: Text(isArabic ? 'طلباتي' : 'My Requests'),
+          ),
+          PopupMenuItem(
+            value: 'settings',
+            child: Text(isArabic ? 'الإعدادات' : 'Settings'),
           ),
           PopupMenuItem(
             value: 'logout',
@@ -642,6 +657,16 @@ if (isMobile)
         case 'requests':
           Navigator.of(context).push(
             smoothRoute(MyRequestsPage(isArabic: isArabic)),
+          );
+          break;
+        case 'settings':
+          Navigator.of(context).push(
+            smoothRoute(
+              SettingsPage(
+                isArabic: isArabic,
+                onLanguageChanged: onLanguage,
+              ),
+            ),
           );
           break;
         case 'notifications':
@@ -785,6 +810,12 @@ if (isMobile)
           value: 'requests',
           child: Text(
             isArabic ? 'طلباتي' : 'My Requests',
+          ),
+        ),
+        PopupMenuItem(
+          value: 'settings',
+          child: Text(
+            isArabic ? 'الإعدادات' : 'Settings',
           ),
         ),
         PopupMenuItem(
