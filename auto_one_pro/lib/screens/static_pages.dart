@@ -286,7 +286,7 @@ class AboutAutoOnePage extends StatelessWidget {
               ),
 
               // ====================================================
-              // الماركات الحصرية (لو موجودة)
+              // الماركات الحصرية (لو موجودة) — شكل شجري متعرّج
               // ====================================================
               if (brandPartners.isNotEmpty)
                 Padding(
@@ -305,49 +305,7 @@ class AboutAutoOnePage extends StatelessWidget {
                                 : 'Exclusive distributors for leading global brands',
                           ),
                           const SizedBox(height: 30),
-                          Wrap(
-                            spacing: 16,
-                            runSpacing: 16,
-                            alignment: WrapAlignment.center,
-                            children: brandPartners.map((text) {
-                              return Container(
-                                width: 320,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 18,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border(
-                                    left: isArabic
-                                        ? BorderSide.none
-                                        : const BorderSide(
-                                            color: Colors.red, width: 4),
-                                    right: isArabic
-                                        ? const BorderSide(
-                                            color: Colors.red, width: 4)
-                                        : BorderSide.none,
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.black12,
-                                      blurRadius: 10,
-                                      offset: Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  text,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
+                          _BrandPartnersTree(items: brandPartners),
                         ],
                       ),
                     ),
@@ -794,6 +752,150 @@ class AboutAutoOnePage extends StatelessWidget {
       'Purchase procedures are completed',
     ];
     return defaults[i];
+  }
+}
+
+// ============================================================
+// BRAND PARTNERS TREE (شكل شجري متعرّج للماركات الحصرية)
+// ============================================================
+class _BrandPartnersTree extends StatelessWidget {
+  final List<String> items;
+
+  const _BrandPartnersTree({required this.items});
+
+  static const double _boxWidth = 340;
+  static const double _rowHeight = 110;
+  static const double _centerWidth = 70;
+
+  Widget _card(String text) {
+    return Container(
+      width: _boxWidth,
+      constraints: const BoxConstraints(minHeight: 60),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.red.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(height: 3, width: 60, color: Colors.red),
+        ],
+      ),
+    );
+  }
+
+  Widget _spine(bool isRight, bool isFirst, bool isLast) {
+    return SizedBox(
+      width: _centerWidth,
+      height: _rowHeight,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // الخط الرأسي المستمر عبر كل الصفوف
+          Positioned(
+            top: isFirst ? _rowHeight / 2 : 0,
+            bottom: isLast ? _rowHeight / 2 : 0,
+            child: Container(width: 2, color: Colors.red.shade200),
+          ),
+          // الخط الأفقي القصير اللي بيوصل للكارت
+          Align(
+            alignment:
+                isRight ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              width: _centerWidth / 2,
+              height: 2,
+              color: Colors.red.shade300,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final treeWidth = _boxWidth * 2 + _centerWidth;
+        final isSmall = constraints.maxWidth < treeWidth + 20;
+
+        if (isSmall) {
+          // على الموبايل: قايمة بسيطة بدل الشكل الشجري
+          return Column(
+            children: items
+                .map(
+                  (text) => Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: _card(text),
+                  ),
+                )
+                .toList(),
+          );
+        }
+
+        return Center(
+          child: SizedBox(
+            width: treeWidth,
+            child: Column(
+              children: List.generate(items.length, (i) {
+                final isRight = i.isEven;
+                final isFirst = i == 0;
+                final isLast = i == items.length - 1;
+                final card = _card(items[i]);
+
+                return SizedBox(
+                  height: _rowHeight,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: _boxWidth,
+                        child: isRight
+                            ? null
+                            : Align(
+                                alignment: Alignment.centerLeft,
+                                child: card,
+                              ),
+                      ),
+                      _spine(isRight, isFirst, isLast),
+                      SizedBox(
+                        width: _boxWidth,
+                        child: isRight
+                            ? Align(
+                                alignment: Alignment.centerRight,
+                                child: card,
+                              )
+                            : null,
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
