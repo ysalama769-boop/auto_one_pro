@@ -1207,7 +1207,8 @@ class BrandStrip extends StatefulWidget {
 }
 
 
-class _BrandStripState extends State<BrandStrip> {
+class _BrandStripState extends State<BrandStrip>
+    with SingleTickerProviderStateMixin {
   // القايمة الثابتة القديمة، بتستخدم كـ fallback بس لو حصلت مشكلة
   // في تحميل الماركات من قاعدة البيانات (زي مشكلة في الشبكة)
   static const Map<String, String> _fallbackBrandLogos = {
@@ -1228,31 +1229,74 @@ class _BrandStripState extends State<BrandStrip> {
 
   List<Map<String, String>> brandItems = [];
   bool isLoading = true;
-  final ScrollController _brandsScrollController = ScrollController();
+
+  final ScrollController _scrollController = ScrollController();
+  Ticker? _ticker;
+  Duration _lastElapsed = Duration.zero;
+  double _offset = 0;
+  bool _isPaused = false;
+
+  static const double _itemWidth = 128;
+  static const double _speed = 40; // بكسل في الثانية
 
   @override
   void initState() {
     super.initState();
     _loadBrands();
+    _ticker = createTicker(_onTick)..start();
   }
 
   @override
   void dispose() {
-    _brandsScrollController.dispose();
+    _ticker?.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _scrollBy(ScrollController controller, double delta) {
-    if (!controller.hasClients) return;
-    final target = (controller.offset + delta).clamp(
-      0.0,
-      controller.position.maxScrollExtent,
-    );
-    controller.animateTo(
+  void _onTick(Duration elapsed) {
+    if (!_scrollController.hasClients || brandItems.isEmpty) {
+      _lastElapsed = elapsed;
+      return;
+    }
+    if (_lastElapsed == Duration.zero) {
+      _lastElapsed = elapsed;
+      return;
+    }
+    final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0;
+    _lastElapsed = elapsed;
+    if (_isPaused || dt <= 0) return;
+
+    final oneSetWidth = _itemWidth * brandItems.length;
+    if (oneSetWidth <= 0) return;
+
+    _offset += _speed * dt;
+    if (_offset >= oneSetWidth) {
+      _offset -= oneSetWidth;
+    }
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(_offset);
+    }
+  }
+
+  // بيحرّك الشريط يدويًا لما حد يدوس على أي سهم، وبيوقف اللف
+  // التلقائي مؤقتًا لحد ما الحركة تخلص عشان مايحصلش تعارض.
+  void _scrollByArrow(double delta) {
+    if (!_scrollController.hasClients || brandItems.isEmpty) return;
+    _isPaused = true;
+    final maxExtent = _scrollController.position.maxScrollExtent;
+    final target = (_scrollController.offset + delta).clamp(0.0, maxExtent);
+    _scrollController
+        .animateTo(
       target,
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeOut,
-    );
+    )
+        .then((_) {
+      if (!mounted) return;
+      final oneSetWidth = _itemWidth * brandItems.length;
+      _offset = oneSetWidth > 0 ? _scrollController.offset % oneSetWidth : 0;
+      _isPaused = false;
+    });
   }
 
   Future<void> _loadBrands() async {
@@ -1304,6 +1348,83 @@ class _BrandStripState extends State<BrandStrip> {
     });
   }
 
+  Widget _buildBrandItem(Map<String, String> item) {
+    final label = item['label']!;
+    final matchKey = item['matchKey']!;
+    final logo = item['logo']!;
+
+    return SizedBox(
+      width: _itemWidth,
+      child: HoverLift(
+        borderRadius: BorderRadius.circular(100),
+        child: InkWell(
+          onTap: () => widget.onBrandTap(matchKey),
+          borderRadius: BorderRadius.circular(100),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 92,
+                height: 92,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.white, Color(0xfffafafa)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withValues(alpha: 0.28),
+                      blurRadius: 22,
+                      spreadRadius: 1,
+                    ),
+                    const BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: logo.isEmpty
+                    ? const Icon(
+                        Icons.directions_car_filled_rounded,
+                        size: 34,
+                        color: Colors.red,
+                      )
+                    : carImageAdaptive(
+                        logo,
+                        fit: BoxFit.contain,
+                        showWatermark: false,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.directions_car_filled_rounded,
+                            size: 34,
+                            color: Colors.red,
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isArabic = widget.isArabic;
@@ -1316,6 +1437,11 @@ class _BrandStripState extends State<BrandStrip> {
         ),
       );
     }
+
+    if (brandItems.isEmpty) return const SizedBox.shrink();
+
+    // بنكرر القايمة عشان اللفة تبقى متصلة من غير قفشة.
+    final loopItems = [...brandItems, ...brandItems];
 
     return Container(
       width: double.infinity,
@@ -1356,101 +1482,63 @@ class _BrandStripState extends State<BrandStrip> {
           Stack(
             alignment: Alignment.center,
             children: [
-              styledHorizontalScrollbar(
-            controller: _brandsScrollController,
-            child: SingleChildScrollView(
-              controller: _brandsScrollController,
-              scrollDirection: Axis.horizontal,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: Row(
-              children: brandItems.map((item) {
-                final label = item['label']!;
-                final matchKey = item['matchKey']!;
-                final logo = item['logo']!;
-
-                return Padding(
-                  padding: const EdgeInsetsDirectional.only(
-                    end: 18,
-                  ),
-                  child: HoverLift(
-                    borderRadius: BorderRadius.circular(100),
-                    child: InkWell(
-                    onTap: () => widget.onBrandTap(matchKey),
-                    borderRadius: BorderRadius.circular(100),
-                    child: SizedBox(
-                      width: 110,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 92,
-                            height: 92,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [Colors.white, Color(0xfffafafa)],
+              SizedBox(
+                height: 164,
+                child: MouseRegion(
+                  onEnter: (_) => _isPaused = true,
+                  onExit: (_) => _isPaused = false,
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification is ScrollStartNotification) {
+                        _isPaused = true;
+                      } else if (notification is ScrollEndNotification) {
+                        final oneSetWidth = _itemWidth * brandItems.length;
+                        if (oneSetWidth > 0 &&
+                            _scrollController.hasClients) {
+                          _offset = _scrollController.offset % oneSetWidth;
+                        }
+                        _isPaused = false;
+                      }
+                      return false;
+                    },
+                    child: styledHorizontalScrollbar(
+                      controller: _scrollController,
+                      child: ShaderMask(
+                        shaderCallback: (bounds) {
+                          return const LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black,
+                              Colors.black,
+                              Colors.transparent,
+                            ],
+                            stops: [0.0, 0.06, 0.94, 1.0],
+                          ).createShader(bounds);
+                        },
+                        blendMode: BlendMode.dstIn,
+                        child: Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: SingleChildScrollView(
+                            controller: _scrollController,
+                            scrollDirection: Axis.horizontal,
+                            physics: const NeverScrollableScrollPhysics(),
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 14),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: loopItems
+                                    .map((p) => _buildBrandItem(p))
+                                    .toList(),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.red.withValues(alpha: 0.28),
-                                  blurRadius: 22,
-                                  spreadRadius: 1,
-                                ),
-                                const BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 8,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: logo.isEmpty
-                                ? const Icon(
-                                    Icons.directions_car_filled_rounded,
-                                    size: 34,
-                                    color: Colors.red,
-                                  )
-                                : carImageAdaptive(
-                                    logo,
-                                    fit: BoxFit.contain,
-                                    showWatermark: false,
-                                    errorBuilder:
-                                        (context, error, stackTrace) {
-                                      return const Icon(
-                                        Icons.directions_car_filled_rounded,
-                                        size: 34,
-                                        color: Colors.red,
-                                      );
-                                    },
-                                  ),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          Text(
-                            label,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.black87,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                  ),
-                );
-              }).toList(),
                 ),
-              ),
-            ),
               ),
               Positioned(
                 right: 0,
@@ -1459,7 +1547,7 @@ class _BrandStripState extends State<BrandStrip> {
                   scale: 0.5,
                   child: CarouselArrow(
                     icon: Icons.arrow_back_ios_new,
-                    onTap: () => _scrollBy(_brandsScrollController, 320),
+                    onTap: () => _scrollByArrow(320),
                   ),
                 ),
               ),
@@ -1470,7 +1558,7 @@ class _BrandStripState extends State<BrandStrip> {
                   scale: 0.5,
                   child: CarouselArrow(
                     icon: Icons.arrow_forward_ios,
-                    onTap: () => _scrollBy(_brandsScrollController, -320),
+                    onTap: () => _scrollByArrow(-320),
                   ),
                 ),
               ),
@@ -1481,6 +1569,9 @@ class _BrandStripState extends State<BrandStrip> {
     );
   }
 }
+
+
+
 
 
 
