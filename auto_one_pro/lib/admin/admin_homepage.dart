@@ -27,6 +27,7 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
   final heroSubtitleArCtrl = TextEditingController();
   final heroSubtitleEnCtrl = TextEditingController();
   List<TextEditingController> bannerControllers = [];
+  List<String> bannerTypes = []; // 'image' أو 'video' لكل عنصر
 
   // بانر صفحة الفروع
   final branchesBannerCtrl = TextEditingController();
@@ -142,12 +143,22 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
       heroSubtitleEnCtrl.text =
           (response?['hero_subtitle_en'] ?? '').toString();
 
-      final banners = (response?['banner_images'] is List)
-          ? List<String>.from(
-              (response!['banner_images'] as List).map((e) => e.toString()))
-          : <String>[];
-      bannerControllers =
-          banners.map((url) => TextEditingController(text: url)).toList();
+      final rawBanners = (response?['banner_images'] is List)
+          ? (response!['banner_images'] as List)
+          : <dynamic>[];
+      bannerControllers = [];
+      bannerTypes = [];
+      for (final entry in rawBanners) {
+        if (entry is Map) {
+          bannerControllers
+              .add(TextEditingController(text: (entry['url'] ?? '').toString()));
+          bannerTypes.add((entry['type'] ?? 'image').toString());
+        } else {
+          // توافق مع الشكل القديم: رابط نصي بس = صورة
+          bannerControllers.add(TextEditingController(text: entry.toString()));
+          bannerTypes.add('image');
+        }
+      }
 
       branchesBannerCtrl.text =
           (response?['branches_banner'] ?? '').toString();
@@ -246,13 +257,87 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
     });
   }
 
+  // بيرفع صورة أو فيديو لعنصر معيّن في سلايدر الهيرو، وبيحدد نوعه
+  // (صورة/فيديو) تلقائيًا من امتداد الملف.
+  Future<void> _pickAndUploadBannerAt(
+    int index,
+    void Function(void Function()) setSectionState,
+  ) async {
+    final uploadInput = html.FileUploadInputElement()
+      ..accept = 'image/*,video/*';
+    uploadInput.click();
+
+    uploadInput.onChange.listen((event) async {
+      final files = uploadInput.files;
+      if (files == null || files.isEmpty) return;
+      final file = files[0];
+
+      setState(() => isUploadingImage = true);
+
+      try {
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(file);
+        await reader.onLoad.first;
+        final bytes = reader.result as Uint8List;
+
+        final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
+        final path =
+            'site/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+
+        await Supabase.instance.client.storage.from('car_images').uploadBinary(
+              path,
+              bytes,
+              fileOptions: const FileOptions(upsert: true),
+            );
+
+        final publicUrl = Supabase.instance.client.storage
+            .from('car_images')
+            .getPublicUrl(path);
+
+        final lowerName = file.name.toLowerCase();
+        final isVideoFile = (file.type).startsWith('video/') ||
+            lowerName.endsWith('.mp4') ||
+            lowerName.endsWith('.mov') ||
+            lowerName.endsWith('.webm');
+
+        if (mounted && index < bannerControllers.length) {
+          setState(() {
+            bannerControllers[index].text = publicUrl;
+            while (bannerTypes.length <= index) {
+              bannerTypes.add('image');
+            }
+            bannerTypes[index] = isVideoFile ? 'video' : 'image';
+          });
+          setSectionState(() {});
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isArabic ? 'فشل رفع الملف: $e' : 'Failed to upload file: $e',
+              ),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => isUploadingImage = false);
+      }
+    });
+  }
+
   Future<void> _save() async {
     setState(() => isSaving = true);
     try {
-      final banners = bannerControllers
-          .map((c) => c.text.trim())
-          .where((url) => url.isNotEmpty)
-          .toList();
+      final banners = <Map<String, String>>[];
+      for (var i = 0; i < bannerControllers.length; i++) {
+        final url = bannerControllers[i].text.trim();
+        if (url.isEmpty) continue;
+        banners.add({
+          'url': url,
+          'type': i < bannerTypes.length ? bannerTypes[i] : 'image',
+        });
+      }
 
       await Supabase.instance.client.from('homepage_settings').update({
         'hero_title_ar': heroTitleArCtrl.text.trim(),
@@ -522,56 +607,130 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
                   onPressed: () {
                     setState(() {
                       bannerControllers.add(TextEditingController());
+                      bannerTypes.add('image');
                     });
                     setSectionState(() {});
                   },
                   icon: const Icon(Icons.add_rounded),
-                  label: Text(isArabic ? 'إضافة صورة' : 'Add image'),
+                  label: Text(isArabic ? 'إضافة صورة/فيديو' : 'Add image/video'),
                 ),
               ],
             ),
             const SizedBox(height: 6),
             Text(
               isArabic
-                  ? 'لو مفيش صور، السلايدر مش هيظهر خالص في الصفحة الرئيسية.'
+                  ? 'لو مفيش صور أو فيديوهات، السلايدر مش هيظهر خالص في الصفحة الرئيسية.'
                   : 'If empty, no slider will show on the homepage.',
               style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 10),
             for (var i = 0; i < bannerControllers.length; i++)
               Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: bannerControllers[i],
-                        decoration: InputDecoration(
-                          hintText: isArabic
-                              ? 'رابط صورة البانر'
-                              : 'Banner image URL',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: bannerControllers[i],
+                              decoration: InputDecoration(
+                                hintText: isArabic
+                                    ? 'رابط الصورة أو الفيديو'
+                                    : 'Image or video URL',
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                bannerControllers[i].dispose();
+                                bannerControllers.removeAt(i);
+                                if (i < bannerTypes.length) {
+                                  bannerTypes.removeAt(i);
+                                }
+                              });
+                              setSectionState(() {});
+                            },
+                            icon: const Icon(
+                              Icons.remove_circle_outline_rounded,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          bannerControllers[i].dispose();
-                          bannerControllers.removeAt(i);
-                        });
-                        setSectionState(() {});
-                      },
-                      icon: const Icon(
-                        Icons.remove_circle_outline_rounded,
-                        color: Colors.red,
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          ChoiceChip(
+                            label: Text(isArabic ? 'صورة' : 'Image'),
+                            avatar: const Icon(Icons.image_rounded, size: 16),
+                            selected: (i < bannerTypes.length
+                                    ? bannerTypes[i]
+                                    : 'image') ==
+                                'image',
+                            onSelected: (_) {
+                              setState(() {
+                                while (bannerTypes.length <=
+                                    bannerControllers.length - 1) {
+                                  bannerTypes.add('image');
+                                }
+                                bannerTypes[i] = 'image';
+                              });
+                              setSectionState(() {});
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          ChoiceChip(
+                            label: Text(isArabic ? 'فيديو' : 'Video'),
+                            avatar:
+                                const Icon(Icons.videocam_rounded, size: 16),
+                            selected: (i < bannerTypes.length
+                                    ? bannerTypes[i]
+                                    : 'image') ==
+                                'video',
+                            onSelected: (_) {
+                              setState(() {
+                                while (bannerTypes.length <=
+                                    bannerControllers.length - 1) {
+                                  bannerTypes.add('image');
+                                }
+                                bannerTypes[i] = 'video';
+                              });
+                              setSectionState(() {});
+                            },
+                          ),
+                          const Spacer(),
+                          TextButton.icon(
+                            onPressed: isUploadingImage
+                                ? null
+                                : () => _pickAndUploadBannerAt(
+                                      i,
+                                      setSectionState,
+                                    ),
+                            icon: const Icon(Icons.upload_rounded, size: 18),
+                            label: Text(
+                              isArabic ? 'رفع ملف' : 'Upload file',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             _saveButtonInline(),

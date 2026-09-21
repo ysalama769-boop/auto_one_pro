@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -51,8 +52,9 @@ class _HomePageState extends State<HomePage> {
  }
 
 int get safeImageIndex {
-  if (images.isEmpty) return 0;
-  if (currentImage >= images.length) return images.length - 1;
+  final banners = heroBanners;
+  if (banners.isEmpty) return 0;
+  if (currentImage >= banners.length) return banners.length - 1;
   if (currentImage < 0) return 0;
   return currentImage;
 }
@@ -93,24 +95,51 @@ void _scrollBy(ScrollController controller, double delta) {
 }
 
   // ==========================================================
-  // صور الواجهة
+  // صور/فيديوهات الهيرو
   //
-  // مؤقتًا حاطط نفس الصورة الموجودة عندك.
-  //
-  // بعدين هنغيرهم إلى:
-  //
-  // assets/jetour_g700.jpg
-  // assets/patrol.jpg
-  // assets/kia_sonet.jpg
-  // ...
+  // بتتقرا من لوحة التحكم (إعدادات الرئيسية > صور البانر)، ولو
+  // الأدمن لسه ما ضافش حاجة، بيرجع لنفس الصور الافتراضية.
   // ==========================================================
 
-  final List<String> images = [
+  static const List<String> _fallbackImages = [
     'assets/youssefcar22.jpg',
     'assets/youssefcar3.jpg',
     'assets/youssefcar4.jpg',
     'assets/youssefcar5.jpg',
   ];
+
+  List<_HeroBannerItem> get heroBanners {
+    final raw = homepageSettings.value?['banner_images'];
+    if (raw is List && raw.isNotEmpty) {
+      final parsed = raw.map((entry) {
+        if (entry is Map) {
+          final url = (entry['url'] ?? '').toString();
+          final type = (entry['type'] ?? 'image').toString();
+          return _HeroBannerItem(
+            url: url,
+            isVideo: type == 'video',
+            isAsset: false,
+          );
+        }
+        // توافق مع الشكل القديم: مجرد رابط نصي = صورة
+        return _HeroBannerItem(
+          url: entry.toString(),
+          isVideo: false,
+          isAsset: false,
+        );
+      }).where((item) => item.url.isNotEmpty).toList();
+
+      if (parsed.isNotEmpty) return parsed;
+    }
+
+    return _fallbackImages
+        .map((path) => _HeroBannerItem(
+              url: path,
+              isVideo: false,
+              isAsset: true,
+            ))
+        .toList();
+  }
   
 final List<Map<String, String>> slideTexts = [
   {
@@ -180,10 +209,11 @@ final List<Map<String, String>> slideButtons = [
   // ==========================================================
 
  void nextImage() {
-  if (images.isEmpty) return;
+  final banners = heroBanners;
+  if (banners.isEmpty) return;
 
   setState(() {
-    currentImage = (currentImage + 1) % images.length;
+    currentImage = (currentImage + 1) % banners.length;
   });
 }
   // ==========================================================
@@ -191,11 +221,12 @@ final List<Map<String, String>> slideButtons = [
   // ==========================================================
 
   void previousImage() {
-  if (images.isEmpty) return;
+  final banners = heroBanners;
+  if (banners.isEmpty) return;
 
   setState(() {
     currentImage =
-        (currentImage - 1 + images.length) % images.length;
+        (currentImage - 1 + banners.length) % banners.length;
   });
 }
 
@@ -242,7 +273,7 @@ final List<Map<String, String>> slideButtons = [
                             fit: StackFit.expand,
                             children: [
                               // =====================================
-                              // الصورة (بتتغيّر بفيد ناعم + parallax)
+                              // الصورة/الفيديو (بتتغيّر بفيد ناعم + parallax)
                               // =====================================
                               AnimatedSwitcher(
                                 duration:
@@ -254,28 +285,14 @@ final List<Map<String, String>> slideButtons = [
                                   );
                                 },
                                 child: Transform.scale(
-                                  key: ValueKey(images[safeImageIndex]),
+                                  key: ValueKey(
+                                    heroBanners[safeImageIndex].url,
+                                  ),
                                   scale: 1.06,
                                   child: Transform.translate(
                                     offset: _heroParallax,
-                                    child: Image.asset(
-                                      images[safeImageIndex],
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Container(
-                                          color: Colors.grey[850],
-                                          child: const Center(
-                                            child: Icon(
-                                              Icons.directions_car,
-                                              size: 100,
-                                              color: Colors.white24,
-                                            ),
-                                          ),
-                                        );
-                                      },
+                                    child: _HeroMedia(
+                                      item: heroBanners[safeImageIndex],
                                     ),
                                   ),
                                 ),
@@ -340,11 +357,16 @@ final List<Map<String, String>> slideButtons = [
                                         key: ValueKey(
                                           'hero_title_$currentImage',
                                         ),
-                                        text: widget.isArabic
-                                            ? slideTexts[currentImage]
-                                                ['ar']!
-                                            : slideTexts[currentImage]
-                                                ['en']!,
+                                        text: siteText(
+                                          key: 'hero_title',
+                                          isArabic: widget.isArabic,
+                                          defaultAr: slideTexts[
+                                              currentImage %
+                                                  slideTexts.length]['ar']!,
+                                          defaultEn: slideTexts[
+                                              currentImage %
+                                                  slideTexts.length]['en']!,
+                                        ),
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: isSmall ? 28 : 46,
@@ -364,11 +386,18 @@ final List<Map<String, String>> slideButtons = [
                                       const SizedBox(height: 14),
 
                                       Text(
-                                        widget.isArabic
-                                            ? slideDescriptions[
-                                                currentImage]['ar']!
-                                            : slideDescriptions[
-                                                currentImage]['en']!,
+                                        siteText(
+                                          key: 'hero_subtitle',
+                                          isArabic: widget.isArabic,
+                                          defaultAr: slideDescriptions[
+                                              currentImage %
+                                                  slideDescriptions
+                                                      .length]['ar']!,
+                                          defaultEn: slideDescriptions[
+                                              currentImage %
+                                                  slideDescriptions
+                                                      .length]['en']!,
+                                        ),
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: isSmall ? 14 : 17,
@@ -402,10 +431,10 @@ final List<Map<String, String>> slideButtons = [
                                         ),
                                         child: Text(
                                           widget.isArabic
-                                              ? slideButtons[
-                                                  currentImage]['ar']!
-                                              : slideButtons[
-                                                  currentImage]['en']!,
+                                              ? slideButtons[currentImage %
+                                                  slideButtons.length]['ar']!
+                                              : slideButtons[currentImage %
+                                                  slideButtons.length]['en']!,
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w800,
                                             fontSize: 15,
@@ -426,9 +455,12 @@ final List<Map<String, String>> slideButtons = [
                                   child: Center(
                                     child: Transform.scale(
                                       scale: 0.9,
-                                      child: CarouselArrow(
-                                        icon: Icons.arrow_back_ios_new,
-                                        onTap: previousImage,
+                                      child: Directionality(
+                                        textDirection: TextDirection.ltr,
+                                        child: CarouselArrow(
+                                          icon: Icons.chevron_left_rounded,
+                                          onTap: previousImage,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -440,9 +472,12 @@ final List<Map<String, String>> slideButtons = [
                                   child: Center(
                                     child: Transform.scale(
                                       scale: 0.9,
-                                      child: CarouselArrow(
-                                        icon: Icons.arrow_forward_ios,
-                                        onTap: nextImage,
+                                      child: Directionality(
+                                        textDirection: TextDirection.ltr,
+                                        child: CarouselArrow(
+                                          icon: Icons.chevron_right_rounded,
+                                          onTap: nextImage,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -458,7 +493,7 @@ final List<Map<String, String>> slideButtons = [
                                   mainAxisAlignment:
                                       MainAxisAlignment.center,
                                   children: List.generate(
-                                    images.length,
+                                    heroBanners.length,
                                     (index) {
                                       final isActive =
                                           index == currentImage;
@@ -2730,4 +2765,124 @@ class _HeroParticlesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _HeroParticlesPainter oldDelegate) => true;
+}
+
+// ============================================================
+// HERO BANNER ITEM (عنصر واحد في سلايدر الهيرو: صورة أو فيديو)
+// ============================================================
+class _HeroBannerItem {
+  final String url;
+  final bool isVideo;
+  final bool isAsset; // true لو أصل محلي جوه assets، مش رابط شبكة
+
+  const _HeroBannerItem({
+    required this.url,
+    required this.isVideo,
+    required this.isAsset,
+  });
+}
+
+// ============================================================
+// HERO MEDIA (بتعرض صورة أو فيديو حسب نوع العنصر)
+// ============================================================
+class _HeroMedia extends StatefulWidget {
+  final _HeroBannerItem item;
+
+  const _HeroMedia({required this.item});
+
+  @override
+  State<_HeroMedia> createState() => _HeroMediaState();
+}
+
+class _HeroMediaState extends State<_HeroMedia> {
+  VideoPlayerController? _controller;
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item.isVideo) {
+      _initVideo();
+    }
+  }
+
+  void _initVideo() {
+    final controller =
+        VideoPlayerController.networkUrl(Uri.parse(widget.item.url));
+    _controller = controller;
+    controller
+      ..setLooping(true)
+      ..setVolume(0)
+      ..initialize().then((_) {
+        if (!mounted) return;
+        setState(() => _ready = true);
+        controller.play();
+      }).catchError((_) {
+        // لو الفيديو فشل، هيفضل الخلفية سادة (fallback بسيط)
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Widget _errorFallback() {
+    return Container(
+      color: Colors.grey[850],
+      child: const Center(
+        child: Icon(
+          Icons.directions_car,
+          size: 100,
+          color: Colors.white24,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.item.isVideo) {
+      final controller = _controller;
+      if (controller == null || !_ready) {
+        return Container(
+          color: Colors.grey[900],
+          child: const Center(
+            child: CircularProgressIndicator(
+              color: Colors.white54,
+              strokeWidth: 2,
+            ),
+          ),
+        );
+      }
+      return FittedBox(
+        fit: BoxFit.cover,
+        clipBehavior: Clip.hardEdge,
+        child: SizedBox(
+          width: controller.value.size.width,
+          height: controller.value.size.height,
+          child: VideoPlayer(controller),
+        ),
+      );
+    }
+
+    if (widget.item.isAsset) {
+      return Image.asset(
+        widget.item.url,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _errorFallback(),
+      );
+    }
+
+    return Image.network(
+      widget.item.url,
+      width: double.infinity,
+      height: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => _errorFallback(),
+    );
+  }
 }
