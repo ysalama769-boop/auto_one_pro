@@ -535,30 +535,39 @@ InkWell(
 
   const SizedBox(width: 15),
 
-  InkWell(
-    onTap: onLanguage,
-    borderRadius: BorderRadius.circular(8),
-    child: Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 9,
-      ),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.white54,
-        ),
+  // زرار تبديل اللغة في الهيدر بيظهر بس للزوار اللي لسه ما
+  // سجلوش دخول، لأن اللي عنده حساب بيقدر يغيّر اللغة من صفحة
+  // الإعدادات بدل ما يتكرر الزرار في الهيدر.
+  ValueListenableBuilder<User?>(
+    valueListenable: currentUser,
+    builder: (context, user, _) {
+      if (user != null) return const SizedBox.shrink();
+      return InkWell(
+        onTap: onLanguage,
         borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        isArabic ? 'EN' : 'AR',
-        style: TextStyle(
-          color: transparent
-              ? Colors.white
-              : const Color.fromARGB(255, 12, 12, 12),
-          fontWeight: FontWeight.bold,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 9,
+          ),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.white54,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            isArabic ? 'EN' : 'AR',
+            style: TextStyle(
+              color: transparent
+                  ? Colors.white
+                  : const Color.fromARGB(255, 12, 12, 12),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
-      ),
-    ),
+      );
+    },
   ),
 
   const SizedBox(width: 12),
@@ -825,12 +834,13 @@ if (isMobile)
           ),
         ),
       ],
-      PopupMenuItem(
-        value: 'language',
-        child: Text(
-          isArabic ? 'English' : 'العربية',
+      if (currentUser.value == null)
+        PopupMenuItem(
+          value: 'language',
+          child: Text(
+            isArabic ? 'English' : 'العربية',
+          ),
         ),
-      ),
       PopupMenuItem(
         value: 'whatsapp',
         child: Text(

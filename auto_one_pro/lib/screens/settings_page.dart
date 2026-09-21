@@ -22,9 +22,15 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool get isArabic => widget.isArabic;
+  // نسخة محلية من اللغة عشان الصفحة نفسها تستجيب فورًا لما
+  // المستخدم يغيّر اللغة من جواها، من غير ما ننتظر إعادة بناء
+  // من فوق (الصفحات اللي بتتفتح بالـ Navigator.push مبتتجددش
+  // تلقائيًا لو اتغيّرت حاجة في الصفحة اللي فتحتها).
+  late bool _isArabic;
+  bool get isArabic => _isArabic;
 
   final _nameCtrl = TextEditingController();
+  final _currentPasswordCtrl = TextEditingController();
   final _newPasswordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
 
@@ -36,6 +42,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    _isArabic = widget.isArabic;
     final user = Supabase.instance.client.auth.currentUser;
     _nameCtrl.text = (user?.userMetadata?['full_name'] ?? '').toString();
     _notificationsEnabled =
@@ -45,9 +52,17 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _currentPasswordCtrl.dispose();
     _newPasswordCtrl.dispose();
     _confirmPasswordCtrl.dispose();
     super.dispose();
+  }
+
+  void _toggleLanguage() {
+    // بيغيّر اللغة على مستوى التطبيق كله (الهيدر والصفحة الرئيسية)...
+    widget.onLanguageChanged();
+    // ...وبيغيّرها كمان جوه صفحة الإعدادات نفسها فورًا.
+    setState(() => _isArabic = !_isArabic);
   }
 
   void _showMessage(String message) {
@@ -79,32 +94,79 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _updatePassword() async {
+    final currentPass = _currentPasswordCtrl.text;
     final newPass = _newPasswordCtrl.text;
     final confirmPass = _confirmPasswordCtrl.text;
+    final email = Supabase.instance.client.auth.currentUser?.email;
 
+    if (currentPass.isEmpty) {
+      _showMessage(
+        isArabic ? 'اكتب كلمة السر الحالية' : 'Enter your current password',
+      );
+      return;
+    }
     if (newPass.length < 6) {
       _showMessage(
         isArabic
-            ? 'كلمة السر لازم تكون 6 حروف/أرقام على الأقل'
-            : 'Password must be at least 6 characters',
+            ? 'كلمة السر الجديدة لازم تكون 6 حروف/أرقام على الأقل'
+            : 'New password must be at least 6 characters',
       );
       return;
     }
     if (newPass != confirmPass) {
       _showMessage(
-        isArabic ? 'كلمتا السر مش متطابقتين' : 'Passwords do not match',
+        isArabic
+            ? 'كلمة السر الجديدة والتأكيد مش متطابقين'
+            : 'New password and confirmation do not match',
+      );
+      return;
+    }
+    if (email == null) {
+      _showMessage(
+        isArabic ? 'تعذّر التحقق من الحساب' : 'Could not verify account',
       );
       return;
     }
 
     setState(() => _savingPassword = true);
     try {
+      // الخطوة 1: نتأكد إن كلمة السر الحالية صح عن طريق تسجيل
+      // دخول تجريبي بيها (Supabase مبيطلبش كلمة السر القديمة
+      // تلقائيًا قبل التحديث، فبنعمل التحقق ده يدويًا).
+      final verify = await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: currentPass,
+      );
+      if (verify.user == null) {
+        _showMessage(
+          isArabic ? 'كلمة السر الحالية غلط' : 'Current password is wrong',
+        );
+        return;
+      }
+
+      // الخطوة 2: كلمة السر الحالية صح، دلوقتي نحدّث للجديدة.
       await Supabase.instance.client.auth.updateUser(
         UserAttributes(password: newPass),
       );
+
+      _currentPasswordCtrl.clear();
       _newPasswordCtrl.clear();
       _confirmPasswordCtrl.clear();
       _showMessage(isArabic ? 'تم تغيير كلمة السر' : 'Password updated');
+    } on AuthException catch (e) {
+      final msg = e.message.toLowerCase();
+      final isWrongPassword = msg.contains('invalid') ||
+          msg.contains('credentials') ||
+          msg.contains('password');
+      _showMessage(
+        isWrongPassword
+            ? (isArabic
+                ? 'كلمة السر الحالية غلط'
+                : 'Current password is wrong')
+            : (isArabic
+                ? 'تعذّر تغيير كلمة السر: ${e.message}'
+                : 'Failed to update password: ${e.message}'),
+      );
     } catch (e) {
       _showMessage(
         isArabic
@@ -177,38 +239,6 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Widget _sectionCard({required String title, required List<Widget> children}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 15,
-            ),
-          ),
-          const SizedBox(height: 14),
-          ...children,
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
@@ -228,49 +258,32 @@ class _SettingsPageState extends State<SettingsPage> {
             // ====================================================
             // البيانات الشخصية
             // ====================================================
-            _sectionCard(
+            _HoverCard(
               title: isArabic ? 'البيانات الشخصية' : 'Personal Info',
+              icon: Icons.person_rounded,
               children: [
                 TextField(
                   controller: _nameCtrl,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'الاسم' : 'Name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                  decoration: _fieldDecoration(
+                    isArabic ? 'الاسم' : 'Name',
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 TextField(
                   enabled: false,
                   controller: TextEditingController(text: user?.email ?? ''),
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'البريد الإلكتروني' : 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                  decoration: _fieldDecoration(
+                    isArabic ? 'البريد الإلكتروني' : 'Email',
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 Align(
                   alignment:
                       isArabic ? Alignment.centerLeft : Alignment.centerRight,
-                  child: ElevatedButton(
+                  child: _PrimaryButton(
                     onPressed: _savingName ? null : _saveName,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: _savingName
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(isArabic ? 'حفظ' : 'Save'),
+                    loading: _savingName,
+                    label: isArabic ? 'حفظ' : 'Save',
                   ),
                 ),
               ],
@@ -279,51 +292,41 @@ class _SettingsPageState extends State<SettingsPage> {
             // ====================================================
             // تغيير كلمة السر
             // ====================================================
-            _sectionCard(
+            _HoverCard(
               title: isArabic ? 'تغيير كلمة السر' : 'Change Password',
+              icon: Icons.lock_rounded,
               children: [
+                TextField(
+                  controller: _currentPasswordCtrl,
+                  obscureText: true,
+                  decoration: _fieldDecoration(
+                    isArabic ? 'كلمة السر الحالية' : 'Current password',
+                  ),
+                ),
+                const SizedBox(height: 12),
                 TextField(
                   controller: _newPasswordCtrl,
                   obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'كلمة السر الجديدة' : 'New password',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                  decoration: _fieldDecoration(
+                    isArabic ? 'كلمة السر الجديدة' : 'New password',
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 TextField(
                   controller: _confirmPasswordCtrl,
                   obscureText: true,
-                  decoration: InputDecoration(
-                    labelText:
-                        isArabic ? 'تأكيد كلمة السر' : 'Confirm password',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                  decoration: _fieldDecoration(
+                    isArabic ? 'تأكيد كلمة السر الجديدة' : 'Confirm new password',
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 Align(
                   alignment:
                       isArabic ? Alignment.centerLeft : Alignment.centerRight,
-                  child: ElevatedButton(
+                  child: _PrimaryButton(
                     onPressed: _savingPassword ? null : _updatePassword,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: _savingPassword
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(isArabic ? 'تحديث كلمة السر' : 'Update password'),
+                    loading: _savingPassword,
+                    label: isArabic ? 'تحديث كلمة السر' : 'Update password',
                   ),
                 ),
               ],
@@ -332,8 +335,9 @@ class _SettingsPageState extends State<SettingsPage> {
             // ====================================================
             // الإشعارات
             // ====================================================
-            _sectionCard(
+            _HoverCard(
               title: isArabic ? 'الإشعارات' : 'Notifications',
+              icon: Icons.notifications_rounded,
               children: [
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
@@ -354,8 +358,9 @@ class _SettingsPageState extends State<SettingsPage> {
             // ====================================================
             // اللغة
             // ====================================================
-            _sectionCard(
+            _HoverCard(
               title: isArabic ? 'اللغة' : 'Language',
+              icon: Icons.language_rounded,
               children: [
                 Row(
                   children: [
@@ -368,7 +373,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     OutlinedButton(
-                      onPressed: widget.onLanguageChanged,
+                      onPressed: _toggleLanguage,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                      ),
                       child: Text(isArabic ? 'English' : 'العربية'),
                     ),
                   ],
@@ -379,8 +388,9 @@ class _SettingsPageState extends State<SettingsPage> {
             // ====================================================
             // الحساب
             // ====================================================
-            _sectionCard(
+            _HoverCard(
               title: isArabic ? 'الحساب' : 'Account',
+              icon: Icons.manage_accounts_rounded,
               children: [
                 Align(
                   alignment:
@@ -396,6 +406,150 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _fieldDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: const Color(0xfffafafa),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.red, width: 1.4),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// PRIMARY BUTTON (زرار موحّد لكل الحفظ/التحديث في الصفحة)
+// ============================================================
+class _PrimaryButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final bool loading;
+  final String label;
+
+  const _PrimaryButton({
+    required this.onPressed,
+    required this.loading,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        elevation: 0,
+      ),
+      child: loading
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+    );
+  }
+}
+
+// ============================================================
+// HOVER CARD (كارت بتصميم احترافي، بيتفاعل مع الماوس عند المرور)
+// ============================================================
+class _HoverCard extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final List<Widget> children;
+
+  const _HoverCard({
+    required this.title,
+    required this.icon,
+    required this.children,
+  });
+
+  @override
+  State<_HoverCard> createState() => _HoverCardState();
+}
+
+class _HoverCardState extends State<_HoverCard> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        margin: const EdgeInsets.only(bottom: 16),
+        transform: Matrix4.translationValues(0, _hovering ? -3 : 0, 0),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _hovering ? Colors.red.withValues(alpha: 0.35) : Colors.transparent,
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _hovering
+                  ? Colors.black.withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: 0.06),
+              blurRadius: _hovering ? 22 : 10,
+              spreadRadius: _hovering ? 1 : 0,
+              offset: Offset(0, _hovering ? 8 : 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(widget.icon, color: Colors.red, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...widget.children,
           ],
         ),
       ),
