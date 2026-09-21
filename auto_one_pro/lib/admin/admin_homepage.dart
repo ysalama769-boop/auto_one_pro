@@ -33,6 +33,9 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
   final branchesBannerCtrl = TextEditingController();
   // بانر صفحة الخدمات
   final servicesBannerCtrl = TextEditingController();
+  // صورة قسم "نبذة عنا" وصورة خلفية قسم "تاريخنا" في صفحة من نحن
+  final aboutImageCtrl = TextEditingController();
+  final historyImageCtrl = TextEditingController();
 
   // محتوى صفحة "عن أوتو ون"
   final aboutIntroArCtrl = TextEditingController();
@@ -49,6 +52,11 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
       List.generate(5, (_) => TextEditingController());
   final List<TextEditingController> stepEnCtrls =
       List.generate(5, (_) => TextEditingController());
+
+  // الماركات اللي أوتو ون موزع حصري ليها (قسم في صفحة "من نحن")،
+  // كل عنصر نص كامل (عربي/إنجليزي) بيوصف الحصرية والمنطقة.
+  List<TextEditingController> brandPartnerArCtrls = [];
+  List<TextEditingController> brandPartnerEnCtrls = [];
 
   // نصوص إضافية قابلة للتعديل (عناوين ووصف أقسام الصفحة الرئيسية
   // وصفحة الخدمات) — كل عنصر هنا اتخزن كعمودين (key_ar, key_en).
@@ -76,6 +84,66 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
     {'group': 'تقييمات العملاء', 'key': 'reviews_title', 'label': 'العنوان'},
     {'group': 'صفحة الخدمات', 'key': 'services_title', 'label': 'العنوان'},
     {'group': 'صفحة الخدمات', 'key': 'services_desc', 'label': 'الوصف'},
+    {
+      'group': 'من نحن - تاريخنا',
+      'key': 'about_history_title',
+      'label': 'العنوان',
+    },
+    {
+      'group': 'من نحن - تاريخنا',
+      'key': 'about_history_subtitle',
+      'label': 'الوصف تحت العنوان',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_services_title',
+      'label': 'العنوان الرئيسي',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_services_subtitle',
+      'label': 'الوصف تحت العنوان',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_service1_title',
+      'label': 'اسم الخدمة 1',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_service2_title',
+      'label': 'اسم الخدمة 2',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_service3_title',
+      'label': 'اسم الخدمة 3',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_service4_title',
+      'label': 'اسم الخدمة 4',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_service5_title',
+      'label': 'اسم الخدمة 5',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_service6_title',
+      'label': 'اسم الخدمة 6',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_service7_title',
+      'label': 'اسم الخدمة 7',
+    },
+    {
+      'group': 'من نحن - خدماتنا',
+      'key': 'about_service8_title',
+      'label': 'اسم الخدمة 8',
+    },
   ];
 
   final Map<String, TextEditingController> extraArCtrls = {
@@ -104,6 +172,14 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
     }
     branchesBannerCtrl.dispose();
     servicesBannerCtrl.dispose();
+    aboutImageCtrl.dispose();
+    historyImageCtrl.dispose();
+    for (final c in brandPartnerArCtrls) {
+      c.dispose();
+    }
+    for (final c in brandPartnerEnCtrls) {
+      c.dispose();
+    }
     aboutIntroArCtrl.dispose();
     aboutIntroEnCtrl.dispose();
     aboutOfferArCtrl.dispose();
@@ -164,6 +240,22 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
           (response?['branches_banner'] ?? '').toString();
       servicesBannerCtrl.text =
           (response?['services_banner'] ?? '').toString();
+      aboutImageCtrl.text = (response?['about_image'] ?? '').toString();
+      historyImageCtrl.text = (response?['history_image'] ?? '').toString();
+
+      final rawPartners = (response?['brand_partners'] is List)
+          ? (response!['brand_partners'] as List)
+          : <dynamic>[];
+      brandPartnerArCtrls = [];
+      brandPartnerEnCtrls = [];
+      for (final entry in rawPartners) {
+        if (entry is Map) {
+          brandPartnerArCtrls
+              .add(TextEditingController(text: (entry['text_ar'] ?? '').toString()));
+          brandPartnerEnCtrls
+              .add(TextEditingController(text: (entry['text_en'] ?? '').toString()));
+        }
+      }
 
       aboutIntroArCtrl.text = (response?['about_intro_ar'] ?? '').toString();
       aboutIntroEnCtrl.text = (response?['about_intro_en'] ?? '').toString();
@@ -203,6 +295,14 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
 
   Future<void> _pickAndUploadServicesBanner() async {
     await _pickAndUploadBanner(servicesBannerCtrl);
+  }
+
+  Future<void> _pickAndUploadAboutImage() async {
+    await _pickAndUploadBanner(aboutImageCtrl);
+  }
+
+  Future<void> _pickAndUploadHistoryImage() async {
+    await _pickAndUploadBanner(historyImageCtrl);
   }
 
   Future<void> _pickAndUploadBanner(TextEditingController target) async {
@@ -339,6 +439,16 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         });
       }
 
+      final partners = <Map<String, String>>[];
+      for (var i = 0; i < brandPartnerArCtrls.length; i++) {
+        final ar = brandPartnerArCtrls[i].text.trim();
+        final en = i < brandPartnerEnCtrls.length
+            ? brandPartnerEnCtrls[i].text.trim()
+            : '';
+        if (ar.isEmpty && en.isEmpty) continue;
+        partners.add({'text_ar': ar, 'text_en': en});
+      }
+
       await Supabase.instance.client.from('homepage_settings').update({
         'hero_title_ar': heroTitleArCtrl.text.trim(),
         'hero_title_en': heroTitleEnCtrl.text.trim(),
@@ -347,6 +457,9 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         'banner_images': banners,
         'branches_banner': branchesBannerCtrl.text.trim(),
         'services_banner': servicesBannerCtrl.text.trim(),
+        'about_image': aboutImageCtrl.text.trim(),
+        'history_image': historyImageCtrl.text.trim(),
+        'brand_partners': partners,
         'about_intro_ar': aboutIntroArCtrl.text.trim(),
         'about_intro_en': aboutIntroEnCtrl.text.trim(),
         'about_offer_ar': aboutOfferArCtrl.text.trim(),
@@ -419,6 +532,11 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         'label': isArabic ? 'محتوى "عن أوتو ون"' : 'About Page',
         'icon': Icons.info_outline_rounded,
         'body': _aboutSectionBody,
+      },
+      {
+        'label': isArabic ? 'الماركات الحصرية (من نحن)' : 'Exclusive Brands',
+        'icon': Icons.workspace_premium_rounded,
+        'body': _brandPartnersSectionBody,
       },
       {
         'label': isArabic ? 'خطوات طريقة الشراء' : 'How to Buy Steps',
@@ -803,6 +921,66 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
             ),
           ],
         ),
+        const SizedBox(height: 24),
+        Text(
+          isArabic
+              ? 'صورة "نبذة عنا" (صفحة من نحن)'
+              : '"About us" image (About page)',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: aboutImageCtrl,
+                decoration: InputDecoration(
+                  hintText: isArabic ? 'رابط الصورة' : 'Image URL',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: isUploadingImage ? null : _pickAndUploadAboutImage,
+              icon: const Icon(Icons.upload_file),
+              tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          isArabic
+              ? 'صورة خلفية "تاريخنا" (صفحة من نحن)'
+              : '"Our history" background image (About page)',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: historyImageCtrl,
+                decoration: InputDecoration(
+                  hintText: isArabic ? 'رابط الصورة' : 'Image URL',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: isUploadingImage ? null : _pickAndUploadHistoryImage,
+              icon: const Icon(Icons.upload_file),
+              tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+            ),
+          ],
+        ),
         _saveButtonInline(),
       ],
     );
@@ -848,6 +1026,113 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         ),
         _saveButtonInline(),
       ],
+    );
+  }
+
+  Widget _brandPartnersSectionBody() {
+    return StatefulBuilder(
+      builder: (context, setSectionState) {
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    isArabic
+                        ? 'الماركات اللي أوتو ون موزع حصري ليها'
+                        : 'Brands Auto One is an exclusive distributor for',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      brandPartnerArCtrls.add(TextEditingController());
+                      brandPartnerEnCtrls.add(TextEditingController());
+                    });
+                    setSectionState(() {});
+                  },
+                  icon: const Icon(Icons.add_rounded),
+                  label: Text(isArabic ? 'إضافة ماركة' : 'Add brand'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              isArabic
+                  ? 'مثال: "الموزع الحصري لسيارات كيا في الرياض". لو القسم فاضي، مش هيظهر في صفحة من نحن.'
+                  : 'e.g. "Exclusive distributor of Kia cars in Riyadh". If empty, this section won\'t show on the About page.',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 10),
+            for (var i = 0; i < brandPartnerArCtrls.length; i++)
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: brandPartnerArCtrls[i],
+                            decoration: InputDecoration(
+                              labelText: isArabic ? 'النص (عربي)' : 'Text (Arabic)',
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: brandPartnerEnCtrls[i],
+                            decoration: InputDecoration(
+                              labelText:
+                                  isArabic ? 'النص (إنجليزي)' : 'Text (English)',
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          brandPartnerArCtrls[i].dispose();
+                          brandPartnerEnCtrls[i].dispose();
+                          brandPartnerArCtrls.removeAt(i);
+                          brandPartnerEnCtrls.removeAt(i);
+                        });
+                        setSectionState(() {});
+                      },
+                      icon: const Icon(
+                        Icons.remove_circle_outline_rounded,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            _saveButtonInline(),
+          ],
+        );
+      },
     );
   }
 

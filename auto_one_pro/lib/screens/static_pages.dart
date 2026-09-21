@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../shared/constants.dart';
 import '../admin/admin_shared.dart';
+import '../shared/widgets.dart';
 
 // ============================================================
 // ABOUT AUTO ONE PAGE (نبذة عن المعرض + طريقة الشراء)
@@ -10,74 +11,46 @@ class AboutAutoOnePage extends StatelessWidget {
 
   const AboutAutoOnePage({super.key, required this.isArabic});
 
-  Widget _sectionTitle(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w900,
-      ),
-    );
-  }
+  // أيقونات ثابتة لكروت "خدماتنا" (النصوص بس قابلة للتعديل من
+  // التحكم، الأيقونات مرتبطة بترتيب الكارت).
+  static const List<IconData> _serviceIcons = [
+    Icons.local_car_wash_rounded,
+    Icons.auto_awesome_rounded,
+    Icons.door_front_door_rounded,
+    Icons.thermostat_rounded,
+    Icons.videocam_rounded,
+    Icons.event_seat_rounded,
+    Icons.format_paint_rounded,
+    Icons.shield_rounded,
+  ];
 
-  Widget _bulletBlock(String title, String body) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-            ),
+  Widget _pageTitle(String title, String subtitle) {
+    return Column(
+      children: [
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
           ),
-          const SizedBox(height: 6),
-          Text(
-            body,
-            style: const TextStyle(fontSize: 14, height: 1.8, color: Colors.black87),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          height: 3,
+          width: 70,
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(20),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _stepRow(int number, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              '$number',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                text,
-                style: const TextStyle(fontSize: 14, height: 1.6),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+      ],
     );
   }
 
@@ -90,122 +63,740 @@ class AboutAutoOnePage extends StatelessWidget {
       return (value == null || value.isEmpty) ? fallback : value;
     }
 
+    final aboutImage = (settings?['about_image'] ?? '').toString().trim();
+    final historyImage = (settings?['history_image'] ?? '').toString().trim();
+
+    final rawPartners = settings?['brand_partners'];
+    final brandPartners = (rawPartners is List)
+        ? rawPartners
+            .whereType<Map>()
+            .map((e) => isArabic
+                ? (e['text_ar'] ?? '').toString()
+                : ((e['text_en'] ?? '').toString().isEmpty
+                    ? (e['text_ar'] ?? '').toString()
+                    : e['text_en'].toString()))
+            .where((s) => s.trim().isNotEmpty)
+            .toList()
+        : <String>[];
+
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xfff6f6f8),
+        backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: kHeaderColor,
           foregroundColor: kHeaderTextColor,
-          title: Text(isArabic ? 'عن AUTO ONE' : 'About AUTO ONE'),
+          title: Text(isArabic ? 'من نحن' : 'About Us'),
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _sectionTitle(isArabic ? 'عن أوتو ون' : 'About Auto One'),
-                  const SizedBox(height: 18),
-                  _bulletBlock(
-                    isArabic ? 'نبذة عن المعرض' : 'About the showroom',
-                    isArabic
-                        ? t(
-                            'about_intro_ar',
-                            'AUTO ONE معرض سيارات يهتم بتقديم تجربة شراء موثوقة وسهلة، بأسعار تنافسية ومجموعة مختارة بعناية من السيارات.',
-                          )
-                        : t(
-                            'about_intro_en',
-                            'AUTO ONE is a car showroom focused on offering a trusted and easy buying experience, with competitive prices and a carefully selected range of cars.',
-                          ),
-                  ),
-                  _bulletBlock(
-                    isArabic ? 'اللي بنقدمه' : 'What we offer',
-                    isArabic
-                        ? t(
-                            'about_offer_ar',
-                            'نوفّر لك مجموعة متنوعة من السيارات بموديلات وفئات مختلفة، مع معلومات وصور واضحة لكل سيارة عشان تقدر تاخد قرارك بثقة.',
-                          )
-                        : t(
-                            'about_offer_en',
-                            'We provide a diverse range of cars across different models and categories, with clear information and photos for every car so you can decide with confidence.',
-                          ),
-                  ),
-                  _bulletBlock(
-                    isArabic ? 'السيارات المتوفرة' : 'Available cars',
-                    isArabic
-                        ? t(
-                            'about_available_ar',
-                            'مخزوننا بيتجدد باستمرار بسيارات جديدة ومستعملة من ماركات متعددة، وتقدر تتصفحها كلها من صفحة "المعرض".',
-                          )
-                        : t(
-                            'about_available_en',
-                            'Our inventory is regularly refreshed with new and used cars from multiple brands, and you can browse them all from the "Cars" page.',
-                          ),
-                  ),
-                  _bulletBlock(
-                    isArabic ? 'هدفنا وخدمتنا' : 'Our goal and service',
-                    isArabic
-                        ? t(
-                            'about_goal_ar',
-                            'هدفنا إننا نسهّل عليك رحلة اختيار وشراء سيارتك من البداية للنهاية، مع دعم وتواصل سريع في أي وقت تحتاجه.',
-                          )
-                        : t(
-                            'about_goal_en',
-                            'Our goal is to make your car-buying journey simple from start to finish, with fast support whenever you need it.',
-                          ),
-                  ),
+          child: Column(
+            children: [
+              // ====================================================
+              // نبذة عنا
+              // ====================================================
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 36, 24, 40),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _pageTitle(
+                          isArabic ? 'من نحن' : 'About Us',
+                          isArabic
+                              ? 'تعرف على قصتنا ومبادئنا'
+                              : 'Learn about our story and principles',
+                        ),
+                        const SizedBox(height: 36),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isSmall = constraints.maxWidth < 800;
+                            final imageWidget = ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: AspectRatio(
+                                aspectRatio: 16 / 10,
+                                child: aboutImage.isEmpty
+                                    ? Container(
+                                        color: Colors.grey.shade200,
+                                        child: const Icon(
+                                          Icons.directions_car_filled_rounded,
+                                          size: 70,
+                                          color: Colors.black26,
+                                        ),
+                                      )
+                                    : carImageAdaptive(
+                                        aboutImage,
+                                        fit: BoxFit.cover,
+                                        showWatermark: false,
+                                      ),
+                              ),
+                            );
 
-                  const SizedBox(height: 20),
-                  Container(height: 1, color: Colors.black12),
-                  const SizedBox(height: 30),
+                            final textWidget = Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isArabic ? 'نبذة عنا' : 'About Us',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  height: 3,
+                                  width: 50,
+                                  color: Colors.red,
+                                ),
+                                const SizedBox(height: 18),
+                                Text(
+                                  isArabic
+                                      ? t(
+                                          'about_intro_ar',
+                                          'AUTO ONE معرض سيارات يهتم بتقديم تجربة شراء موثوقة وسهلة، بأسعار تنافسية ومجموعة مختارة بعناية من السيارات.',
+                                        )
+                                      : t(
+                                          'about_intro_en',
+                                          'AUTO ONE is a car showroom focused on offering a trusted and easy buying experience, with competitive prices and a carefully selected range of cars.',
+                                        ),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    height: 1.9,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  isArabic
+                                      ? t(
+                                          'about_offer_ar',
+                                          'نوفّر لك مجموعة متنوعة من السيارات بموديلات وفئات مختلفة، مع معلومات وصور واضحة لكل سيارة عشان تقدر تاخد قرارك بثقة.',
+                                        )
+                                      : t(
+                                          'about_offer_en',
+                                          'We provide a diverse range of cars across different models and categories, with clear information and photos for every car so you can decide with confidence.',
+                                        ),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    height: 1.9,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  isArabic
+                                      ? t(
+                                          'about_goal_ar',
+                                          'هدفنا إننا نسهّل عليك رحلة اختيار وشراء سيارتك من البداية للنهاية، مع دعم وتواصل سريع في أي وقت تحتاجه.',
+                                        )
+                                      : t(
+                                          'about_goal_en',
+                                          'Our goal is to make your car-buying journey simple from start to finish, with fast support whenever you need it.',
+                                        ),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    height: 1.9,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            );
 
-                  _sectionTitle(isArabic ? 'طريقة الشراء' : 'How to Buy'),
-                  const SizedBox(height: 18),
-                  _stepRow(
-                    1,
-                    isArabic
-                        ? t('step1_ar', 'اختر سيارتك')
-                        : t('step1_en', 'Choose your car'),
+                            if (isSmall) {
+                              return Column(
+                                children: [
+                                  imageWidget,
+                                  const SizedBox(height: 26),
+                                  textWidget,
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(child: imageWidget),
+                                const SizedBox(width: 48),
+                                Expanded(child: textWidget),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  _stepRow(
-                    2,
-                    isArabic
-                        ? t('step2_ar', 'اضغط طلب حجز')
-                        : t('step2_en', 'Tap "Request Booking"'),
-                  ),
-                  _stepRow(
-                    3,
-                    isArabic
-                        ? t('step3_ar', 'سجّل بياناتك')
-                        : t('step3_en', 'Fill in your details'),
-                  ),
-                  _stepRow(
-                    4,
-                    isArabic
-                        ? t('step4_ar', 'فريق AUTO ONE يتواصل معك')
-                        : t('step4_en', 'The AUTO ONE team contacts you'),
-                  ),
-                  _stepRow(
-                    5,
-                    isArabic
-                        ? t('step5_ar', 'يتم استكمال إجراءات الشراء')
-                        : t(
-                            'step5_en',
-                            'Purchase procedures are completed',
-                          ),
-                  ),
-                ],
+                ),
               ),
-            ),
+
+              // ====================================================
+              // تاريخنا (بانر غامق)
+              // ====================================================
+              Container(
+                width: double.infinity,
+                height: 300,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0B0B0B),
+                  image: historyImage.isEmpty
+                      ? null
+                      : DecorationImage(
+                          image: NetworkImage(historyImage),
+                          fit: BoxFit.cover,
+                          colorFilter: ColorFilter.mode(
+                            Colors.black.withValues(alpha: 0.55),
+                            BlendMode.darken,
+                          ),
+                        ),
+                ),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isArabic
+                          ? t('about_history_title_ar', 'تاريخنا')
+                          : t('about_history_title_en', 'Our History'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      isArabic
+                          ? t(
+                              'about_history_subtitle_ar',
+                              'حلول للمركبات بمستوى عالٍ من الجودة والثقة.',
+                            )
+                          : t(
+                              'about_history_subtitle_en',
+                              'Quality and trusted vehicle solutions.',
+                            ),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ====================================================
+              // الماركات الحصرية (لو موجودة)
+              // ====================================================
+              if (brandPartners.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 44, 24, 20),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1100),
+                      child: Column(
+                        children: [
+                          _pageTitle(
+                            isArabic
+                                ? 'الماركات الحصرية'
+                                : 'Exclusive Brands',
+                            isArabic
+                                ? 'موزّعون حصريون لعدد من أشهر الماركات العالمية'
+                                : 'Exclusive distributors for leading global brands',
+                          ),
+                          const SizedBox(height: 30),
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 16,
+                            alignment: WrapAlignment.center,
+                            children: brandPartners.map((text) {
+                              return Container(
+                                width: 320,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 18,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border(
+                                    left: isArabic
+                                        ? BorderSide.none
+                                        : const BorderSide(
+                                            color: Colors.red, width: 4),
+                                    right: isArabic
+                                        ? const BorderSide(
+                                            color: Colors.red, width: 4)
+                                        : BorderSide.none,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 10,
+                                      offset: Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  text,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+              // ====================================================
+              // خدماتنا
+              // ====================================================
+              Container(
+                width: double.infinity,
+                color: const Color(0xfff9f9fa),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 44,
+                  horizontal: 24,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    child: Column(
+                      children: [
+                        _pageTitle(
+                          isArabic
+                              ? t('about_services_title_ar', 'خدماتنا')
+                              : t('about_services_title_en', 'Our Services'),
+                          isArabic
+                              ? t(
+                                  'about_services_subtitle_ar',
+                                  'وجهتك الموثوقة لحلول العناية المتكاملة بالسيارات.',
+                                )
+                              : t(
+                                  'about_services_subtitle_en',
+                                  'Your trusted destination for complete car care solutions.',
+                                ),
+                        ),
+                        const SizedBox(height: 30),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final columns = constraints.maxWidth >= 900
+                                ? 4
+                                : constraints.maxWidth >= 600
+                                    ? 2
+                                    : 1;
+                            final cardWidth =
+                                (constraints.maxWidth - (columns - 1) * 16) /
+                                    columns;
+
+                            return Wrap(
+                              spacing: 16,
+                              runSpacing: 16,
+                              children: List.generate(8, (i) {
+                                final title = isArabic
+                                    ? t(
+                                        'about_service${i + 1}_title_ar',
+                                        _defaultServiceAr(i),
+                                      )
+                                    : t(
+                                        'about_service${i + 1}_title_en',
+                                        _defaultServiceEn(i),
+                                      );
+                                return SizedBox(
+                                  width: cardWidth,
+                                  child: HoverLift(
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius:
+                                            BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: Colors.black12,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: Colors.red
+                                                  .withValues(alpha: 0.08),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(
+                                              _serviceIcons[i],
+                                              color: Colors.red,
+                                              size: 22,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 14),
+                                          Text(
+                                            title,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // ====================================================
+              // ليه أوتو ون؟ (بنفس نصوص قسم "لماذا AUTO ONE" بالرئيسية)
+              // ====================================================
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 44,
+                  horizontal: 24,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    child: Column(
+                      children: [
+                        _pageTitle(
+                          siteText(
+                            key: 'why_title',
+                            isArabic: isArabic,
+                            defaultAr: 'ليه أوتو ون؟',
+                            defaultEn: 'WHY AUTO ONE?',
+                          ),
+                          siteText(
+                            key: 'why_subtitle',
+                            isArabic: isArabic,
+                            defaultAr: 'تجربة مختلفة في اختيار وشراء سيارتك',
+                            defaultEn:
+                                'A different experience in choosing and buying your car',
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final columns = constraints.maxWidth >= 700
+                                ? 2
+                                : 1;
+                            final cardWidth =
+                                (constraints.maxWidth - (columns - 1) * 16) /
+                                    columns;
+
+                            final items = [
+                              (
+                                Icons.local_offer_rounded,
+                                siteText(
+                                  key: 'why_card1_title',
+                                  isArabic: isArabic,
+                                  defaultAr: 'اختيارات متنوعة',
+                                  defaultEn: 'WIDE SELECTION',
+                                ),
+                                siteText(
+                                  key: 'why_card1_desc',
+                                  isArabic: isArabic,
+                                  defaultAr:
+                                      'مجموعة متنوعة من السيارات والموديلات لتختار ما يناسبك.',
+                                  defaultEn:
+                                      'A wide selection of cars and models to match your needs.',
+                                ),
+                              ),
+                              (
+                                Icons.price_check_rounded,
+                                siteText(
+                                  key: 'why_card2_title',
+                                  isArabic: isArabic,
+                                  defaultAr: 'أسعار منافسة',
+                                  defaultEn: 'COMPETITIVE PRICES',
+                                ),
+                                siteText(
+                                  key: 'why_card2_desc',
+                                  isArabic: isArabic,
+                                  defaultAr:
+                                      'أسعار مدروسة وعروض مميزة على مجموعة من السيارات.',
+                                  defaultEn:
+                                      'Competitive prices and special offers on selected cars.',
+                                ),
+                              ),
+                              (
+                                Icons.handshake_rounded,
+                                siteText(
+                                  key: 'why_card3_title',
+                                  isArabic: isArabic,
+                                  defaultAr: 'خدمة موثوقة',
+                                  defaultEn: 'RELIABLE SERVICE',
+                                ),
+                                siteText(
+                                  key: 'why_card3_desc',
+                                  isArabic: isArabic,
+                                  defaultAr:
+                                      'نهتم بتقديم تجربة واضحة ومريحة من البداية للنهاية.',
+                                  defaultEn:
+                                      'A clear and comfortable experience from start to finish.',
+                                ),
+                              ),
+                              (
+                                Icons.support_agent_rounded,
+                                siteText(
+                                  key: 'why_card4_title',
+                                  isArabic: isArabic,
+                                  defaultAr: 'تواصل سريع',
+                                  defaultEn: 'FAST SUPPORT',
+                                ),
+                                siteText(
+                                  key: 'why_card4_desc',
+                                  isArabic: isArabic,
+                                  defaultAr:
+                                      'تواصل معنا بسهولة واحصل على المساعدة التي تحتاجها.',
+                                  defaultEn:
+                                      'Reach out easily and get the help you need.',
+                                ),
+                              ),
+                            ];
+
+                            return Wrap(
+                              spacing: 16,
+                              runSpacing: 16,
+                              children: List.generate(items.length, (i) {
+                                final isRed = i == 1 || i == 3;
+                                final (icon, title, desc) = items[i];
+                                return SizedBox(
+                                  width: cardWidth,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(22),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isRed ? Colors.red : Colors.white,
+                                      borderRadius:
+                                          BorderRadius.circular(14),
+                                      border: isRed
+                                          ? null
+                                          : Border.all(color: Colors.black12),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Colors.black12,
+                                          blurRadius: 10,
+                                          offset: Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: isRed
+                                                ? Colors.white
+                                                    .withValues(alpha: 0.18)
+                                                : Colors.red
+                                                    .withValues(alpha: 0.08),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            icon,
+                                            color: isRed
+                                                ? Colors.white
+                                                : Colors.red,
+                                            size: 22,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 14),
+                                        Text(
+                                          title,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w900,
+                                            color: isRed
+                                                ? Colors.white
+                                                : Colors.black87,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          desc,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 12.5,
+                                            height: 1.6,
+                                            color: isRed
+                                                ? Colors.white70
+                                                : Colors.black54,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // ====================================================
+              // طريقة الشراء
+              // ====================================================
+              Container(
+                width: double.infinity,
+                color: const Color(0xfff6f6f8),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 44,
+                  horizontal: 24,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 700),
+                    child: Column(
+                      children: [
+                        _pageTitle(
+                          isArabic ? 'طريقة الشراء' : 'How to Buy',
+                          isArabic
+                              ? 'خطوات بسيطة توصلك لسيارتك'
+                              : 'Simple steps to get your car',
+                        ),
+                        const SizedBox(height: 30),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (var i = 0; i < 5; i++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 30,
+                                      height: 30,
+                                      alignment: Alignment.center,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Text(
+                                        '${i + 1}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          isArabic
+                                              ? t('step${i + 1}_ar',
+                                                  _defaultStepAr(i))
+                                              : t('step${i + 1}_en',
+                                                  _defaultStepEn(i)),
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            height: 1.6,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              AutoOneFooter(isArabic: isArabic),
+            ],
           ),
         ),
       ),
     );
   }
+
+  String _defaultServiceAr(int i) {
+    const defaults = [
+      'غسيل واكس احترافي للسيارات',
+      'خدمات النانو سيراميك بمختلف أشكالها',
+      'حماية أطراف ومقابض الأبواب',
+      'تظليل العازل الحراري بضمان مفتوح',
+      'داش كام بأنظمة وتقنيات عالية',
+      'أرضيات جلد خام بتركيب ديناميكي',
+      'طلاء السيارات وتلميع داخلي وخارجي',
+      'حماية داخلية وخارجية',
+    ];
+    return defaults[i];
+  }
+
+  String _defaultServiceEn(int i) {
+    const defaults = [
+      'Professional car wash & wax',
+      'Nano ceramic coating services',
+      'Door edge & handle protection',
+      'Thermal insulation tinting with open warranty',
+      'High-tech dash cams',
+      'Raw leather flooring with dynamic fitting',
+      'Interior & exterior paint polishing',
+      'Interior & exterior protection',
+    ];
+    return defaults[i];
+  }
+
+  String _defaultStepAr(int i) {
+    const defaults = [
+      'اختر سيارتك',
+      'اضغط طلب حجز',
+      'سجّل بياناتك',
+      'فريق AUTO ONE يتواصل معك',
+      'يتم استكمال إجراءات الشراء',
+    ];
+    return defaults[i];
+  }
+
+  String _defaultStepEn(int i) {
+    const defaults = [
+      'Choose your car',
+      'Tap "Request Booking"',
+      'Fill in your details',
+      'The AUTO ONE team contacts you',
+      'Purchase procedures are completed',
+    ];
+    return defaults[i];
+  }
 }
+
 
 // ============================================================
 // PRIVACY POLICY PAGE
