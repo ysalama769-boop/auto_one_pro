@@ -217,6 +217,17 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
     if (confirmed != true) return;
 
     try {
+      // بنمسح البيانات المساعدة المرتبطة بالسيارة الأول (صور وألوان)
+      // عشان متعملش مشكلة قيد ربط (foreign key) لما نمسح السيارة نفسها
+      await Supabase.instance.client
+          .from('car_images')
+          .delete()
+          .eq('car_id', id);
+      await Supabase.instance.client
+          .from('car_color_availability')
+          .delete()
+          .eq('car_id', id);
+
       await Supabase.instance.client.from('cars').delete().eq('id', id);
       await logActivity(
         isArabic
@@ -224,13 +235,32 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
             : 'Deleted car: ${carName ?? id}',
       );
       _loadCars();
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+      final isForeignKeyError =
+          e.code == '23503' || e.message.toLowerCase().contains('foreign key');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isForeignKeyError
+                ? (isArabic
+                    ? 'السيارة دي مرتبطة بحجوزات أو طلبات فعلية، فمتقدرش تتمسح خالص. تقدر تعطّلها (تخفيها من الموقع) من نموذج التعديل بدل ما تحذفها.'
+                    : 'This car has existing bookings or requests linked to it, so it can\'t be deleted. You can deactivate it (hide it from the site) from the edit form instead.')
+                : (isArabic
+                    ? 'حصلت مشكلة: ${e.message}'
+                    : 'Something went wrong: ${e.message}'),
+          ),
+          duration: const Duration(seconds: 6),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isArabic ? 'حصلت مشكلة، حاولي تاني' : 'Something went wrong',
+            isArabic ? 'حصلت مشكلة: $e' : 'Something went wrong: $e',
           ),
+          duration: const Duration(seconds: 6),
         ),
       );
     }
