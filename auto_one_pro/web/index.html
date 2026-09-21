@@ -42,7 +42,13 @@
   -->
   <script src="flutter_bootstrap.js" async></script>
 
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
+  <!--
+    مؤجَّلين (defer) عشان ما يوقفوش ظهور الصفحة الأول: المتصفح بيكمل
+    يبني الصفحة عادي وبيحمّلهم في الخلفية، وينفّذهم بعد ما الـ HTML
+    يخلص تحليل بدل ما يقف عندهم الأول (كانوا سبب "Render-blocking
+    requests" في تقرير Lighthouse).
+  -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js" defer></script>
 </body>
 </html>

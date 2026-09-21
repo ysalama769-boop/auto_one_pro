@@ -805,7 +805,9 @@ class _CarFormPageState extends State<CarFormPage> {
         final reader = html.FileReader();
         reader.readAsArrayBuffer(file);
         await reader.onLoad.first;
-        final bytes = reader.result as Uint8List;
+        final rawBytes = reader.result as Uint8List;
+        // صور السيارات هي أكبر مصدر لوزن الصفحة، فبنضغطها قبل الرفع
+        final bytes = await compressImageBytes(rawBytes);
 
         final brandFolder = brandCtrl.text.trim().isEmpty
             ? 'other'

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:html' as html;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/widgets.dart';
@@ -120,6 +122,62 @@ Future<void> loadHomepageSettings() async {
     homepageSettings.value = response;
   } catch (e) {
     // لو حصلت مشكلة، النصوص الثابتة الاحتياطية هتفضل شغالة
+  }
+}
+
+// ============================================================
+// ضغط الصور قبل الرفع (بيقلل حجم الصور المرفوعة من لوحة
+// التحكم بشكل كبير من غير ما تأثر على الشكل، وده بيسرّع تحميل
+// الموقع للزوار).
+// ============================================================
+// بيصغّر الصورة (لو أكبر من الحد الأقصى) وبيحوّلها لـ JPEG
+// بجودة معقولة، وبيرجّع البايتات الجاهزة للرفع. لو حصلت أي
+// مشكلة أثناء الضغط، بيرجّع البايتات الأصلية زي ما هي عشان
+// الرفع ما يفشلش خالص.
+Future<Uint8List> compressImageBytes(
+  Uint8List originalBytes, {
+  int maxDimension = 1600,
+  double quality = 0.82,
+}) async {
+  try {
+    final blob = html.Blob([originalBytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final imgElement = html.ImageElement();
+    imgElement.src = url;
+    await imgElement.onLoad.first;
+
+    final naturalWidth = imgElement.naturalWidth;
+    final naturalHeight = imgElement.naturalHeight;
+    html.Url.revokeObjectUrl(url);
+
+    if (naturalWidth == 0 || naturalHeight == 0) return originalBytes;
+
+    var targetWidth = naturalWidth;
+    var targetHeight = naturalHeight;
+    final biggestSide = naturalWidth > naturalHeight ? naturalWidth : naturalHeight;
+    if (biggestSide > maxDimension) {
+      final scale = maxDimension / biggestSide;
+      targetWidth = (naturalWidth * scale).round();
+      targetHeight = (naturalHeight * scale).round();
+    }
+
+    final canvas = html.CanvasElement(width: targetWidth, height: targetHeight);
+    final ctx = canvas.context2D;
+    ctx.drawImageScaled(imgElement, 0, 0, targetWidth, targetHeight);
+
+    final blobResult = await canvas.toBlob('image/jpeg', quality);
+    final reader = html.FileReader();
+    reader.readAsArrayBuffer(blobResult);
+    await reader.onLoad.first;
+    final compressed = reader.result as Uint8List;
+
+    // لو الضغط مطلّعش فرق حقيقي أو زوّد الحجم غلط، استخدم الأصلي
+    if (compressed.isEmpty || compressed.length >= originalBytes.length) {
+      return originalBytes;
+    }
+    return compressed;
+  } catch (e) {
+    return originalBytes;
   }
 }
 

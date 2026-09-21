@@ -3,6 +3,7 @@ import 'dart:html' as html;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../admin/admin_shared.dart';
 
 // ============================================================
 // ADMIN BRANDS & CATEGORIES
@@ -43,7 +44,8 @@ class _AdminBrandsCategoriesPageState
         final reader = html.FileReader();
         reader.readAsArrayBuffer(file);
         await reader.onLoad.first;
-        final bytes = reader.result as Uint8List;
+        final rawBytes = reader.result as Uint8List;
+        final bytes = await compressImageBytes(rawBytes);
 
         final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         final path =

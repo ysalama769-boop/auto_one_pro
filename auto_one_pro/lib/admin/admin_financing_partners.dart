@@ -73,7 +73,8 @@ class _AdminFinancingPartnersPageState
         final reader = html.FileReader();
         reader.readAsArrayBuffer(file);
         await reader.onLoad.first;
-        final bytes = reader.result as Uint8List;
+        final rawBytes = reader.result as Uint8List;
+        final bytes = await compressImageBytes(rawBytes);
 
         final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         final path =
@@ -165,7 +166,8 @@ class _AdminFinancingPartnersPageState
         final reader = html.FileReader();
         reader.readAsArrayBuffer(file);
         await reader.onLoad.first;
-        final bytes = reader.result as Uint8List;
+        final rawBytes = reader.result as Uint8List;
+        final bytes = await compressImageBytes(rawBytes);
 
         final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         final path =

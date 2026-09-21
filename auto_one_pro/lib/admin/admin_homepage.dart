@@ -320,7 +320,9 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         final reader = html.FileReader();
         reader.readAsArrayBuffer(file);
         await reader.onLoad.first;
-        final bytes = reader.result as Uint8List;
+        final rawBytes = reader.result as Uint8List;
+        // بنضغط الصورة قبل الرفع عشان تقلّل حجم تحميل الموقع للزوار
+        final bytes = await compressImageBytes(rawBytes);
 
         final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         final path =
@@ -378,7 +380,12 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         final reader = html.FileReader();
         reader.readAsArrayBuffer(file);
         await reader.onLoad.first;
-        final bytes = reader.result as Uint8List;
+        final rawBytes = reader.result as Uint8List;
+        // بنضغط الصورة بس لو كانت صورة (مش فيديو) قبل الرفع
+        final isImageFile = file.type.startsWith('image/');
+        final bytes = isImageFile
+            ? await compressImageBytes(rawBytes)
+            : rawBytes;
 
         final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         final path =
