@@ -1924,28 +1924,14 @@ class AutoOneFooter extends StatelessWidget {
     // ============================================================
     Widget logoColumn() {
       return Column(
-        crossAxisAlignment: crossAxis,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Image.asset(
-              'assets/logo-autoone.png',
-              height: 46,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stack) =>
-                  const SizedBox.shrink(),
-            ),
+          Image.asset(
+            'assets/logo-autoone.png',
+            height: 46,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stack) =>
+                const SizedBox.shrink(),
           ),
           const SizedBox(height: 14),
           SizedBox(
@@ -1954,7 +1940,7 @@ class AutoOneFooter extends StatelessWidget {
               isArabic
                   ? 'معرض سيارات موثوق، نوفّر لك أفضل السيارات بأسعار تنافسية وتجربة شراء سهلة.'
                   : 'A trusted car showroom offering the best cars at competitive prices.',
-              textAlign: textAlign,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 13,
@@ -1985,23 +1971,23 @@ class AutoOneFooter extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(child: logoColumn()),
-                          Expanded(child: locationColumn()),
                           Expanded(child: contactColumn()),
                           Expanded(child: linksColumn(context)),
+                          Expanded(child: locationColumn()),
                         ],
                       );
                     }
-                    // شاشة ضيقة: الأعمدة فوق بعض
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    // شاشة ضيقة: عمودين جنب بعض بدل عمود واحد
+                    final halfWidth = (constraints.maxWidth - 20) / 2;
+                    return Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 20,
+                      runSpacing: 30,
                       children: [
-                        logoColumn(),
-                        const SizedBox(height: 30),
-                        locationColumn(),
-                        const SizedBox(height: 30),
-                        contactColumn(),
-                        const SizedBox(height: 30),
-                        linksColumn(context),
+                        SizedBox(width: halfWidth, child: logoColumn()),
+                        SizedBox(width: halfWidth, child: contactColumn()),
+                        SizedBox(width: halfWidth, child: linksColumn(context)),
+                        SizedBox(width: halfWidth, child: locationColumn()),
                       ],
                     );
                   },
@@ -2018,7 +2004,8 @@ class AutoOneFooter extends StatelessWidget {
 
                 Wrap(
                   alignment: WrapAlignment.center,
-                  spacing: 18,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
                   runSpacing: 8,
                   children: [
                     _policyLink(
@@ -2026,25 +2013,29 @@ class AutoOneFooter extends StatelessWidget {
                       isArabic ? 'سياسة الخصوصية' : 'Privacy Policy',
                       PrivacyPolicyPage(isArabic: isArabic),
                     ),
+                    const Text(
+                      '•',
+                      style: TextStyle(color: Colors.black26, fontSize: 12),
+                    ),
                     _policyLink(
                       context,
                       isArabic ? 'الشروط والأحكام' : 'Terms & Conditions',
                       TermsPage(isArabic: isArabic),
                     ),
+                    const Text(
+                      '•',
+                      style: TextStyle(color: Colors.black26, fontSize: 12),
+                    ),
+                    Text(
+                      isArabic
+                          ? '© ${DateTime.now().year} AUTO ONE — جميع الحقوق محفوظة'
+                          : '© ${DateTime.now().year} AUTO ONE — All rights reserved',
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
-                ),
-
-                const SizedBox(height: 14),
-
-                Text(
-                  isArabic
-                      ? '© ${DateTime.now().year} AUTO ONE — جميع الحقوق محفوظة'
-                      : '© ${DateTime.now().year} AUTO ONE — All rights reserved',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontSize: 12,
-                  ),
                 ),
 
                 const SizedBox(height: 20),
