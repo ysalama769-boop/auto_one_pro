@@ -845,9 +845,15 @@ class _CarFormPageState extends State<CarFormPage> {
                   RegExp(r'[^\w\-]'),
                   '_',
                 );
+        final modelFolder = nameCtrl.text.trim().isEmpty
+            ? 'general'
+            : nameCtrl.text.trim().toLowerCase().replaceAll(
+                  RegExp(r'[^\w\-]'),
+                  '_',
+                );
         final safeName = file.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         final path =
-            '$brandFolder/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+            '$brandFolder/$modelFolder/${DateTime.now().millisecondsSinceEpoch}_$safeName';
 
         await Supabase.instance.client.storage.from('car_images').uploadBinary(
               path,

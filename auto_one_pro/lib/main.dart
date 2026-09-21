@@ -13,7 +13,7 @@ import 'screens/cars_page.dart';
 import 'screens/car_details_page.dart';
 import 'screens/comparison_page.dart';
 import 'admin/admin_shared.dart';
-import 'admin/admin_gate.dart';
+import 'admin/admin_gate.dart' deferred as admin_gate;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -320,9 +320,15 @@ class _AutoOneShellState extends State<AutoOneShell> {
            onCars: ([brand]) => openCars(brand),
 
             onLanguage: widget.onLanguageChanged,
-            onAdminAccess: () {
+            onAdminAccess: () async {
+              // بيحمّل كود لوحة التحكم بس في اللحظة دي (مش مع الموقع
+              // من الأول)، وده اللي بيقلل حجم التحميل لأي زائر عادي.
+              await admin_gate.loadLibrary();
+              if (!context.mounted) return;
               Navigator.of(context).push(
-                smoothRoute(AdminGate(isArabic: widget.isArabic)),
+                smoothRoute(
+                  admin_gate.AdminGate(isArabic: widget.isArabic),
+                ),
               );
             },
           ),
