@@ -68,14 +68,27 @@ class _AutoOneAppState extends State<AutoOneApp> {
       if (carId == null) return;
 
       final matches = cars.where((c) => c.id == carId);
-      if (matches.isEmpty) return;
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        navigatorKey.currentState?.push(
-          smoothRoute(
-            CarDetailsPage(car: matches.first, isArabic: isArabic),
-          ),
-        );
+      if (matches.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigatorKey.currentState?.push(
+            smoothRoute(
+              CarDetailsPage(car: matches.first, isArabic: isArabic),
+            ),
+          );
+        });
+        return;
+      }
+
+      // السيارة دي مش من ضمن الدفعة الأولى اللي اتحمّلت (أول
+      // carsPageSize سيارة) — نجيبها مباشرة بالـ id بتاعها.
+      fetchCarById(carId).then((car) {
+        if (car == null || !mounted) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigatorKey.currentState?.push(
+            smoothRoute(CarDetailsPage(car: car, isArabic: isArabic)),
+          );
+        });
       });
     } catch (e) {
       debugPrint('AUTO_ONE_DEBUG: تعذّر فتح رابط المشاركة: $e');

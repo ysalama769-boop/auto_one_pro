@@ -60,12 +60,16 @@ Future<List<CarColor>> fetchColorsForCar(int carId) async {
 // بتجيب ألوان كل السيارات دفعة واحدة (طلب واحد بس، مش طلب لكل سيارة)
 Future<void> loadColorsForCars(List<Car> carsList) async {
   try {
+    final carIds = carsList.map((c) => c.id).whereType<int>().toList();
+    if (carIds.isEmpty) return;
+
     final response = await Supabase.instance.client
         .from('car_color_availability')
         .select(
           'car_id, color_id, is_available, image, exterior_images, interior_images, colors(id, name_ar, name_en, color_value)',
         )
-        .eq('is_available', true);
+        .eq('is_available', true)
+        .inFilter('car_id', carIds);
 
     final Map<int, List<CarColor>> grouped = {};
 
@@ -99,7 +103,10 @@ Future<void> loadColorsForCars(List<Car> carsList) async {
       grouped.putIfAbsent(carId, () => []).add(color);
     }
 
-    carColorsCache = grouped;
+    // بنضيف للكاش الموجود بدل ما نستبدله بالكامل، عشان لو الدالة
+    // دي اتنادت أكتر من مرة (تحميل دفعة تانية من السيارات) الألوان
+    // القديمة متتمسحش.
+    carColorsCache = {...carColorsCache, ...grouped};
   } catch (e) {
     debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل الألوان: $e');
   }
@@ -113,12 +120,17 @@ Future<void> loadColorsForCars(List<Car> carsList) async {
 Map<int, List<String>> carImagesCache = {};
 
 
-// بتجيب صور كل السيارات دفعة واحدة (طلب واحد بس)
+// بتجيب صور السيارات اللي في carsList بس (مش كل السيارات في
+// قاعدة البيانات)، دفعة واحدة (طلب واحد بس)
 Future<void> loadImagesForCars(List<Car> carsList) async {
   try {
+    final carIds = carsList.map((c) => c.id).whereType<int>().toList();
+    if (carIds.isEmpty) return;
+
     final response = await Supabase.instance.client
         .from('car_images')
-        .select('car_id, image');
+        .select('car_id, image')
+        .inFilter('car_id', carIds);
 
     final Map<int, List<String>> grouped = {};
 
@@ -131,7 +143,8 @@ Future<void> loadImagesForCars(List<Car> carsList) async {
       grouped.putIfAbsent(carId, () => []).add(image);
     }
 
-    carImagesCache = grouped;
+    // بنضيف للكاش الموجود بدل ما نستبدله، لنفس سبب الألوان فوق
+    carImagesCache = {...carImagesCache, ...grouped};
   } catch (e) {
     debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل صور المعرض: $e');
   }
@@ -305,6 +318,47 @@ const List<CarColor> carColorLibrary = [
 // ============================================================
 // بتجيب السيارات المتاحة من الجدول وتحدّث القايمة العامة cars
 // لو حصل أي خطأ (زي مفيش إنترنت)، القايمة الثابتة تحت بتفضل شغالة كـ احتياطي
+// بتجيب سيارة واحدة بالـ id مباشرة من قاعدة البيانات — مستخدمة
+// لما حد يفتح رابط مشاركة لسيارة ممكن متكونش لسه من ضمن الدفعة
+// المتحمّلة (أول carsPageSize سيارة) في القايمة العامة cars.
+Future<Car?> fetchCarById(int id) async {
+  try {
+    final response = await Supabase.instance.client
+        .from('cars')
+        .select(
+          'id, brand, name, name_en, category, year, price, image, '
+          'description, description_en, engine, fuel, seats, transmission, '
+          'drive, horsepower, airbags, '
+          'is_offer, old_price, discount_percent, offer_start_date, '
+          'offer_end_date, is_featured, is_available, sort_order, '
+          'view_count, car_status, condition_status',
+        )
+        .eq('id', id)
+        .maybeSingle();
+
+    if (response == null) return null;
+
+    final car = Car.fromMap(response);
+    await Future.wait([
+      loadColorsForCars([car]),
+      loadImagesForCars([car]),
+    ]);
+    return car;
+  } catch (e) {
+    debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل السيارة رقم $id: $e');
+    return null;
+  }
+}
+
+// أول عدد سيارات بيتحمّل لأي صفحة (سريع)، والباقي بيتحمّل بعدين
+// دفعة دفعة (20 سيارة كل مرة) لما حد يفتح صفحة "تصفّح السيارات"
+const int carsPageSize = 20;
+
+// بيتتبّع عدد السيارات اللي اتحمّلت لحد دلوقتي، وهل فيه سيارات
+// تانية لسه معملهاش تحميل ولا خلصوا كلهم
+int _carsLoadedOffset = 0;
+bool hasMoreCarsToLoad = true;
+
 Future<void> loadCarsFromSupabase() async {
   try {
     // بنجيب بس الأعمدة اللي محتاجينها لعرض كروت السيارات في الصفحة
@@ -312,6 +366,10 @@ Future<void> loadCarsFromSupabase() async {
     // والمواصفات الكاملة)، وده بيقلل حجم البيانات اللي بتتحمّل بشكل
     // كبير خصوصًا مع عدد كبير من السيارات. التفاصيل الكاملة بتتحمّل
     // بعدين لما حد يفتح صفحة سيارة معيّنة (CarDetailsPage).
+    //
+    // وكمان بنجيب أول carsPageSize سيارة بس هنا (مش كل السيارات
+    // دفعة واحدة)، عشان الموقع يفتح بسرعة — الباقي بيتحمّل بعدين
+    // دفعة دفعة لما حد يفتح صفحة "تصفّح السيارات" (loadMoreCars).
     final response = await Supabase.instance.client
         .from('cars')
         .select(
@@ -323,7 +381,8 @@ Future<void> loadCarsFromSupabase() async {
           'view_count, car_status, condition_status',
         )
         .eq('is_available', true)
-        .order('sort_order', nullsFirst: false);
+        .order('sort_order', nullsFirst: false)
+        .range(0, carsPageSize - 1);
 
     debugPrint('AUTO_ONE_DEBUG: raw response = $response');
 
@@ -335,6 +394,8 @@ Future<void> loadCarsFromSupabase() async {
 
     if (fetched.isNotEmpty) {
       cars = fetched;
+      _carsLoadedOffset = fetched.length;
+      hasMoreCarsToLoad = fetched.length == carsPageSize;
       debugPrint('AUTO_ONE_DEBUG: cars list replaced successfully');
       await Future.wait([
         loadColorsForCars(fetched),
@@ -345,9 +406,56 @@ Future<void> loadCarsFromSupabase() async {
       debugPrint('AUTO_ONE_DEBUG: colors loaded for ${carColorsCache.length} cars, images loaded for ${carImagesCache.length} cars');
     } else {
       debugPrint('AUTO_ONE_DEBUG: fetched list was empty, keeping fallback data');
+      hasMoreCarsToLoad = false;
     }
   } catch (e) {
     debugPrint('AUTO_ONE_DEBUG: EXCEPTION while loading cars: $e');
+  }
+}
+
+// بتجيب دفعة تانية (20 سيارة) وتضيفها لقايمة cars الموجودة، من
+// غير ما تمسح اللي اتحمّل قبل كده. بترجع true لو فعلاً جابت
+// سيارات جديدة، و false لو خلصت كل السيارات أو حصل خطأ.
+Future<bool> loadMoreCars() async {
+  if (!hasMoreCarsToLoad) return false;
+
+  try {
+    final response = await Supabase.instance.client
+        .from('cars')
+        .select(
+          'id, brand, name, name_en, category, year, price, image, '
+          'description, description_en, engine, fuel, seats, transmission, '
+          'drive, horsepower, airbags, '
+          'is_offer, old_price, discount_percent, offer_start_date, '
+          'offer_end_date, is_featured, is_available, sort_order, '
+          'view_count, car_status, condition_status',
+        )
+        .eq('is_available', true)
+        .order('sort_order', nullsFirst: false)
+        .range(_carsLoadedOffset, _carsLoadedOffset + carsPageSize - 1);
+
+    final fetched = (response as List)
+        .map((row) => Car.fromMap(row as Map<String, dynamic>))
+        .toList();
+
+    if (fetched.isEmpty) {
+      hasMoreCarsToLoad = false;
+      return false;
+    }
+
+    cars = [...cars, ...fetched];
+    _carsLoadedOffset += fetched.length;
+    hasMoreCarsToLoad = fetched.length == carsPageSize;
+
+    await Future.wait([
+      loadColorsForCars(fetched),
+      loadImagesForCars(fetched),
+    ]);
+
+    return true;
+  } catch (e) {
+    debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل دفعة سيارات إضافية: $e');
+    return false;
   }
 }
 

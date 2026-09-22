@@ -32,6 +32,7 @@ class CarsPage extends StatefulWidget {
 class _CarsPageState extends State<CarsPage> {
   String search = '';
   bool showOffers = false;
+  bool _isLoadingMoreCars = false;
 
  String selectedBrand = 'ALL';
 
@@ -42,6 +43,26 @@ void initState() {
   selectedBrand = widget.initialBrand ?? 'ALL';
   showOffers = widget.initialOffers;
   selectedBodyType = widget.initialBodyType ?? 'ALL';
+
+  _loadRemainingCarsInBackground();
+}
+
+// بنكمّل تحميل باقي السيارات (20 سيارة كل مرة) في الخلفية، بدل
+// ما نستنّى كل السيارات تتحمّل الأول قبل ما الصفحة تبان — الزائر
+// بيشوف أول دفعة على طول، والباقي بيكمل يتحمّل وهو بيتصفّح.
+Future<void> _loadRemainingCarsInBackground() async {
+  if (!hasMoreCarsToLoad || _isLoadingMoreCars) return;
+
+  setState(() => _isLoadingMoreCars = true);
+
+  while (hasMoreCarsToLoad) {
+    final gotMore = await loadMoreCars();
+    if (!mounted) return;
+    if (gotMore) setState(() {});
+    if (!gotMore) break;
+  }
+
+  if (mounted) setState(() => _isLoadingMoreCars = false);
 }
   String selectedType = 'ALL';
   String selectedCategory = 'ALL';
@@ -1556,6 +1577,32 @@ String _searchAlias(Car car) {
                           _visibleCarsCount += _carsPerPage;
                         });
                       },
+                    ),
+                  ],
+                  if (_isLoadingMoreCars) ...[
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          widget.isArabic
+                              ? 'جاري تحميل باقي السيارات...'
+                              : 'Loading more cars...',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: Colors.black45,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],
