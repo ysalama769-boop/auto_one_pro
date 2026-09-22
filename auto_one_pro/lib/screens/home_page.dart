@@ -232,10 +232,291 @@ final List<Map<String, String>> slideButtons = [
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // ====================================================
+    final sections = <WidgetBuilder>[
+      (context) => BrandStrip(
+  isArabic: widget.isArabic,
+  onBrandTap: (brand) {
+    widget.onOpenCars(brand);
+  },
+),
+      (context) => Container(
+  color: Colors.white,
+  width: double.infinity,
+  height: 20,
+),
+      (context) => const SizedBox(height: 50),
+      (context) => // ====================================================
+// WHY AUTO ONE
+// ====================================================
+
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.symmetric(
+    vertical: 70,
+    horizontal: 30,
+  ),
+  color: const Color(0xFF0B0B0B),
+
+  child: Column(
+    children: [
+
+      // TITLE
+      Text(
+        siteText(
+          key: 'why_title',
+          isArabic: widget.isArabic,
+          defaultAr: 'لماذا AUTO ONE؟',
+          defaultEn: 'WHY AUTO ONE?',
+        ),
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 30,
+          fontWeight: FontWeight.w900,
+          color: Colors.white,
+        ),
+      ),
+
+      const SizedBox(height: 10),
+
+      // SUBTITLE
+      Text(
+        siteText(
+          key: 'why_subtitle',
+          isArabic: widget.isArabic,
+          defaultAr: 'تجربة مختلفة في اختيار وشراء سيارتك',
+          defaultEn: 'A different experience in choosing and buying your car',
+        ),
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 15,
+          color: Colors.white60,
+        ),
+      ),
+
+      const SizedBox(height: 45),
+
+      LayoutBuilder(
+        builder: (context, constraints) {
+
+          final isSmall = constraints.maxWidth < 700;
+
+          return Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 20,
+            runSpacing: 20,
+
+            children: [
+
+              _whyAutoOneCard(
+                icon: Icons.directions_car_filled_rounded,
+                title: siteText(
+                  key: 'why_card1_title',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'اختيارات متنوعة',
+                  defaultEn: 'WIDE SELECTION',
+                ),
+                description: siteText(
+                  key: 'why_card1_desc',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'مجموعة متنوعة من السيارات والموديلات لتختار ما يناسبك.',
+                  defaultEn: 'A wide selection of cars and models to match your needs.',
+                ),
+                isSmall: isSmall,
+                onTap: () => _showBodyTypeSheet(context),
+              ),
+
+              _whyAutoOneCard(
+                icon: Icons.price_check_rounded,
+                title: siteText(
+                  key: 'why_card2_title',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'أسعار منافسة',
+                  defaultEn: 'COMPETITIVE PRICES',
+                ),
+                description: siteText(
+                  key: 'why_card2_desc',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'أسعار مدروسة وعروض مميزة على مجموعة من السيارات.',
+                  defaultEn: 'Competitive prices and special offers on selected cars.',
+                ),
+                isSmall: isSmall,
+                onTap: () => widget.onOpenCars('__OFFERS__'),
+              ),
+
+              _whyAutoOneCard(
+                icon: Icons.handshake_rounded,
+                title: siteText(
+                  key: 'why_card3_title',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'خدمة موثوقة',
+                  defaultEn: 'RELIABLE SERVICE',
+                ),
+                description: siteText(
+                  key: 'why_card3_desc',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'نهتم بتقديم تجربة واضحة ومريحة من البداية للنهاية.',
+                  defaultEn: 'A clear and comfortable experience from start to finish.',
+                ),
+                isSmall: isSmall,
+                onTap: () {
+                  Navigator.of(context).push(
+                    smoothRoute(
+                      AboutAutoOnePage(isArabic: widget.isArabic),
+                    ),
+                  );
+                },
+              ),
+
+              _whyAutoOneCard(
+                icon: Icons.support_agent_rounded,
+                title: siteText(
+                  key: 'why_card4_title',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'تواصل سريع',
+                  defaultEn: 'FAST SUPPORT',
+                ),
+                description: siteText(
+                  key: 'why_card4_desc',
+                  isArabic: widget.isArabic,
+                  defaultAr: 'تواصل معنا بسهولة واحصل على المساعدة التي تحتاجها.',
+                  defaultEn: 'Reach out easily and get the help you need.',
+                ),
+                isSmall: isSmall,
+                onTap: () => _showQuickContactSheet(context),
+              ),
+            ],
+          );
+        },
+      ),
+    ],
+  ),
+),
+      (context) => const SizedBox(height: 35),
+      (context) => // ====================================================
+// FEATURED CARS
+// ====================================================
+
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.symmetric(
+    vertical: 55,
+    horizontal: 30,
+  ),
+  color: const Color(0xFFF7F7F7),
+
+  child: Column(
+    children: [
+      Text(
+        widget.isArabic
+            ? 'سيارات مميزة'
+            : 'FEATURED CARS',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w900,
+          color: Colors.black,
+        ),
+      ),
+
+      const SizedBox(height: 10),
+
+      Text(
+        widget.isArabic
+            ? 'اختيارات مميزة من سيارات AUTO ONE'
+            : 'A selection of featured cars from AUTO ONE',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 15,
+          color: Colors.black54,
+        ),
+      ),
+
+      const SizedBox(height: 35),
+
+      LayoutBuilder(
+  builder: (context, constraints) {
+
+   final List<Car> featuredCars = cars.where((c) => c.isFeatured).toList();
+
+// لو لسه محدش حدد أي سيارة كمميزة من لوحة التحكم، نعرض آخر السيارات
+// كإجراء احتياطي عشان القسم ميفضلش فاضي
+if (featuredCars.isEmpty && cars.isNotEmpty) {
+  featuredCars.addAll(cars.take(5));
+}
+
+    // بقت بتتسحب لجنب زي شريط الماركات، بدل ما تتلف على أكتر من صف.
+    // السهمين متحطين فوق الشريط نفسه (Stack) على الحافة اليمين
+    // والشمال، مش قسم منفصل فوقه.
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        styledHorizontalScrollbar(
+          controller: _featuredCarsScrollController,
+          child: SingleChildScrollView(
+            controller: _featuredCarsScrollController,
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                children: featuredCars.map((car) {
+                  return Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 16),
+                    child: SizedBox(
+                      width: 260,
+                      child: FeaturedCarCard(
+                        car: car,
+                        isArabic: widget.isArabic,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+        // السهمين بقوا صغيرين وف نفس مستوى شريط السحب (Scrollbar)
+        // تحت، مش قاعدين فوق صورة الكارت.
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: Transform.scale(
+            scale: 0.5,
+            child: CarouselArrow(
+              icon: Icons.arrow_back_ios_new,
+              onTap: () => _scrollBy(_featuredCarsScrollController, 320),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          bottom: 0,
+          child: Transform.scale(
+            scale: 0.5,
+            child: CarouselArrow(
+              icon: Icons.arrow_forward_ios,
+              onTap: () => _scrollBy(_featuredCarsScrollController, -320),
+            ),
+          ),
+        ),
+      ],
+    );
+        },
+      ),
+    ],
+  ),
+),
+      (context) => const SizedBox(height: 50),
+      (context) => _FinancingPartnersCarousel(isArabic: widget.isArabic),
+      (context) => const SizedBox(height: 50),
+      (context) => _ReviewsCarousel(isArabic: widget.isArabic),
+      (context) => const SizedBox(height: 40),
+      (context) => AutoOneFooter(isArabic: widget.isArabic),
+    ];
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: // ====================================================
           // HERO (فيديو/صورة full-width بتملا الشاشة)
           // ====================================================
 
@@ -538,299 +819,19 @@ final List<Map<String, String>> slideButtons = [
               );
             },
           ),
-
-BrandStrip(
-  isArabic: widget.isArabic,
-  onBrandTap: (brand) {
-    widget.onOpenCars(brand);
-  },
-),
-
-Container(
-  color: Colors.white,
-  width: double.infinity,
-  height: 20,
-),
-
-          const SizedBox(height: 50),
-// ====================================================
-// WHY AUTO ONE
-// ====================================================
-
-Container(
-  width: double.infinity,
-  padding: const EdgeInsets.symmetric(
-    vertical: 70,
-    horizontal: 30,
-  ),
-  color: const Color(0xFF0B0B0B),
-
-  child: Column(
-    children: [
-
-      // TITLE
-      Text(
-        siteText(
-          key: 'why_title',
-          isArabic: widget.isArabic,
-          defaultAr: 'لماذا AUTO ONE؟',
-          defaultEn: 'WHY AUTO ONE?',
         ),
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 30,
-          fontWeight: FontWeight.w900,
-          color: Colors.white,
-        ),
-      ),
-
-      const SizedBox(height: 10),
-
-      // SUBTITLE
-      Text(
-        siteText(
-          key: 'why_subtitle',
-          isArabic: widget.isArabic,
-          defaultAr: 'تجربة مختلفة في اختيار وشراء سيارتك',
-          defaultEn: 'A different experience in choosing and buying your car',
-        ),
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 15,
-          color: Colors.white60,
-        ),
-      ),
-
-      const SizedBox(height: 45),
-
-      LayoutBuilder(
-        builder: (context, constraints) {
-
-          final isSmall = constraints.maxWidth < 700;
-
-          return Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 20,
-            runSpacing: 20,
-
-            children: [
-
-              _whyAutoOneCard(
-                icon: Icons.directions_car_filled_rounded,
-                title: siteText(
-                  key: 'why_card1_title',
-                  isArabic: widget.isArabic,
-                  defaultAr: 'اختيارات متنوعة',
-                  defaultEn: 'WIDE SELECTION',
-                ),
-                description: siteText(
-                  key: 'why_card1_desc',
-                  isArabic: widget.isArabic,
-                  defaultAr: 'مجموعة متنوعة من السيارات والموديلات لتختار ما يناسبك.',
-                  defaultEn: 'A wide selection of cars and models to match your needs.',
-                ),
-                isSmall: isSmall,
-                onTap: () => _showBodyTypeSheet(context),
-              ),
-
-              _whyAutoOneCard(
-                icon: Icons.price_check_rounded,
-                title: siteText(
-                  key: 'why_card2_title',
-                  isArabic: widget.isArabic,
-                  defaultAr: 'أسعار منافسة',
-                  defaultEn: 'COMPETITIVE PRICES',
-                ),
-                description: siteText(
-                  key: 'why_card2_desc',
-                  isArabic: widget.isArabic,
-                  defaultAr: 'أسعار مدروسة وعروض مميزة على مجموعة من السيارات.',
-                  defaultEn: 'Competitive prices and special offers on selected cars.',
-                ),
-                isSmall: isSmall,
-                onTap: () => widget.onOpenCars('__OFFERS__'),
-              ),
-
-              _whyAutoOneCard(
-                icon: Icons.handshake_rounded,
-                title: siteText(
-                  key: 'why_card3_title',
-                  isArabic: widget.isArabic,
-                  defaultAr: 'خدمة موثوقة',
-                  defaultEn: 'RELIABLE SERVICE',
-                ),
-                description: siteText(
-                  key: 'why_card3_desc',
-                  isArabic: widget.isArabic,
-                  defaultAr: 'نهتم بتقديم تجربة واضحة ومريحة من البداية للنهاية.',
-                  defaultEn: 'A clear and comfortable experience from start to finish.',
-                ),
-                isSmall: isSmall,
-                onTap: () {
-                  Navigator.of(context).push(
-                    smoothRoute(
-                      AboutAutoOnePage(isArabic: widget.isArabic),
-                    ),
-                  );
-                },
-              ),
-
-              _whyAutoOneCard(
-                icon: Icons.support_agent_rounded,
-                title: siteText(
-                  key: 'why_card4_title',
-                  isArabic: widget.isArabic,
-                  defaultAr: 'تواصل سريع',
-                  defaultEn: 'FAST SUPPORT',
-                ),
-                description: siteText(
-                  key: 'why_card4_desc',
-                  isArabic: widget.isArabic,
-                  defaultAr: 'تواصل معنا بسهولة واحصل على المساعدة التي تحتاجها.',
-                  defaultEn: 'Reach out easily and get the help you need.',
-                ),
-                isSmall: isSmall,
-                onTap: () => _showQuickContactSheet(context),
-              ),
-            ],
-          );
-        },
-      ),
-    ],
-  ),
-),
-const SizedBox(height: 35),
-
-          // ====================================================
-// FEATURED CARS
-// ====================================================
-
-Container(
-  width: double.infinity,
-  padding: const EdgeInsets.symmetric(
-    vertical: 55,
-    horizontal: 30,
-  ),
-  color: const Color(0xFFF7F7F7),
-
-  child: Column(
-    children: [
-      Text(
-        widget.isArabic
-            ? 'سيارات مميزة'
-            : 'FEATURED CARS',
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w900,
-          color: Colors.black,
-        ),
-      ),
-
-      const SizedBox(height: 10),
-
-      Text(
-        widget.isArabic
-            ? 'اختيارات مميزة من سيارات AUTO ONE'
-            : 'A selection of featured cars from AUTO ONE',
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 15,
-          color: Colors.black54,
-        ),
-      ),
-
-      const SizedBox(height: 35),
-
-      LayoutBuilder(
-  builder: (context, constraints) {
-
-   final List<Car> featuredCars = cars.where((c) => c.isFeatured).toList();
-
-// لو لسه محدش حدد أي سيارة كمميزة من لوحة التحكم، نعرض آخر السيارات
-// كإجراء احتياطي عشان القسم ميفضلش فاضي
-if (featuredCars.isEmpty && cars.isNotEmpty) {
-  featuredCars.addAll(cars.take(5));
-}
-
-    // بقت بتتسحب لجنب زي شريط الماركات، بدل ما تتلف على أكتر من صف.
-    // السهمين متحطين فوق الشريط نفسه (Stack) على الحافة اليمين
-    // والشمال، مش قسم منفصل فوقه.
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        styledHorizontalScrollbar(
-          controller: _featuredCarsScrollController,
-          child: SingleChildScrollView(
-            controller: _featuredCarsScrollController,
-            scrollDirection: Axis.horizontal,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Row(
-                children: featuredCars.map((car) {
-                  return Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 16),
-                    child: SizedBox(
-                      width: 260,
-                      child: FeaturedCarCard(
-                        car: car,
-                        isArabic: widget.isArabic,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => _LazySection(
+              index: index,
+              child: sections[index](context),
             ),
-          ),
-        ),
-        // السهمين بقوا صغيرين وف نفس مستوى شريط السحب (Scrollbar)
-        // تحت، مش قاعدين فوق صورة الكارت.
-        Positioned(
-          right: 0,
-          bottom: 0,
-          child: Transform.scale(
-            scale: 0.5,
-            child: CarouselArrow(
-              icon: Icons.arrow_back_ios_new,
-              onTap: () => _scrollBy(_featuredCarsScrollController, 320),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          bottom: 0,
-          child: Transform.scale(
-            scale: 0.5,
-            child: CarouselArrow(
-              icon: Icons.arrow_forward_ios,
-              onTap: () => _scrollBy(_featuredCarsScrollController, -320),
-            ),
+            childCount: sections.length,
           ),
         ),
       ],
     );
-        },
-      ),
-    ],
-  ),
-),
 
-const SizedBox(height: 50),
-
-_FinancingPartnersCarousel(isArabic: widget.isArabic),
-
-const SizedBox(height: 50),
-
-_ReviewsCarousel(isArabic: widget.isArabic),
-
-const SizedBox(height: 40),
-
-AutoOneFooter(isArabic: widget.isArabic),
-
-        ],
-      ),
-    );
- 
   }
  Widget _whyAutoOneCard({
   required IconData icon,
@@ -2974,6 +2975,69 @@ class _HeroMediaState extends State<_HeroMedia> {
       height: double.infinity,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) => _errorFallback(),
+    );
+  }
+}
+
+// ============================================================
+// LAZY SECTION (تأثير ظهور تدريجي لكل قسم في الصفحة الرئيسية،
+// وبيتربط مع SliverList عشان القسم البعيد عن الشاشة أصلاً ميتبنيش
+// (يتحمّل) غير لما الزائر يقرّب منه بالسكرول)
+// ============================================================
+class _LazySection extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _LazySection({required this.index, required this.child});
+
+  @override
+  State<_LazySection> createState() => _LazySectionState();
+}
+
+class _LazySectionState extends State<_LazySection>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+    );
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.04),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    // بنأخّر بداية كل قسم شوية عن اللي قبله، عشان الأقسام تبان
+    // بترتيب واحد ورا التاني بدل ما تطلع كلها مرة واحدة — والتأخير
+    // محدود بحد أقصى عشان قسم بعيد اتبنى بسبب سكرول سريع ميستناش
+    // كتير.
+    final delayMs = 70 * widget.index;
+    final delay = Duration(milliseconds: delayMs > 300 ? 300 : delayMs);
+    Future.delayed(delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: _slide,
+        child: widget.child,
+      ),
     );
   }
 }
