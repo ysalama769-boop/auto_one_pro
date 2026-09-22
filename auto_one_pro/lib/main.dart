@@ -146,42 +146,19 @@ class SplashScreen extends StatefulWidget {
 }
 
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
-  late final Animation<double> _scale;
-
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-
-    _fade = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
-
-    _scale = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
-
-    _controller.forward();
-
     _bootstrap();
   }
 
   Future<void> _bootstrap() async {
-    // بيجيب بيانات السيارات من Supabase، مع ضمان إن الـ Splash Screen
-    // تظهر ثانيتين على الأقل حتى لو النت سريع
+    // بيجيب بيانات السيارات وإعدادات الرئيسية من Supabase، من غير
+    // أي تأخير مصطنع — بمجرد ما البيانات تجهز، بنكمل على طول.
     await Future.wait([
       loadCarsFromSupabase(),
       loadHomepageSettings(),
-      Future.delayed(const Duration(milliseconds: 2200)),
     ]);
 
     if (mounted) {
@@ -190,37 +167,17 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection:
           widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
+        // نفس خلفية شاشة التحميل الأولى (اللي في index.html)، عشان
+        // الانتقال بينهم يبقى سلس ومش حاسة إنها شاشة تانية منفصلة —
+        // من غير لوجو تاني ولا أنيميشن، بس مؤشر تحميل بسيط.
         backgroundColor: Colors.white,
-        body: Center(
-          child: FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/logo-autoone.png',
-                    width: 220,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 28),
-                  const PulsingDots(),
-                ],
-              ),
-            ),
-          ),
+        body: const Center(
+          child: PulsingDots(),
         ),
       ),
     );
