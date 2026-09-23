@@ -2837,7 +2837,7 @@ Container(
       // فيه بند واحد على الأقل متعلّم "متوفر" للسيارة دي.
       _ExtraSpecsAccordion(
         isArabic: isArabic,
-        specsByCategory: car.extraSpecsByCategory,
+        car: car,
       ),
 
       // DESCRIPTION (لو متسجل)
@@ -3308,114 +3308,75 @@ class _ShareOptionButton extends StatelessWidget {
 // وقيم البنود المعروفة لنصوص عربي/إنجليزي واضحة، وبتعرض أي
 // بند مخصّص (مش من ضمن الـ40 المعروفة) بشكله الخام زي ما اتكتب)
 // ============================================================
-class _ExtraSpecsAccordion extends StatelessWidget {
+// ============================================================
+// EXTRA SPECS ACCORDION (نسخة فاخرة للعميل) — قوائم مطوية فئة
+// بفئة، كل فئة بلونها وأيقونتها ودايرة تقدّم، وفتح/قفل بحركة
+// ناعمة، وقسم واحد بس مفتوح في نفس الوقت. بتجمّع قيم البنود من
+// مصدرين: الـ40 بند الجديدة (من extra_specs)، والـ8 بند القديمة
+// اللي قيمتها متخزنة في أعمدة السيارة نفسها (الوقود، الناقل...).
+// ============================================================
+class _ExtraSpecsAccordion extends StatefulWidget {
   final bool isArabic;
-  final Map<String, Map<String, String>> specsByCategory;
+  final Car car;
 
   const _ExtraSpecsAccordion({
     required this.isArabic,
-    required this.specsByCategory,
+    required this.car,
   });
 
   @override
-  Widget build(BuildContext context) {
-    // بنبني قايمة الأقسام اللي فيها بيانات فعلية بس، بترتيب
-    // العرض المعرّف في carSpecCategories، وبعدها أي قسم مخصّص
-    // (زي "أخرى") مش موجود في الشيما الأساسية.
-    final sections = <_SpecSection>[];
+  State<_ExtraSpecsAccordion> createState() => _ExtraSpecsAccordionState();
+}
 
-    for (final category in carSpecCategories) {
-      final rawValues = specsByCategory[category.key];
-      if (rawValues == null || rawValues.isEmpty) continue;
+class _ExtraSpecsAccordionState extends State<_ExtraSpecsAccordion> {
+  String? openCategoryKey;
 
-      final rows = <_SpecRow>[];
-      for (final item in category.items) {
-        final rawValue = rawValues[item.key];
-        if (rawValue == null || rawValue.trim().isEmpty) continue;
+  bool get isArabic => widget.isArabic;
+  Car get car => widget.car;
 
-        rows.add(
-          _SpecRow(
-            label: isArabic ? item.labelAr : item.labelEn,
-            value: _formatSpecValue(item, rawValue, isArabic),
-          ),
-        );
+  // بيجيب القيمة الخام لبند معيّن، من عمود السيارة الحقيقي لو
+  // البند قديم (storesInColumn)، أو من extra_specs لو جديد.
+  String? _rawValueFor(CarSpecCategory category, CarSpecItem item) {
+    if (item.storesInColumn != null) {
+      switch (item.storesInColumn) {
+        case 'fuel':
+          return car.fuel.trim().isEmpty ? null : car.fuel.trim();
+        case 'transmission':
+          return car.transmission.trim().isEmpty
+              ? null
+              : car.transmission.trim();
+        case 'drive':
+          return car.drive.trim().isEmpty ? null : car.drive.trim();
+        case 'seats':
+          return car.seats.trim().isEmpty ? null : car.seats.trim();
+        case 'sunroof':
+          return car.sunroof.trim().isEmpty ? null : car.sunroof.trim();
+        case 'airbags':
+          return car.airbags.trim().isEmpty ? null : car.airbags.trim();
+        case 'wireless_charger':
+          return car.wirelessCharger.trim().isEmpty ? null : 'true';
+        case 'abs_system':
+          return car.absSystem.trim().isEmpty ? null : 'true';
       }
-      if (rows.isNotEmpty) {
-        sections.add(
-          _SpecSection(
-            title: isArabic ? category.labelAr : category.labelEn,
-            rows: rows,
-          ),
-        );
-      }
+      return null;
     }
-
-    // أي قسم إضافي مش من ضمن الشيما (زي "أخرى" أو أي حاجة قديمة)
-    for (final entry in specsByCategory.entries) {
-      final isKnownCategory =
-          carSpecCategories.any((c) => c.key == entry.key);
-      if (isKnownCategory || entry.value.isEmpty) continue;
-
-      final rows = entry.value.entries
-          .where((e) => e.value.trim().isNotEmpty)
-          .map((e) => _SpecRow(label: e.key, value: e.value))
-          .toList();
-      if (rows.isNotEmpty) {
-        sections.add(
-          _SpecSection(
-            title: isArabic ? 'مواصفات أخرى' : 'Other Specs',
-            rows: rows,
-          ),
-        );
-      }
-    }
-
-    if (sections.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            isArabic ? 'مواصفات تفصيلية' : 'DETAILED SPECIFICATIONS',
-            style: const TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...sections.map(
-            (section) => _ExtraSpecCategoryTile(
-              title: section.title,
-              rows: section.rows,
-            ),
-          ),
-        ],
-      ),
-    );
+    return car.extraSpecsByCategory[category.key]?[item.key];
   }
 
-  // بيترجم القيمة الخام المخزّنة (زي "led" أو "true") لنص واضح
-  // للعميل حسب نوع البند في الشيما.
-  String _formatSpecValue(CarSpecItem item, String rawValue, bool isArabic) {
+  String _formatSpecValue(CarSpecItem item, String rawValue) {
     switch (item.type) {
       case CarSpecType.toggle:
         return isArabic ? 'متوفر' : 'Available';
-
       case CarSpecType.choice:
         for (final option in item.options) {
           if (option.value == rawValue) {
             var label = isArabic ? option.labelAr : option.labelEn;
             final unit = isArabic ? item.unitAr : item.unitEn;
-            if (unit != null && unit.isNotEmpty) {
-              label = '$label $unit';
-            }
+            if (unit != null && unit.isNotEmpty) label = '$label $unit';
             return label;
           }
         }
         return rawValue;
-
       case CarSpecType.multiChoice:
         final selectedValues = rawValue.split(',').map((s) => s.trim());
         final labels = selectedValues.map((v) {
@@ -3429,72 +3390,253 @@ class _ExtraSpecsAccordion extends StatelessWidget {
         return labels.join(isArabic ? '، ' : ', ');
     }
   }
-}
-
-class _SpecSection {
-  final String title;
-  final List<_SpecRow> rows;
-  _SpecSection({required this.title, required this.rows});
-}
-
-class _SpecRow {
-  final String label;
-  final String value;
-  _SpecRow({required this.label, required this.value});
-}
-
-class _ExtraSpecCategoryTile extends StatelessWidget {
-  final String title;
-  final List<_SpecRow> rows;
-
-  const _ExtraSpecCategoryTile({required this.title, required this.rows});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black12),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          childrenPadding:
-              const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          title: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+    // بنبني، لكل قسم، عدد البنود المتوفرة وقيمها الجاهزة للعرض.
+    final sectionsData = <_SpecSectionData>[];
+    for (final category in carSpecCategories) {
+      final rows = <_SpecRowData>[];
+      for (final item in category.items) {
+        final raw = _rawValueFor(category, item);
+        if (raw == null || raw.trim().isEmpty) continue;
+        rows.add(
+          _SpecRowData(
+            icon: item.icon,
+            label: isArabic ? item.labelAr : item.labelEn,
+            value: _formatSpecValue(item, raw),
           ),
-          children: [
-            for (final row in rows)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        row.label,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      row.value,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
+        );
+      }
+      if (rows.isNotEmpty) {
+        sectionsData.add(
+          _SpecSectionData(
+            key: category.key,
+            title: isArabic ? category.labelAr : category.labelEn,
+            icon: category.icon,
+            color: category.color,
+            total: category.items.length,
+            rows: rows,
+          ),
+        );
+      }
+    }
+
+    // أي قسم حر إضافي (زي "أخرى" من المواصفات المخصصة القديمة)
+    for (final entry in car.extraSpecsByCategory.entries) {
+      final isKnownCategory =
+          carSpecCategories.any((c) => c.key == entry.key);
+      if (isKnownCategory || entry.value.isEmpty) continue;
+      final rows = entry.value.entries
+          .where((e) => e.value.trim().isNotEmpty)
+          .map((e) => _SpecRowData(
+                icon: Icons.check_circle_outline_rounded,
+                label: e.key,
+                value: e.value,
+              ))
+          .toList();
+      if (rows.isNotEmpty) {
+        sectionsData.add(
+          _SpecSectionData(
+            key: entry.key,
+            title: isArabic ? 'مواصفات أخرى' : 'Other Specs',
+            icon: Icons.more_horiz_rounded,
+            color: Colors.grey.shade700,
+            total: rows.length,
+            rows: rows,
+          ),
+        );
+      }
+    }
+
+    if (sectionsData.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            isArabic ? 'مواصفات تفصيلية' : 'DETAILED SPECIFICATIONS',
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 17,
+            ),
+          ),
+          const SizedBox(height: 14),
+          for (final section in sectionsData)
+            _PremiumSpecSection(
+              data: section,
+              isOpen: openCategoryKey == section.key,
+              onTap: () {
+                setState(() {
+                  openCategoryKey =
+                      openCategoryKey == section.key ? null : section.key;
+                });
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpecSectionData {
+  final String key;
+  final String title;
+  final IconData icon;
+  final Color color;
+  final int total;
+  final List<_SpecRowData> rows;
+
+  _SpecSectionData({
+    required this.key,
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.total,
+    required this.rows,
+  });
+}
+
+class _SpecRowData {
+  final IconData icon;
+  final String label;
+  final String value;
+  _SpecRowData({required this.icon, required this.label, required this.value});
+}
+
+// ============================================================
+// PREMIUM SPEC SECTION (قسم واحد فاخر: لون + أيقونة + دايرة تقدم
+// + فتح/قفل بحركة ناعمة)
+// ============================================================
+class _PremiumSpecSection extends StatelessWidget {
+  final _SpecSectionData data;
+  final bool isOpen;
+  final VoidCallback onTap;
+
+  const _PremiumSpecSection({
+    required this.data,
+    required this.isOpen,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ratio = data.total == 0 ? 0.0 : data.rows.length / data.total;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isOpen ? data.color.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isOpen
+              ? data.color.withValues(alpha: 0.5)
+              : Colors.black.withValues(alpha: 0.08),
+          width: isOpen ? 1.4 : 1,
         ),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 42,
+                          height: 42,
+                          child: CircularProgressIndicator(
+                            value: ratio == 0 ? 1 : ratio,
+                            strokeWidth: 3.2,
+                            backgroundColor: data.color.withValues(alpha: .12),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              ratio == 0 ? Colors.transparent : data.color,
+                            ),
+                          ),
+                        ),
+                        Icon(data.icon, size: 19, color: data.color),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      data.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        color: isOpen ? data.color : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: isOpen ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 220),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: isOpen ? data.color : Colors.black38,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+            child: isOpen
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 1,
+                          color: data.color.withValues(alpha: 0.15),
+                          margin: const EdgeInsets.only(bottom: 10),
+                        ),
+                        for (final row in data.rows)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 7),
+                            child: Row(
+                              children: [
+                                Icon(row.icon, size: 16, color: data.color),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    row.label,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  row.value,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
       ),
     );
   }

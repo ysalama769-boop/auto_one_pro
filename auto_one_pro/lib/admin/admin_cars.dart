@@ -786,6 +786,31 @@ class _CarFormPageState extends State<CarFormPage> {
       });
     }
 
+    // البنود القديمة اللي بقت جوه الواجهة المنظّمة (الوقود، الناقل،
+    // الدفع، المقاعد، الوسائد، ABS، فتحة السقف، الشاحن اللاسلكي)
+    // قيمتها الأصلية متخزنة في أعمدتها الحقيقية، فبنجيبها من نفس
+    // الكنترولرز اللي جهزوها فوق، مش من extra_specs.
+    void loadColumnBacked(String key, TextEditingController ctrl) {
+      final value = ctrl.text.trim();
+      if (value.isNotEmpty) {
+        structuredSpecValues[key] = value;
+      }
+    }
+
+    loadColumnBacked('fuel', fuelCtrl);
+    loadColumnBacked('transmission', transmissionCtrl);
+    loadColumnBacked('drive', driveCtrl);
+    loadColumnBacked('seats', seatsCtrl);
+    loadColumnBacked('sunroof', sunroofCtrl);
+    loadColumnBacked('airbags', airbagsCtrl);
+    // دول توجل/تفعيل بس (نص حر قديم)، فأي قيمة غير فاضية معناها "مفعّل"
+    if (wirelessChargerCtrl.text.trim().isNotEmpty) {
+      structuredSpecValues['wireless_charger'] = 'true';
+    }
+    if (absSystemCtrl.text.trim().isNotEmpty) {
+      structuredSpecValues['abs_system'] = 'true';
+    }
+
     _loadExtras();
   }
 
@@ -1468,43 +1493,9 @@ class _CarFormPageState extends State<CarFormPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: seatsCtrl,
-                      label: isArabic ? 'المقاعد' : 'Seats',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: engineCtrl,
-                      label: isArabic ? 'المحرك' : 'Engine',
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: transmissionCtrl,
-                      label: isArabic ? 'ناقل الحركة' : 'Transmission',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: fuelCtrl,
-                      label: isArabic ? 'الوقود' : 'Fuel',
-                    ),
-                  ),
-                ],
-              ),
               _field(
-                controller: driveCtrl,
-                label: isArabic ? 'نظام الدفع' : 'Drive system',
+                controller: engineCtrl,
+                label: isArabic ? 'المحرك' : 'Engine',
               ),
 
               Row(
@@ -1615,45 +1606,10 @@ class _CarFormPageState extends State<CarFormPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: infotainmentCtrl,
-                      label:
-                          isArabic ? 'نظام الترفيه/الشاشة' : 'Infotainment',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: sunroofCtrl,
-                      label: isArabic ? 'فتحة سقف' : 'Sunroof',
-                    ),
-                  ),
-                ],
+              _field(
+                controller: infotainmentCtrl,
+                label: isArabic ? 'نظام الترفيه/الشاشة' : 'Infotainment',
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: cameraSensorsCtrl,
-                      label: isArabic
-                          ? 'كاميرا خلفية + حساسات ركن'
-                          : 'Camera & sensors',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: wirelessChargerCtrl,
-                      label:
-                          isArabic ? 'شاحن لاسلكي' : 'Wireless charger',
-                    ),
-                  ),
-                ],
-              ),
-
               _categoryExtraSpecsSection('features', setDialogState),
 
               const SizedBox(height: 8),
@@ -1668,25 +1624,6 @@ class _CarFormPageState extends State<CarFormPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: airbagsCtrl,
-                      label: isArabic
-                          ? 'عدد الوسائد الهوائية'
-                          : 'Number of airbags',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: absSystemCtrl,
-                      label: isArabic ? 'نظام ABS' : 'ABS system',
-                    ),
-                  ),
-                ],
-              ),
 
               _categoryExtraSpecsSection('safety', setDialogState),
 
@@ -2763,7 +2700,42 @@ class _CarFormPageState extends State<CarFormPage> {
                       ),
                     );
                     if (result != null) {
-                      setState(() => structuredSpecValues = result);
+                      setState(() {
+                        structuredSpecValues = result;
+                        // البنود اللي قيمتها بترجع تتخزن في عمود
+                        // حقيقي (مش extra_specs) — بنزامن القيمة مع
+                        // الكنترولر بتاعها، عشان دالة الحفظ العادية
+                        // تلتقطها زي ما هي من غير ما نلمسها.
+                        void syncColumn(
+                          String key,
+                          TextEditingController ctrl, {
+                          bool isToggle = false,
+                        }) {
+                          final value = result[key];
+                          if (isToggle) {
+                            ctrl.text = value != null ? 'نعم' : '';
+                          } else {
+                            ctrl.text = value ?? '';
+                          }
+                        }
+
+                        syncColumn('fuel', fuelCtrl);
+                        syncColumn('transmission', transmissionCtrl);
+                        syncColumn('drive', driveCtrl);
+                        syncColumn('seats', seatsCtrl);
+                        syncColumn('sunroof', sunroofCtrl);
+                        syncColumn('airbags', airbagsCtrl);
+                        syncColumn(
+                          'wireless_charger',
+                          wirelessChargerCtrl,
+                          isToggle: true,
+                        );
+                        syncColumn(
+                          'abs_system',
+                          absSystemCtrl,
+                          isToggle: true,
+                        );
+                      });
                     }
                   },
                   style: OutlinedButton.styleFrom(
@@ -2833,12 +2805,14 @@ class _StructuredSpecItemTile extends StatelessWidget {
   final bool isArabic;
   final String? currentValue; // null = مش متوفرة في السيارة دي
   final void Function(String? value) onChanged;
+  final Color accentColor;
 
   const _StructuredSpecItemTile({
     required this.item,
     required this.isArabic,
     required this.currentValue,
     required this.onChanged,
+    this.accentColor = Colors.red,
   });
 
   @override
@@ -2852,6 +2826,8 @@ class _StructuredSpecItemTile extends StatelessWidget {
         children: [
           Row(
             children: [
+              Icon(item.icon, size: 17, color: accentColor),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   isArabic ? item.labelAr : item.labelEn,
@@ -2863,7 +2839,7 @@ class _StructuredSpecItemTile extends StatelessWidget {
               ),
               Switch(
                 value: isEnabled,
-                activeColor: Colors.red,
+                activeColor: accentColor,
                 onChanged: (value) {
                   if (!value) {
                     onChanged(null);
@@ -2929,10 +2905,10 @@ class _StructuredSpecItemTile extends StatelessWidget {
                       vertical: 7,
                     ),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.red : Colors.grey.shade100,
+                      color: isSelected ? accentColor : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: isSelected ? Colors.red : Colors.black12,
+                        color: isSelected ? accentColor : Colors.black12,
                       ),
                     ),
                     child: Text(
@@ -2976,21 +2952,28 @@ class CarSpecsEditorPage extends StatefulWidget {
 
 class _CarSpecsEditorPageState extends State<CarSpecsEditorPage> {
   late Map<String, String> values;
+  String selectedCategoryKey = carSpecCategories.first.key;
 
-  // كل بنود الـ8 أقسام مجمّعين في قايمة واحدة مسطّحة، بنفس ترتيب
-  // الشيما (فمحتاجين متقاربين منطقيًا حتى من غير عناوين أقسام)
-  late final List<CarSpecItem> allItems;
+  bool get isArabic => widget.isArabic;
 
   @override
   void initState() {
     super.initState();
     values = Map<String, String>.from(widget.initialValues);
-    allItems = [
-      for (final category in carSpecCategories) ...category.items,
-    ];
   }
 
-  bool get isArabic => widget.isArabic;
+  int _activeCountFor(CarSpecCategory category) =>
+      category.items.where((item) => values.containsKey(item.key)).length;
+
+  void _onItemChanged(String key, String? value) {
+    setState(() {
+      if (value == null) {
+        values.remove(key);
+      } else {
+        values[key] = value;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -3015,67 +2998,397 @@ class _CarSpecsEditorPageState extends State<CarSpecsEditorPage> {
             ),
           ],
         ),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Text(
-              isArabic
-                  ? 'فعّلي بس البنود المتوفرة فعليًا في السيارة دي؛ أي بند تسيبيه من غير تفعيل مش هيبان للعميل خالص.'
-                  : 'Only enable the items actually available in this car; anything left off won\'t show to customers at all.',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black12),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 760;
+            return isWide ? _buildWideLayout() : _buildNarrowLayout();
+          },
+        ),
+      ),
+    );
+  }
+
+  // ==========================================================
+  // الديسكتوب: عمود قائمة (يمين) + عمود تفاصيل (المساحة الباقية)
+  // ==========================================================
+  Widget _buildWideLayout() {
+    final selectedCategory =
+        carSpecCategories.firstWhere((c) => c.key == selectedCategoryKey);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 280,
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            children: [
+              for (final category in carSpecCategories)
+                _CategoryNavRow(
+                  category: category,
+                  isArabic: isArabic,
+                  isSelected: category.key == selectedCategoryKey,
+                  activeCount: _activeCountFor(category),
+                  onTap: () =>
+                      setState(() => selectedCategoryKey = category.key),
+                ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              key: ValueKey(selectedCategoryKey),
+              child: _CategoryDetailPanel(
+                category: selectedCategory,
+                isArabic: isArabic,
+                values: values,
+                onItemChanged: _onItemChanged,
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================================
+  // الموبايل: أكورديون رأسي، قسم واحد بس مفتوح في نفس الوقت
+  // ==========================================================
+  Widget _buildNarrowLayout() {
+    return ListView(
+      padding: const EdgeInsets.all(14),
+      children: [
+        for (final category in carSpecCategories)
+          _MobileAccordionSection(
+            category: category,
+            isArabic: isArabic,
+            values: values,
+            isOpen: category.key == selectedCategoryKey,
+            activeCount: _activeCountFor(category),
+            onHeaderTap: () {
+              setState(() {
+                selectedCategoryKey =
+                    selectedCategoryKey == category.key ? '' : category.key;
+              });
+            },
+            onItemChanged: _onItemChanged,
+          ),
+      ],
+    );
+  }
+}
+
+// ============================================================
+// CATEGORY NAV ROW (صف واحد في القايمة الجانبية على الديسكتوب)
+// ============================================================
+class _CategoryNavRow extends StatelessWidget {
+  final CarSpecCategory category;
+  final bool isArabic;
+  final bool isSelected;
+  final int activeCount;
+  final VoidCallback onTap;
+
+  const _CategoryNavRow({
+    required this.category,
+    required this.isArabic,
+    required this.isSelected,
+    required this.activeCount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final total = category.items.length;
+    final ratio = total == 0 ? 0.0 : activeCount / total;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? category.color.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? category.color : Colors.black12,
+          ),
+        ),
+        child: Row(
+          children: [
+            _MiniProgressRing(
+              ratio: ratio,
+              color: category.color,
+              icon: category.icon,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (var i = 0; i < allItems.length; i++) ...[
-                    if (i > 0) const Divider(height: 1),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: _StructuredSpecItemTile(
-                        item: allItems[i],
-                        isArabic: isArabic,
-                        currentValue: values[allItems[i].key],
-                        onChanged: (value) {
-                          setState(() {
-                            if (value == null) {
-                              values.remove(allItems[i].key);
-                            } else {
-                              values[allItems[i].key] = value;
-                            }
-                          });
-                        },
-                      ),
+                  Text(
+                    isArabic ? category.labelAr : category.labelEn,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? category.color : Colors.black87,
                     ),
-                  ],
+                  ),
+                  Text(
+                    isArabic
+                        ? '$activeCount من $total مفعّلة'
+                        : '$activeCount of $total active',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.black45,
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(values),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: Text(
-                  isArabic
-                      ? 'حفظ المواصفات (${values.length})'
-                      : 'Save specs (${values.length})',
-                ),
-              ),
+            Icon(
+              isArabic
+                  ? Icons.chevron_left_rounded
+                  : Icons.chevron_right_rounded,
+              size: 18,
+              color: isSelected ? category.color : Colors.black26,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// MINI PROGRESS RING (دايرة تقدم صغيرة بأيقونة القسم جوّاها)
+// ============================================================
+class _MiniProgressRing extends StatelessWidget {
+  final double ratio;
+  final Color color;
+  final IconData icon;
+
+  const _MiniProgressRing({
+    required this.ratio,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 34,
+      height: 34,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 34,
+            height: 34,
+            child: CircularProgressIndicator(
+              value: ratio == 0 ? 1 : ratio,
+              strokeWidth: 3,
+              backgroundColor: color.withValues(alpha: 0.12),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                ratio == 0 ? Colors.transparent : color,
+              ),
+            ),
+          ),
+          Icon(icon, size: 15, color: color),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// CATEGORY DETAIL PANEL (محتوى القسم المختار على الديسكتوب)
+// ============================================================
+class _CategoryDetailPanel extends StatelessWidget {
+  final CarSpecCategory category;
+  final bool isArabic;
+  final Map<String, String> values;
+  final void Function(String key, String? value) onItemChanged;
+
+  const _CategoryDetailPanel({
+    required this.category,
+    required this.isArabic,
+    required this.values,
+    required this.onItemChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: category.color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(category.icon, color: category.color, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                isArabic ? category.labelAr : category.labelEn,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Container(height: 2, color: category.color.withValues(alpha: 0.15)),
+          const SizedBox(height: 14),
+          for (var i = 0; i < category.items.length; i++) ...[
+            if (i > 0) const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: _StructuredSpecItemTile(
+                item: category.items[i],
+                isArabic: isArabic,
+                currentValue: values[category.items[i].key],
+                accentColor: category.color,
+                onChanged: (value) =>
+                    onItemChanged(category.items[i].key, value),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// MOBILE ACCORDION SECTION (قسم واحد في الأكورديون الرأسي)
+// ============================================================
+class _MobileAccordionSection extends StatelessWidget {
+  final CarSpecCategory category;
+  final bool isArabic;
+  final Map<String, String> values;
+  final bool isOpen;
+  final int activeCount;
+  final VoidCallback onHeaderTap;
+  final void Function(String key, String? value) onItemChanged;
+
+  const _MobileAccordionSection({
+    required this.category,
+    required this.isArabic,
+    required this.values,
+    required this.isOpen,
+    required this.activeCount,
+    required this.onHeaderTap,
+    required this.onItemChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final total = category.items.length;
+    final ratio = total == 0 ? 0.0 : activeCount / total;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isOpen
+              ? category.color.withValues(alpha: 0.35)
+              : Colors.black12,
+        ),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onHeaderTap,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  _MiniProgressRing(
+                    ratio: ratio,
+                    color: category.color,
+                    icon: category.icon,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isArabic ? category.labelAr : category.labelEn,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          isArabic
+                              ? '$activeCount من $total مفعّلة'
+                              : '$activeCount of $total active',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.black45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: isOpen ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Colors.black45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            child: isOpen
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 1,
+                          color: Colors.black12,
+                          margin: const EdgeInsets.only(bottom: 8),
+                        ),
+                        for (final item in category.items)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: _StructuredSpecItemTile(
+                              item: item,
+                              isArabic: isArabic,
+                              currentValue: values[item.key],
+                              accentColor: category.color,
+                              onChanged: (value) =>
+                                  onItemChanged(item.key, value),
+                            ),
+                          ),
+                      ],
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
       ),
     );
   }
