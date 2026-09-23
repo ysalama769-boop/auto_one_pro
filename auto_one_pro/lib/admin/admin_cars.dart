@@ -2749,35 +2749,40 @@ class _CarFormPageState extends State<CarFormPage> {
               ),
 
               const SizedBox(height: 24),
-              Text(
-                isArabic ? 'مواصفات تفصيلية' : 'Detailed Specifications',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                isArabic
-                    ? 'فعّلي بس البنود المتوفرة فعليًا في السيارة دي؛ أي بند تسيبيه من غير تفعيل مش هيبان للعميل خالص.'
-                    : 'Only enable the items actually available in this car; anything left off won\'t show to customers at all.',
-                style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 10),
-              for (final category in carSpecCategories)
-                _StructuredSpecCategoryTile(
-                  category: category,
-                  isArabic: isArabic,
-                  values: structuredSpecValues,
-                  onChanged: (key, value) {
-                    setState(() {
-                      if (value == null) {
-                        structuredSpecValues.remove(key);
-                      } else {
-                        structuredSpecValues[key] = value;
-                      }
-                    });
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final result = await Navigator.of(context)
+                        .push<Map<String, String>>(
+                      smoothRoute(
+                        CarSpecsEditorPage(
+                          isArabic: isArabic,
+                          initialValues: structuredSpecValues,
+                        ),
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() => structuredSpecValues = result);
+                    }
                   },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: Colors.red),
+                    foregroundColor: Colors.red,
+                  ),
+                  icon: const Icon(Icons.checklist_rounded),
+                  label: Text(
+                    structuredSpecValues.isEmpty
+                        ? (isArabic
+                            ? 'إضافة المواصفات التفصيلية'
+                            : 'Add detailed specifications')
+                        : (isArabic
+                            ? 'تعديل المواصفات التفصيلية (${structuredSpecValues.length})'
+                            : 'Edit detailed specifications (${structuredSpecValues.length})'),
+                  ),
                 ),
+              ),
 
               const SizedBox(height: 10),
               const SizedBox(height: 24),
@@ -2819,85 +2824,6 @@ class _CarFormPageState extends State<CarFormPage> {
   }
 }
 
-
-// ============================================================
-// STRUCTURED SPEC CATEGORY TILE (قسم واحد من الـ40 بند المنظّمة،
-// كل بند جواه مفتاح تشغيل + اختيارات لو النوع choice/multiChoice)
-// ============================================================
-class _StructuredSpecCategoryTile extends StatelessWidget {
-  final CarSpecCategory category;
-  final bool isArabic;
-  final Map<String, String> values;
-  final void Function(String key, String? value) onChanged;
-
-  const _StructuredSpecCategoryTile({
-    required this.category,
-    required this.isArabic,
-    required this.values,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final activeCount =
-        category.items.where((item) => values.containsKey(item.key)).length;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black12),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  isArabic ? category.labelAr : category.labelEn,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              if (activeCount > 0)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '$activeCount',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.green.shade700,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          children: [
-            for (final item in category.items)
-              _StructuredSpecItemTile(
-                item: item,
-                isArabic: isArabic,
-                currentValue: values[item.key],
-                onChanged: (value) => onChanged(item.key, value),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ============================================================
 // STRUCTURED SPEC ITEM TILE (بند واحد: مفتاح تشغيل + اختيارات)
@@ -3023,6 +2949,133 @@ class _StructuredSpecItemTile extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// CAR SPECS EDITOR PAGE (صفحة منفصلة لكل الـ40 بند، قايمة واحدة
+// مسطّحة من غير تقسيم لأقسام) — بتفتح بزرار من فورم السيارة، وبترجع
+// القيم المحدّثة لما تتقفل، من غير ما تحفظ في قاعدة البيانات
+// مباشرة (الحفظ الفعلي بيحصل مع باقي بيانات السيارة سوا).
+// ============================================================
+class CarSpecsEditorPage extends StatefulWidget {
+  final bool isArabic;
+  final Map<String, String> initialValues;
+
+  const CarSpecsEditorPage({
+    super.key,
+    required this.isArabic,
+    required this.initialValues,
+  });
+
+  @override
+  State<CarSpecsEditorPage> createState() => _CarSpecsEditorPageState();
+}
+
+class _CarSpecsEditorPageState extends State<CarSpecsEditorPage> {
+  late Map<String, String> values;
+
+  // كل بنود الـ8 أقسام مجمّعين في قايمة واحدة مسطّحة، بنفس ترتيب
+  // الشيما (فمحتاجين متقاربين منطقيًا حتى من غير عناوين أقسام)
+  late final List<CarSpecItem> allItems;
+
+  @override
+  void initState() {
+    super.initState();
+    values = Map<String, String>.from(widget.initialValues);
+    allItems = [
+      for (final category in carSpecCategories) ...category.items,
+    ];
+  }
+
+  bool get isArabic => widget.isArabic;
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: const Color(0xfff5f5f5),
+        appBar: AppBar(
+          backgroundColor: kHeaderColor,
+          foregroundColor: kHeaderTextColor,
+          title: Text(isArabic ? 'المواصفات التفصيلية' : 'Detailed Specs'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(values),
+              child: Text(
+                isArabic ? 'تم' : 'Done',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text(
+              isArabic
+                  ? 'فعّلي بس البنود المتوفرة فعليًا في السيارة دي؛ أي بند تسيبيه من غير تفعيل مش هيبان للعميل خالص.'
+                  : 'Only enable the items actually available in this car; anything left off won\'t show to customers at all.',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.black12),
+              ),
+              child: Column(
+                children: [
+                  for (var i = 0; i < allItems.length; i++) ...[
+                    if (i > 0) const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: _StructuredSpecItemTile(
+                        item: allItems[i],
+                        isArabic: isArabic,
+                        currentValue: values[allItems[i].key],
+                        onChanged: (value) {
+                          setState(() {
+                            if (value == null) {
+                              values.remove(allItems[i].key);
+                            } else {
+                              values[allItems[i].key] = value;
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(values),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: Text(
+                  isArabic
+                      ? 'حفظ المواصفات (${values.length})'
+                      : 'Save specs (${values.length})',
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
