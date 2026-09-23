@@ -1375,279 +1375,6 @@ class _CarFormPageState extends State<CarFormPage> {
     );
   }
 
-  // قائمة "المواصفة الإضافية" خاصة بقسم معيّن (القيادة، الأمان...) — كل
-  // مواصفة بتتضاف هنا بتتسجل تحت نفس اسم القسم اللي بتضاف منه.
-  Widget _categoryExtraSpecsSection(
-    String category,
-    StateSetter setDialogState,
-  ) {
-    final entries =
-        extraSpecEntries.where((e) => e.category == category).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 10),
-        for (final entry in entries)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: TextFormField(
-                    controller: entry.keyCtrl,
-                    decoration: InputDecoration(
-                      hintText: isArabic ? 'اسم المواصفة' : 'Spec name',
-                      isDense: true,
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 4,
-                  child: TextFormField(
-                    controller: entry.valueCtrl,
-                    decoration: InputDecoration(
-                      hintText: isArabic ? 'القيمة' : 'Value',
-                      isDense: true,
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    setDialogState(() {
-                      setState(() {
-                        entry.keyCtrl.dispose();
-                        entry.valueCtrl.dispose();
-                        extraSpecEntries.remove(entry);
-                      });
-                    });
-                  },
-                  icon: const Icon(
-                    Icons.remove_circle_outline_rounded,
-                    color: Colors.red,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton.icon(
-            onPressed: () {
-              setDialogState(() {
-                setState(() {
-                  extraSpecEntries.add(
-                    ExtraSpecEntry(
-                      category: category,
-                      keyCtrl: TextEditingController(),
-                      valueCtrl: TextEditingController(),
-                    ),
-                  );
-                });
-              });
-            },
-            icon: const Icon(Icons.add_rounded, size: 18),
-            label: Text(isArabic ? 'إضافة مواصفة' : 'Add spec'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _openSpecsDialog() async {
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              title: Text(isArabic ? 'إدارة المواصفات' : 'Manage specs'),
-              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-              content: SizedBox(
-                width: 480,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-              Text(
-                isArabic ? 'القيادة والأبعاد' : 'Driving & Dimensions',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _field(
-                controller: engineCtrl,
-                label: isArabic ? 'المحرك' : 'Engine',
-              ),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: lengthCtrl,
-                      label: isArabic ? 'الطول (سم)' : 'Length (cm)',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: widthCtrl,
-                      label: isArabic ? 'العرض (سم)' : 'Width (cm)',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: heightCtrl,
-                      label: isArabic ? 'الارتفاع (سم)' : 'Height (cm)',
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: wheelbaseCtrl,
-                      label: isArabic ? 'قاعدة العجلات' : 'Wheelbase',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: trunkCapacityCtrl,
-                      label:
-                          isArabic ? 'سعة صندوق الأمتعة' : 'Trunk capacity',
-                    ),
-                  ),
-                ],
-              ),
-
-              _categoryExtraSpecsSection('driving', setDialogState),
-
-              const SizedBox(height: 8),
-              Divider(color: Colors.grey.shade300),
-              const SizedBox(height: 8),
-
-              Text(
-                isArabic ? 'مواصفات إضافية للقيادة' : 'Extra driving specs',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: horsepowerCtrl,
-                      label: isArabic ? 'قوة المحرك (حصان)' : 'Horsepower',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: torqueCtrl,
-                      label: isArabic ? 'عزم الدوران' : 'Torque',
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(
-                      controller: fuelTankCtrl,
-                      label:
-                          isArabic ? 'سعة خزان الوقود' : 'Fuel tank capacity',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _field(
-                      controller: fuelConsumptionCtrl,
-                      label:
-                          isArabic ? 'استهلاك الوقود' : 'Fuel consumption',
-                    ),
-                  ),
-                ],
-              ),
-
-              _categoryExtraSpecsSection('driving_extra', setDialogState),
-
-              const SizedBox(height: 8),
-              Divider(color: Colors.grey.shade300),
-              const SizedBox(height: 8),
-
-              Text(
-                isArabic ? 'التجهيزات والمزايا' : 'Features',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _field(
-                controller: infotainmentCtrl,
-                label: isArabic ? 'نظام الترفيه/الشاشة' : 'Infotainment',
-              ),
-              _categoryExtraSpecsSection('features', setDialogState),
-
-              const SizedBox(height: 8),
-              Divider(color: Colors.grey.shade300),
-              const SizedBox(height: 8),
-
-              Text(
-                isArabic ? 'الأمان' : 'Safety',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              _categoryExtraSpecsSection('safety', setDialogState),
-
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(isArabic ? 'تم' : 'Done'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-    setState(() {});
-  }
 
   Future<void> _openGalleryDialog() async {
     await showDialog<void>(
@@ -2283,50 +2010,9 @@ class _CarFormPageState extends State<CarFormPage> {
                 maxLines: 3,
               ),
               // ==========================================
-              // SPECS — زرار صغير يفتح نافذة إدارة كل المواصفات
-              // (القيادة، الأبعاد، التجهيزات، الأمان، ومواصفات إضافية حرة)
+              // SPECS — انتقل كل حاجة للصفحة الموحّدة (زرار
+              // "المواصفات التفصيلية" في آخر الفورم)
               // ==========================================
-              InkWell(
-                onTap: _openSpecsDialog,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.black12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.tune_rounded,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          isArabic
-                              ? 'إدارة المواصفات (القيادة، الأبعاد، الأمان، التجهيزات)'
-                              : 'Manage specs (driving, dimensions, safety, features)',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Icon(
-                        Icons.chevron_left_rounded,
-                        color: Colors.black38,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
 
               const SizedBox(height: 8),
               Divider(color: Colors.grey.shade300),
@@ -2696,6 +2382,18 @@ class _CarFormPageState extends State<CarFormPage> {
                         CarSpecsEditorPage(
                           isArabic: isArabic,
                           initialValues: structuredSpecValues,
+                          engineCtrl: engineCtrl,
+                          lengthCtrl: lengthCtrl,
+                          widthCtrl: widthCtrl,
+                          heightCtrl: heightCtrl,
+                          wheelbaseCtrl: wheelbaseCtrl,
+                          trunkCapacityCtrl: trunkCapacityCtrl,
+                          horsepowerCtrl: horsepowerCtrl,
+                          torqueCtrl: torqueCtrl,
+                          fuelTankCtrl: fuelTankCtrl,
+                          fuelConsumptionCtrl: fuelConsumptionCtrl,
+                          infotainmentCtrl: infotainmentCtrl,
+                          extraSpecEntries: extraSpecEntries,
                         ),
                       ),
                     );
@@ -2939,11 +2637,40 @@ class _StructuredSpecItemTile extends StatelessWidget {
 class CarSpecsEditorPage extends StatefulWidget {
   final bool isArabic;
   final Map<String, String> initialValues;
+  // البنود الحرة القديمة (أرقام ووصف)، بتتعدّل مباشرة على نفس
+  // الكنترولرز اللي الفورم الأساسي شايلها، فمحتاجش نرجّع قيمتها
+  // زي structuredSpecValues.
+  final TextEditingController engineCtrl;
+  final TextEditingController lengthCtrl;
+  final TextEditingController widthCtrl;
+  final TextEditingController heightCtrl;
+  final TextEditingController wheelbaseCtrl;
+  final TextEditingController trunkCapacityCtrl;
+  final TextEditingController horsepowerCtrl;
+  final TextEditingController torqueCtrl;
+  final TextEditingController fuelTankCtrl;
+  final TextEditingController fuelConsumptionCtrl;
+  final TextEditingController infotainmentCtrl;
+  // مواصفات مخصّصة حرة (اسم + قيمة)، برضو بتتعدّل مباشرة على نفس
+  // القايمة اللي الفورم الأساسي شايلها.
+  final List<ExtraSpecEntry> extraSpecEntries;
 
   const CarSpecsEditorPage({
     super.key,
     required this.isArabic,
     required this.initialValues,
+    required this.engineCtrl,
+    required this.lengthCtrl,
+    required this.widthCtrl,
+    required this.heightCtrl,
+    required this.wheelbaseCtrl,
+    required this.trunkCapacityCtrl,
+    required this.horsepowerCtrl,
+    required this.torqueCtrl,
+    required this.fuelTankCtrl,
+    required this.fuelConsumptionCtrl,
+    required this.infotainmentCtrl,
+    required this.extraSpecEntries,
   });
 
   @override
@@ -2952,6 +2679,8 @@ class CarSpecsEditorPage extends StatefulWidget {
 
 class _CarSpecsEditorPageState extends State<CarSpecsEditorPage> {
   late Map<String, String> values;
+  // "info" قسم افتراضي إضافي (مش من ضمن الشيما) للمعلومات الحرة
+  static const String _freeTextCategoryKey = 'free_text_info';
   String selectedCategoryKey = carSpecCategories.first.key;
 
   bool get isArabic => widget.isArabic;
@@ -3012,8 +2741,7 @@ class _CarSpecsEditorPageState extends State<CarSpecsEditorPage> {
   // الديسكتوب: عمود قائمة (يمين) + عمود تفاصيل (المساحة الباقية)
   // ==========================================================
   Widget _buildWideLayout() {
-    final selectedCategory =
-        carSpecCategories.firstWhere((c) => c.key == selectedCategoryKey);
+    final isFreeTextSelected = selectedCategoryKey == _freeTextCategoryKey;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3032,6 +2760,12 @@ class _CarSpecsEditorPageState extends State<CarSpecsEditorPage> {
                   onTap: () =>
                       setState(() => selectedCategoryKey = category.key),
                 ),
+              _FreeTextNavRow(
+                isArabic: isArabic,
+                isSelected: isFreeTextSelected,
+                onTap: () =>
+                    setState(() => selectedCategoryKey = _freeTextCategoryKey),
+              ),
             ],
           ),
         ),
@@ -3040,12 +2774,30 @@ class _CarSpecsEditorPageState extends State<CarSpecsEditorPage> {
             padding: const EdgeInsets.all(20),
             child: SingleChildScrollView(
               key: ValueKey(selectedCategoryKey),
-              child: _CategoryDetailPanel(
-                category: selectedCategory,
-                isArabic: isArabic,
-                values: values,
-                onItemChanged: _onItemChanged,
-              ),
+              child: isFreeTextSelected
+                  ? _FreeTextInfoPanel(
+                      isArabic: isArabic,
+                      engineCtrl: widget.engineCtrl,
+                      lengthCtrl: widget.lengthCtrl,
+                      widthCtrl: widget.widthCtrl,
+                      heightCtrl: widget.heightCtrl,
+                      wheelbaseCtrl: widget.wheelbaseCtrl,
+                      trunkCapacityCtrl: widget.trunkCapacityCtrl,
+                      horsepowerCtrl: widget.horsepowerCtrl,
+                      torqueCtrl: widget.torqueCtrl,
+                      fuelTankCtrl: widget.fuelTankCtrl,
+                      fuelConsumptionCtrl: widget.fuelConsumptionCtrl,
+                      infotainmentCtrl: widget.infotainmentCtrl,
+                      extraSpecEntries: widget.extraSpecEntries,
+                      onExtrasChanged: () => setState(() {}),
+                    )
+                  : _CategoryDetailPanel(
+                      category: carSpecCategories
+                          .firstWhere((c) => c.key == selectedCategoryKey),
+                      isArabic: isArabic,
+                      values: values,
+                      onItemChanged: _onItemChanged,
+                    ),
             ),
           ),
         ),
@@ -3075,6 +2827,30 @@ class _CarSpecsEditorPageState extends State<CarSpecsEditorPage> {
             },
             onItemChanged: _onItemChanged,
           ),
+        _MobileFreeTextAccordionSection(
+          isArabic: isArabic,
+          isOpen: selectedCategoryKey == _freeTextCategoryKey,
+          onHeaderTap: () {
+            setState(() {
+              selectedCategoryKey = selectedCategoryKey == _freeTextCategoryKey
+                  ? ''
+                  : _freeTextCategoryKey;
+            });
+          },
+          engineCtrl: widget.engineCtrl,
+          lengthCtrl: widget.lengthCtrl,
+          widthCtrl: widget.widthCtrl,
+          heightCtrl: widget.heightCtrl,
+          wheelbaseCtrl: widget.wheelbaseCtrl,
+          trunkCapacityCtrl: widget.trunkCapacityCtrl,
+          horsepowerCtrl: widget.horsepowerCtrl,
+          torqueCtrl: widget.torqueCtrl,
+          fuelTankCtrl: widget.fuelTankCtrl,
+          fuelConsumptionCtrl: widget.fuelConsumptionCtrl,
+          infotainmentCtrl: widget.infotainmentCtrl,
+          extraSpecEntries: widget.extraSpecEntries,
+          onExtrasChanged: () => setState(() {}),
+        ),
       ],
     );
   }
@@ -3384,6 +3160,436 @@ class _MobileAccordionSection extends StatelessWidget {
                             ),
                           ),
                       ],
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// FREE TEXT NAV ROW (صف "معلومات إضافية" في القايمة الجانبية)
+// ============================================================
+class _FreeTextNavRow extends StatelessWidget {
+  final bool isArabic;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FreeTextNavRow({
+    required this.isArabic,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.grey.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? Colors.grey.shade600 : Colors.black12,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.notes_rounded,
+              size: 20,
+              color: isSelected ? Colors.grey.shade800 : Colors.black45,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                isArabic ? 'معلومات إضافية' : 'Additional info',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected ? Colors.grey.shade800 : Colors.black87,
+                ),
+              ),
+            ),
+            Icon(
+              isArabic
+                  ? Icons.chevron_left_rounded
+                  : Icons.chevron_right_rounded,
+              size: 18,
+              color: Colors.black26,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// FREE TEXT INFO PANEL (المحرك، الأبعاد، القوة، ومواصفات مخصّصة
+// حرة — نص عادي، مش مفتاح+اختيارات، لأن قيمتها مختلفة كل سيارة)
+// ============================================================
+class _FreeTextInfoPanel extends StatelessWidget {
+  final bool isArabic;
+  final TextEditingController engineCtrl;
+  final TextEditingController lengthCtrl;
+  final TextEditingController widthCtrl;
+  final TextEditingController heightCtrl;
+  final TextEditingController wheelbaseCtrl;
+  final TextEditingController trunkCapacityCtrl;
+  final TextEditingController horsepowerCtrl;
+  final TextEditingController torqueCtrl;
+  final TextEditingController fuelTankCtrl;
+  final TextEditingController fuelConsumptionCtrl;
+  final TextEditingController infotainmentCtrl;
+  final List<ExtraSpecEntry> extraSpecEntries;
+  final VoidCallback onExtrasChanged;
+
+  const _FreeTextInfoPanel({
+    required this.isArabic,
+    required this.engineCtrl,
+    required this.lengthCtrl,
+    required this.widthCtrl,
+    required this.heightCtrl,
+    required this.wheelbaseCtrl,
+    required this.trunkCapacityCtrl,
+    required this.horsepowerCtrl,
+    required this.torqueCtrl,
+    required this.fuelTankCtrl,
+    required this.fuelConsumptionCtrl,
+    required this.infotainmentCtrl,
+    required this.extraSpecEntries,
+    required this.onExtrasChanged,
+  });
+
+  Widget _textField(TextEditingController ctrl, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: ctrl,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.notes_rounded, color: Colors.grey.shade700, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                isArabic ? 'معلومات إضافية' : 'Additional info',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isArabic
+                ? 'قيمها مختلفة لكل سيارة (أرقام أو وصف حر)، فبتتكتب يدوي بدل الاختيار من قايمة.'
+                : 'Values vary per car, so these are typed manually instead of picked from a list.',
+            style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 14),
+          _textField(engineCtrl, isArabic ? 'المحرك' : 'Engine'),
+          Row(
+            children: [
+              Expanded(
+                child: _textField(
+                  lengthCtrl,
+                  isArabic ? 'الطول (سم)' : 'Length (cm)',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _textField(
+                  widthCtrl,
+                  isArabic ? 'العرض (سم)' : 'Width (cm)',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _textField(
+                  heightCtrl,
+                  isArabic ? 'الارتفاع (سم)' : 'Height (cm)',
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _textField(
+                  wheelbaseCtrl,
+                  isArabic ? 'قاعدة العجلات' : 'Wheelbase',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _textField(
+                  trunkCapacityCtrl,
+                  isArabic ? 'سعة صندوق الأمتعة' : 'Trunk capacity',
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _textField(
+                  horsepowerCtrl,
+                  isArabic ? 'قوة المحرك (حصان)' : 'Horsepower',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _textField(
+                  torqueCtrl,
+                  isArabic ? 'عزم الدوران' : 'Torque',
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _textField(
+                  fuelTankCtrl,
+                  isArabic ? 'سعة خزان الوقود' : 'Fuel tank capacity',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _textField(
+                  fuelConsumptionCtrl,
+                  isArabic ? 'استهلاك الوقود' : 'Fuel consumption',
+                ),
+              ),
+            ],
+          ),
+          _textField(
+            infotainmentCtrl,
+            isArabic ? 'نظام الترفيه/الشاشة (وصف حر)' : 'Infotainment',
+          ),
+          const SizedBox(height: 8),
+          Divider(color: Colors.grey.shade300),
+          const SizedBox(height: 8),
+          Text(
+            isArabic ? 'مواصفات مخصّصة' : 'Custom specs',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+          ),
+          const SizedBox(height: 10),
+          for (final entry in extraSpecEntries)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: TextFormField(
+                      controller: entry.keyCtrl,
+                      decoration: InputDecoration(
+                        hintText: isArabic ? 'اسم المواصفة' : 'Spec name',
+                        isDense: true,
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 4,
+                    child: TextFormField(
+                      controller: entry.valueCtrl,
+                      decoration: InputDecoration(
+                        hintText: isArabic ? 'القيمة' : 'Value',
+                        isDense: true,
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      entry.keyCtrl.dispose();
+                      entry.valueCtrl.dispose();
+                      extraSpecEntries.remove(entry);
+                      onExtrasChanged();
+                    },
+                    icon: const Icon(
+                      Icons.remove_circle_outline_rounded,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: () {
+                extraSpecEntries.add(
+                  ExtraSpecEntry(
+                    category: 'other',
+                    keyCtrl: TextEditingController(),
+                    valueCtrl: TextEditingController(),
+                  ),
+                );
+                onExtrasChanged();
+              },
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: Text(isArabic ? 'إضافة مواصفة' : 'Add spec'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// MOBILE FREE TEXT ACCORDION SECTION
+// ============================================================
+class _MobileFreeTextAccordionSection extends StatelessWidget {
+  final bool isArabic;
+  final bool isOpen;
+  final VoidCallback onHeaderTap;
+  final TextEditingController engineCtrl;
+  final TextEditingController lengthCtrl;
+  final TextEditingController widthCtrl;
+  final TextEditingController heightCtrl;
+  final TextEditingController wheelbaseCtrl;
+  final TextEditingController trunkCapacityCtrl;
+  final TextEditingController horsepowerCtrl;
+  final TextEditingController torqueCtrl;
+  final TextEditingController fuelTankCtrl;
+  final TextEditingController fuelConsumptionCtrl;
+  final TextEditingController infotainmentCtrl;
+  final List<ExtraSpecEntry> extraSpecEntries;
+  final VoidCallback onExtrasChanged;
+
+  const _MobileFreeTextAccordionSection({
+    required this.isArabic,
+    required this.isOpen,
+    required this.onHeaderTap,
+    required this.engineCtrl,
+    required this.lengthCtrl,
+    required this.widthCtrl,
+    required this.heightCtrl,
+    required this.wheelbaseCtrl,
+    required this.trunkCapacityCtrl,
+    required this.horsepowerCtrl,
+    required this.torqueCtrl,
+    required this.fuelTankCtrl,
+    required this.fuelConsumptionCtrl,
+    required this.infotainmentCtrl,
+    required this.extraSpecEntries,
+    required this.onExtrasChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isOpen ? Colors.grey.shade600 : Colors.black12,
+        ),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onHeaderTap,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Icon(Icons.notes_rounded, color: Colors.grey.shade700),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      isArabic ? 'معلومات إضافية' : 'Additional info',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: isOpen ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Colors.black45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            child: isOpen
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                    child: _FreeTextInfoPanel(
+                      isArabic: isArabic,
+                      engineCtrl: engineCtrl,
+                      lengthCtrl: lengthCtrl,
+                      widthCtrl: widthCtrl,
+                      heightCtrl: heightCtrl,
+                      wheelbaseCtrl: wheelbaseCtrl,
+                      trunkCapacityCtrl: trunkCapacityCtrl,
+                      horsepowerCtrl: horsepowerCtrl,
+                      torqueCtrl: torqueCtrl,
+                      fuelTankCtrl: fuelTankCtrl,
+                      fuelConsumptionCtrl: fuelConsumptionCtrl,
+                      infotainmentCtrl: infotainmentCtrl,
+                      extraSpecEntries: extraSpecEntries,
+                      onExtrasChanged: onExtrasChanged,
                     ),
                   )
                 : const SizedBox(width: double.infinity),
