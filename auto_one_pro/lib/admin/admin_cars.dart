@@ -2444,12 +2444,10 @@ class _CarFormPageState extends State<CarFormPage> {
                   icon: const Icon(Icons.checklist_rounded),
                   label: Text(
                     structuredSpecValues.isEmpty
-                        ? (isArabic
-                            ? 'إضافة المواصفات التفصيلية'
-                            : 'Add detailed specifications')
+                        ? (isArabic ? 'إضافة المواصفات' : 'Add specifications')
                         : (isArabic
-                            ? 'تعديل المواصفات التفصيلية (${structuredSpecValues.length})'
-                            : 'Edit detailed specifications (${structuredSpecValues.length})'),
+                            ? 'تعديل المواصفات (${structuredSpecValues.length})'
+                            : 'Edit specifications (${structuredSpecValues.length})'),
                   ),
                 ),
               ),
@@ -2713,7 +2711,7 @@ class _CarSpecsEditorPageState extends State<CarSpecsEditorPage> {
         appBar: AppBar(
           backgroundColor: kHeaderColor,
           foregroundColor: kHeaderTextColor,
-          title: Text(isArabic ? 'المواصفات التفصيلية' : 'Detailed Specs'),
+          title: Text(isArabic ? 'المواصفات' : 'Specifications'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(values),

@@ -2563,278 +2563,11 @@ Container(
 
       const SizedBox(height: 24),
 
-      // SPECIFICATIONS
-      LayoutBuilder(
-        builder: (context, constraints) {
-          final bool wide = constraints.maxWidth >= 1000;
 
-          Widget specCard({
-            required IconData icon,
-            required String label,
-            required String value,
-          }) {
-            return Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: Colors.black12,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(icon, color: Colors.red, size: 18),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          label,
-                          style: const TextStyle(
-                            color: Colors.black54,
-                            fontSize: 11,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          value,
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          Widget specColumn(String title, List<Widget> cards) {
-            if (cards.isEmpty) return const SizedBox.shrink();
-            return Theme(
-              data: Theme.of(context).copyWith(
-                dividerColor: Colors.transparent,
-              ),
-              child: ExpansionTile(
-                initiallyExpanded: true,
-                tilePadding: EdgeInsets.zero,
-                childrenPadding: const EdgeInsets.only(top: 12),
-                iconColor: Colors.black87,
-                collapsedIconColor: Colors.black54,
-                title: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                children: cards,
-              ),
-            );
-          }
-
-          // ==================================================
-          // القيادة
-          // ==================================================
-          final drivingCards = <Widget>[
-            specCard(
-              icon: Icons.compare_arrows_rounded,
-              label: isArabic ? 'نظام الدفع' : 'DRIVE',
-              value: car.drive,
-            ),
-            specCard(
-              icon: Icons.speed_rounded,
-              label: isArabic ? 'نوع المحرك' : 'ENGINE',
-              value: car.engine,
-            ),
-            specCard(
-              icon: Icons.settings_rounded,
-              label: isArabic ? 'ناقل الحركة' : 'TRANSMISSION',
-              value: car.transmission,
-            ),
-            specCard(
-              icon: Icons.local_gas_station_rounded,
-              label: isArabic ? 'الوقود' : 'FUEL',
-              value: car.fuel,
-            ),
-            if (car.horsepower.isNotEmpty)
-              specCard(
-                icon: Icons.bolt_rounded,
-                label: isArabic ? 'قوة المحرك (حصان)' : 'HORSEPOWER',
-                value: car.horsepower,
-              ),
-            if (car.torque.isNotEmpty)
-              specCard(
-                icon: Icons.rotate_right_rounded,
-                label: isArabic ? 'عزم الدوران' : 'TORQUE',
-                value: car.torque,
-              ),
-            if (car.fuelTank.isNotEmpty)
-              specCard(
-                icon: Icons.oil_barrel_rounded,
-                label: isArabic ? 'سعة خزان الوقود' : 'FUEL TANK',
-                value: car.fuelTank,
-              ),
-            if (car.fuelConsumption.isNotEmpty)
-              specCard(
-                icon: Icons.local_gas_station_outlined,
-                label: isArabic ? 'استهلاك الوقود' : 'FUEL CONSUMPTION',
-                value: car.fuelConsumption,
-              ),
-          ];
-
-          // ==================================================
-          // التجهيزات والمزايا
-          // ==================================================
-          final featureCards = <Widget>[
-            specCard(
-              icon: Icons.event_seat_rounded,
-              label: isArabic ? 'المقاعد' : 'SEATS',
-              value: car.seats,
-            ),
-            if (car.infotainment.isNotEmpty)
-              specCard(
-                icon: Icons.tv_rounded,
-                label: isArabic ? 'نظام الترفيه/الشاشة' : 'INFOTAINMENT',
-                value: car.infotainment,
-              ),
-            if (car.sunroof.isNotEmpty)
-              specCard(
-                icon: Icons.wb_sunny_outlined,
-                label: isArabic ? 'فتحة سقف' : 'SUNROOF',
-                value: car.sunroof,
-              ),
-            if (car.cameraSensors.isNotEmpty)
-              specCard(
-                icon: Icons.camera_alt_rounded,
-                label: isArabic
-                    ? 'كاميرا خلفية + حساسات ركن'
-                    : 'CAMERA & SENSORS',
-                value: car.cameraSensors,
-              ),
-            if (car.wirelessCharger.isNotEmpty)
-              specCard(
-                icon: Icons.battery_charging_full_rounded,
-                label: isArabic ? 'شاحن لاسلكي' : 'WIRELESS CHARGER',
-                value: car.wirelessCharger,
-              ),
-          ];
-
-          // ==================================================
-          // الأبعاد
-          // ==================================================
-          final dimensionCards = <Widget>[
-            if (car.carLength.isNotEmpty)
-              specCard(
-                icon: Icons.straighten_rounded,
-                label: isArabic ? 'الطول' : 'LENGTH',
-                value: car.carLength,
-              ),
-            if (car.carWidth.isNotEmpty)
-              specCard(
-                icon: Icons.straighten_rounded,
-                label: isArabic ? 'العرض' : 'WIDTH',
-                value: car.carWidth,
-              ),
-            if (car.carHeight.isNotEmpty)
-              specCard(
-                icon: Icons.straighten_rounded,
-                label: isArabic ? 'الارتفاع' : 'HEIGHT',
-                value: car.carHeight,
-              ),
-            if (car.wheelbase.isNotEmpty)
-              specCard(
-                icon: Icons.timeline_rounded,
-                label: isArabic ? 'قاعدة العجلات' : 'WHEELBASE',
-                value: car.wheelbase,
-              ),
-            if (car.trunkCapacity.isNotEmpty)
-              specCard(
-                icon: Icons.work_outline_rounded,
-                label: isArabic ? 'سعة صندوق الأمتعة' : 'TRUNK CAPACITY',
-                value: car.trunkCapacity,
-              ),
-          ];
-
-          // ==================================================
-          // الأمان
-          // ==================================================
-          final safetyCards = <Widget>[
-            if (car.airbags.isNotEmpty)
-              specCard(
-                icon: Icons.airline_seat_recline_normal_rounded,
-                label: isArabic ? 'عدد الوسائد الهوائية' : 'AIRBAGS',
-                value: car.airbags,
-              ),
-            if (car.absSystem.isNotEmpty)
-              specCard(
-                icon: Icons.shield_outlined,
-                label: isArabic ? 'نظام ABS' : 'ABS SYSTEM',
-                value: car.absSystem,
-              ),
-          ];
-
-          final columns = [
-            specColumn(
-              isArabic ? 'القيادة' : 'DRIVING',
-              drivingCards,
-            ),
-            specColumn(
-              isArabic ? 'التجهيزات والمزايا' : 'FEATURES',
-              featureCards,
-            ),
-            specColumn(
-              isArabic ? 'الأبعاد' : 'DIMENSIONS',
-              dimensionCards,
-            ),
-            specColumn(
-              isArabic ? 'الأمان' : 'SAFETY',
-              safetyCards,
-            ),
-          ].where((c) => c is! SizedBox).toList();
-
-          if (wide) {
-            final rowChildren = <Widget>[];
-            for (var i = 0; i < columns.length; i++) {
-              if (i > 0) rowChildren.add(const SizedBox(width: 20));
-              rowChildren.add(Expanded(child: columns[i]));
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: rowChildren,
-            );
-          }
-
-          final colChildren = <Widget>[];
-          for (var i = 0; i < columns.length; i++) {
-            if (i > 0) colChildren.add(const SizedBox(height: 20));
-            colChildren.add(columns[i]);
-          }
-          return Column(
-            children: colChildren,
-          );
-        },
-      ),
-
-      // مواصفات إضافية — قوائم مطوية حسب القسم (الإضاءة، الأمان
-      // الأساسي، ADAS، الراحة، الترفيه...)، كل قسم بيبان بس لو
-      // فيه بند واحد على الأقل متعلّم "متوفر" للسيارة دي.
+      // المواصفات والمميزات — بلوك واحد موحّد، قوائم مطوية حسب
+      // القسم (المحرك، الإضاءة، الأمان الأساسي، ADAS، الراحة،
+      // الترفيه...)، كل قسم بيبان بس لو فيه بند واحد على الأقل
+      // متعلّم "متوفر" للسيارة دي.
       _ExtraSpecsAccordion(
         isArabic: isArabic,
         car: car,
@@ -3422,6 +3155,90 @@ class _ExtraSpecsAccordionState extends State<_ExtraSpecsAccordion> {
       }
     }
 
+    // معلومات إضافية حرة (المحرك، الأبعاد، القوة الحصانية...) —
+    // قيمها مختلفة كل سيارة فمفيش اختيارات ثابتة ليها، بس بردو
+    // بتنعرض جوّه نفس البلوك الموحّد.
+    final freeTextRows = <_SpecRowData>[
+      if (car.engine.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.settings_rounded,
+          label: isArabic ? 'المحرك' : 'Engine',
+          value: car.engine.trim(),
+        ),
+      if (car.carLength.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.straighten_rounded,
+          label: isArabic ? 'الطول' : 'Length',
+          value: car.carLength.trim(),
+        ),
+      if (car.carWidth.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.straighten_rounded,
+          label: isArabic ? 'العرض' : 'Width',
+          value: car.carWidth.trim(),
+        ),
+      if (car.carHeight.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.straighten_rounded,
+          label: isArabic ? 'الارتفاع' : 'Height',
+          value: car.carHeight.trim(),
+        ),
+      if (car.wheelbase.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.timeline_rounded,
+          label: isArabic ? 'قاعدة العجلات' : 'Wheelbase',
+          value: car.wheelbase.trim(),
+        ),
+      if (car.trunkCapacity.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.work_outline_rounded,
+          label: isArabic ? 'سعة صندوق الأمتعة' : 'Trunk capacity',
+          value: car.trunkCapacity.trim(),
+        ),
+      if (car.horsepower.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.speed_rounded,
+          label: isArabic ? 'قوة المحرك' : 'Horsepower',
+          value: car.horsepower.trim(),
+        ),
+      if (car.torque.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.rotate_right_rounded,
+          label: isArabic ? 'عزم الدوران' : 'Torque',
+          value: car.torque.trim(),
+        ),
+      if (car.fuelTank.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.oil_barrel_rounded,
+          label: isArabic ? 'سعة خزان الوقود' : 'Fuel tank',
+          value: car.fuelTank.trim(),
+        ),
+      if (car.fuelConsumption.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.local_gas_station_outlined,
+          label: isArabic ? 'استهلاك الوقود' : 'Fuel consumption',
+          value: car.fuelConsumption.trim(),
+        ),
+      if (car.infotainment.trim().isNotEmpty)
+        _SpecRowData(
+          icon: Icons.tv_rounded,
+          label: isArabic ? 'نظام الترفيه/الشاشة' : 'Infotainment',
+          value: car.infotainment.trim(),
+        ),
+    ];
+    if (freeTextRows.isNotEmpty) {
+      sectionsData.add(
+        _SpecSectionData(
+          key: 'free_text_info',
+          title: isArabic ? 'معلومات إضافية' : 'Additional Info',
+          icon: Icons.notes_rounded,
+          color: Colors.grey.shade700,
+          total: freeTextRows.length,
+          rows: freeTextRows,
+        ),
+      );
+    }
+
     // أي قسم حر إضافي (زي "أخرى" من المواصفات المخصصة القديمة)
     for (final entry in car.extraSpecsByCategory.entries) {
       final isKnownCategory =
@@ -3457,7 +3274,7 @@ class _ExtraSpecsAccordionState extends State<_ExtraSpecsAccordion> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            isArabic ? 'مواصفات تفصيلية' : 'DETAILED SPECIFICATIONS',
+            isArabic ? 'المواصفات والمميزات' : 'SPECIFICATIONS & FEATURES',
             style: const TextStyle(
               fontWeight: FontWeight.w900,
               fontSize: 17,
