@@ -68,7 +68,10 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
 
       final filteredQuery = widget.filterBrand == null
           ? query
-          : query.eq('brand', widget.filterBrand as Object);
+          // بنستخدم ilike بدل eq عشان الفلترة تتجاهل الفرق بين
+          // الأحرف الكبيرة والصغيرة (Hyundai / hyundai / HYUNDAI
+          // كلهم يتطابقوا مع بعض)
+          : query.ilike('brand', widget.filterBrand as String);
 
       final response = await filteredQuery
           .order('sort_order', nullsFirst: false)
