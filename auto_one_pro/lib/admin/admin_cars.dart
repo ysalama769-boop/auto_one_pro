@@ -26,8 +26,11 @@ class ExtraSpecEntry {
 }
 class AdminCarsPage extends StatefulWidget {
   final bool isArabic;
+  // لو موجودة، الصفحة بتعرض بس سيارات الماركة دي (بدل كل المخزون)،
+  // ولما تضيفي سيارة جديدة من هنا، الماركة بتتحدد أوتوماتيك.
+  final String? filterBrand;
 
-  const AdminCarsPage({super.key, required this.isArabic});
+  const AdminCarsPage({super.key, required this.isArabic, this.filterBrand});
 
   @override
   State<AdminCarsPage> createState() => _AdminCarsPageState();
@@ -57,11 +60,17 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
       // القايمة محتاجة بس الأعمدة اللي بتتعرض فعليًا (مش كل تفاصيل
       // السيارة الكاملة زي المواصفات والوصف)، وده بيقلل حجم البيانات
       // اللي بتتحمّل بشكل كبير خصوصًا لو عندك عدد كبير من السيارات.
-      final response = await Supabase.instance.client
+      final query = Supabase.instance.client
           .from('cars')
           .select(
             'id, brand, name, price, year, image, is_available, car_status, sort_order',
-          )
+          );
+
+      final filteredQuery = widget.filterBrand == null
+          ? query
+          : query.eq('brand', widget.filterBrand as Object);
+
+      final response = await filteredQuery
           .order('sort_order', nullsFirst: false)
           .order('id', ascending: false);
 
@@ -294,6 +303,7 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
         CarFormPage(
           isArabic: isArabic,
           existingCar: fullCar,
+          lockedBrand: existingCar == null ? widget.filterBrand : null,
         ),
       ),
     );
@@ -307,6 +317,18 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xfff5f5f5),
+      appBar: widget.filterBrand == null
+          ? null
+          : AppBar(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              elevation: 0.5,
+              title: Text(
+                isArabic
+                    ? 'سيارات ${widget.filterBrand}'
+                    : '${widget.filterBrand} cars',
+              ),
+            ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'adminCarsPageFAB',
         backgroundColor: Colors.red,
@@ -322,9 +344,13 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
               : inventoryCars.isEmpty
                   ? Center(
                       child: Text(
-                        isArabic
-                            ? 'مفيش سيارات في المخزون لسه'
-                            : 'No cars in inventory yet',
+                        widget.filterBrand != null
+                            ? (isArabic
+                                ? 'مفيش سيارات لماركة ${widget.filterBrand} لسه'
+                                : 'No cars for ${widget.filterBrand} yet')
+                            : (isArabic
+                                ? 'مفيش سيارات في المخزون لسه'
+                                : 'No cars in inventory yet'),
                         style: const TextStyle(color: Colors.black54),
                       ),
                     )
@@ -544,11 +570,16 @@ class _AdminCarsPageState extends State<AdminCarsPage> {
 class CarFormPage extends StatefulWidget {
   final bool isArabic;
   final Map<String, dynamic>? existingCar;
+  // لو موجودة، الماركة بتتحدد أوتوماتيك وبتتقفل (مش قابلة للتعديل)
+  // — مستخدمة لما السيارة بتتضاف من جوه صفحة ماركة معيّنة، عشان
+  // محدش يحتاج يختار الماركة يدوي من قايمة كل الماركات في كل مرة.
+  final String? lockedBrand;
 
   const CarFormPage({
     super.key,
     required this.isArabic,
     this.existingCar,
+    this.lockedBrand,
   });
 
   @override
@@ -635,7 +666,9 @@ class _CarFormPageState extends State<CarFormPage> {
     nameCtrl = TextEditingController(text: car?['name']?.toString() ?? '');
     nameEnCtrl =
         TextEditingController(text: car?['name_en']?.toString() ?? '');
-    brandCtrl = TextEditingController(text: car?['brand']?.toString() ?? '');
+    brandCtrl = TextEditingController(
+      text: widget.lockedBrand ?? car?['brand']?.toString() ?? '',
+    );
     categoryCtrl =
         TextEditingController(text: car?['category']?.toString() ?? '');
     yearCtrl = TextEditingController(text: car?['year']?.toString() ?? '');
@@ -2056,6 +2089,7 @@ class _CarFormPageState extends State<CarFormPage> {
     bool required = false,
     int maxLines = 1,
     TextInputType? keyboardType,
+    bool enabled = true,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -2063,10 +2097,12 @@ class _CarFormPageState extends State<CarFormPage> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
+        enabled: enabled,
         decoration: InputDecoration(
           labelText: label,
           filled: true,
-          fillColor: Colors.grey.shade100,
+          fillColor:
+              enabled ? Colors.grey.shade100 : Colors.grey.shade200,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide.none,
@@ -2119,8 +2155,18 @@ class _CarFormPageState extends State<CarFormPage> {
                 controller: brandCtrl,
                 label: isArabic ? 'الماركة' : 'Brand',
                 required: true,
+                enabled: widget.lockedBrand == null,
               ),
-              if (allBrands.isNotEmpty) ...[
+              if (widget.lockedBrand != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  isArabic
+                      ? 'الماركة محدّدة أوتوماتيك لأنك بتضيف السيارة دي من جوه صفحة "${widget.lockedBrand}"'
+                      : 'Brand is set automatically because you\'re adding this car from the "${widget.lockedBrand}" page',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+              ],
+              if (widget.lockedBrand == null && allBrands.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Text(
                   isArabic

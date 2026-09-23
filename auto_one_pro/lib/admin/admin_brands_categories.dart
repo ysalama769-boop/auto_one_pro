@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin/admin_shared.dart';
+import '../shared/widgets.dart';
+import 'admin_cars.dart';
 
 // ============================================================
 // ADMIN BRANDS & CATEGORIES
@@ -320,7 +322,26 @@ class _AdminBrandsCategoriesPageState
                         itemCount: list.length,
                         itemBuilder: (context, index) {
                           final item = list[index];
-                          return Container(
+                          final brandKey = showBrands
+                              ? ((item['name_en'] ?? '').toString().isNotEmpty
+                                  ? (item['name_en'] ?? '').toString()
+                                  : (item['name_ar'] ?? '').toString())
+                              : null;
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: brandKey == null || brandKey.isEmpty
+                                ? null
+                                : () {
+                                    Navigator.of(context).push(
+                                      smoothRoute(
+                                        AdminCarsPage(
+                                          isArabic: isArabic,
+                                          filterBrand: brandKey,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                            child: Container(
                             margin: const EdgeInsets.only(bottom: 10),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -359,6 +380,26 @@ class _AdminBrandsCategoriesPageState
                                   onChanged: (value) =>
                                       _toggleActive(item, value),
                                 ),
+                                if (brandKey != null && brandKey.isNotEmpty)
+                                  IconButton(
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        smoothRoute(
+                                          AdminCarsPage(
+                                            isArabic: isArabic,
+                                            filterBrand: brandKey,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.directions_car_filled_rounded,
+                                      color: Colors.black54,
+                                    ),
+                                    tooltip: isArabic
+                                        ? 'عرض سيارات الماركة'
+                                        : 'View brand cars',
+                                  ),
                                 IconButton(
                                   onPressed: () => _openForm(existing: item),
                                   icon: const Icon(Icons.edit_outlined),
@@ -373,6 +414,7 @@ class _AdminBrandsCategoriesPageState
                                 ),
                               ],
                             ),
+                          ),
                           );
                         },
                       ),
