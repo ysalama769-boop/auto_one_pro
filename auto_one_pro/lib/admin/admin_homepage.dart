@@ -31,6 +31,7 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
 
   // بانر صفحة الفروع
   final branchesBannerCtrl = TextEditingController();
+  final carsPageBannerCtrl = TextEditingController();
   // بانر صفحة الخدمات
   final servicesBannerCtrl = TextEditingController();
   // صورة قسم "نبذة عنا" وصورة خلفية قسم "تاريخنا" في صفحة من نحن
@@ -171,6 +172,7 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
       c.dispose();
     }
     branchesBannerCtrl.dispose();
+    carsPageBannerCtrl.dispose();
     servicesBannerCtrl.dispose();
     aboutImageCtrl.dispose();
     historyImageCtrl.dispose();
@@ -238,6 +240,8 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
 
       branchesBannerCtrl.text =
           (response?['branches_banner'] ?? '').toString();
+      carsPageBannerCtrl.text =
+          (response?['cars_page_banner'] ?? '').toString();
       servicesBannerCtrl.text =
           (response?['services_banner'] ?? '').toString();
       aboutImageCtrl.text = (response?['about_image'] ?? '').toString();
@@ -291,6 +295,10 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
   // تخزين الصور في Supabase، وبعدين يحط الرابط في خانة بانر الفروع.
   Future<void> _pickAndUploadBranchesBanner() async {
     await _pickAndUploadBanner(branchesBannerCtrl);
+  }
+
+  Future<void> _pickAndUploadCarsPageBanner() async {
+    await _pickAndUploadBanner(carsPageBannerCtrl);
   }
 
   Future<void> _pickAndUploadServicesBanner() async {
@@ -463,6 +471,7 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         'hero_subtitle_en': heroSubtitleEnCtrl.text.trim(),
         'banner_images': banners,
         'branches_banner': branchesBannerCtrl.text.trim(),
+        'cars_page_banner': carsPageBannerCtrl.text.trim(),
         'services_banner': servicesBannerCtrl.text.trim(),
         'about_image': aboutImageCtrl.text.trim(),
         'history_image': historyImageCtrl.text.trim(),
@@ -923,6 +932,36 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
             IconButton(
               onPressed:
                   isUploadingImage ? null : _pickAndUploadServicesBanner,
+              icon: const Icon(Icons.upload_file),
+              tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          isArabic ? 'صورة بانر صفحة السيارات' : 'Cars page banner image',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: carsPageBannerCtrl,
+                decoration: InputDecoration(
+                  hintText:
+                      isArabic ? 'رابط صورة البانر' : 'Banner image URL',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed:
+                  isUploadingImage ? null : _pickAndUploadCarsPageBanner,
               icon: const Icon(Icons.upload_file),
               tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
             ),

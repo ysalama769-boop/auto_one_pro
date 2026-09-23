@@ -1246,10 +1246,10 @@ String _searchAlias(Car car) {
         : ((hs?['hero_subtitle_en'] as String?)?.trim().isNotEmpty == true
             ? hs!['hero_subtitle_en'] as String
             : 'SEARCH AND FIND YOUR PERFECT CAR');
-    final bannerImages = (hs?['banner_images'] is List)
-        ? List<String>.from(
-            (hs!['banner_images'] as List).map((e) => e.toString()))
-        : <String>[];
+    // بانر صفحة السيارات بقى ليه حقل خاص بيه في لوحة التحكم
+    // (بانر صورة واحدة)، مش بيشارك صور الهيرو بتاعة الرئيسية زي
+    // ما كان قبل كده.
+    final carsPageBanner = (hs?['cars_page_banner'] ?? '').toString();
 
     return SingleChildScrollView(
       child: Column(
@@ -1258,20 +1258,16 @@ String _searchAlias(Car car) {
             padding: const EdgeInsets.all(30),
             child: Column(
               children: [
-          if (bannerImages.isNotEmpty) ...[
+          if (carsPageBanner.trim().isNotEmpty) ...[
             SizedBox(
               height: 160,
+              width: double.infinity,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(18),
-                child: PageView.builder(
-                  itemCount: bannerImages.length,
-                  itemBuilder: (context, index) {
-                    return carImageAdaptive(
-                      bannerImages[index],
-                      fit: BoxFit.cover,
-                      showWatermark: false,
-                    );
-                  },
+                child: carImageAdaptive(
+                  carsPageBanner,
+                  fit: BoxFit.cover,
+                  showWatermark: false,
                 ),
               ),
             ),
