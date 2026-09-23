@@ -10,6 +10,7 @@ import '../models/car.dart';
 import '../shared/repository.dart';
 import '../shared/favorites_compare.dart';
 import '../shared/widgets.dart';
+import '../shared/car_specs_schema.dart';
 import '../screens/car_booking_page.dart';
 import '../screens/comparison_page.dart';
 
@@ -2789,19 +2790,6 @@ Container(
               ),
           ];
 
-          // ==================================================
-          // مواصفات إضافية (ديناميكية من لوحة التحكم)
-          // ==================================================
-          final extraCards = <Widget>[
-            for (final entry in car.extraSpecs.entries)
-              if (entry.value.trim().isNotEmpty)
-                specCard(
-                  icon: Icons.check_circle_outline_rounded,
-                  label: entry.key,
-                  value: entry.value,
-                ),
-          ];
-
           final columns = [
             specColumn(
               isArabic ? 'القيادة' : 'DRIVING',
@@ -2818,10 +2806,6 @@ Container(
             specColumn(
               isArabic ? 'الأمان' : 'SAFETY',
               safetyCards,
-            ),
-            specColumn(
-              isArabic ? 'مواصفات إضافية' : 'MORE SPECS',
-              extraCards,
             ),
           ].where((c) => c is! SizedBox).toList();
 
@@ -2846,6 +2830,14 @@ Container(
             children: colChildren,
           );
         },
+      ),
+
+      // مواصفات إضافية — قوائم مطوية حسب القسم (الإضاءة، الأمان
+      // الأساسي، ADAS، الراحة، الترفيه...)، كل قسم بيبان بس لو
+      // فيه بند واحد على الأقل متعلّم "متوفر" للسيارة دي.
+      _ExtraSpecsAccordion(
+        isArabic: isArabic,
+        specsByCategory: car.extraSpecsByCategory,
       ),
 
       // DESCRIPTION (لو متسجل)
@@ -3310,3 +3302,200 @@ class _ShareOptionButton extends StatelessWidget {
   }
 }
 
+// ============================================================
+// EXTRA SPECS ACCORDION (قوائم مطوية للمواصفات الإضافية، فئة
+// بفئة — بتقرا من car_specs_schema.dart عشان تترجم مفاتيح
+// وقيم البنود المعروفة لنصوص عربي/إنجليزي واضحة، وبتعرض أي
+// بند مخصّص (مش من ضمن الـ40 المعروفة) بشكله الخام زي ما اتكتب)
+// ============================================================
+class _ExtraSpecsAccordion extends StatelessWidget {
+  final bool isArabic;
+  final Map<String, Map<String, String>> specsByCategory;
+
+  const _ExtraSpecsAccordion({
+    required this.isArabic,
+    required this.specsByCategory,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // بنبني قايمة الأقسام اللي فيها بيانات فعلية بس، بترتيب
+    // العرض المعرّف في carSpecCategories، وبعدها أي قسم مخصّص
+    // (زي "أخرى") مش موجود في الشيما الأساسية.
+    final sections = <_SpecSection>[];
+
+    for (final category in carSpecCategories) {
+      final rawValues = specsByCategory[category.key];
+      if (rawValues == null || rawValues.isEmpty) continue;
+
+      final rows = <_SpecRow>[];
+      for (final item in category.items) {
+        final rawValue = rawValues[item.key];
+        if (rawValue == null || rawValue.trim().isEmpty) continue;
+
+        rows.add(
+          _SpecRow(
+            label: isArabic ? item.labelAr : item.labelEn,
+            value: _formatSpecValue(item, rawValue, isArabic),
+          ),
+        );
+      }
+      if (rows.isNotEmpty) {
+        sections.add(
+          _SpecSection(
+            title: isArabic ? category.labelAr : category.labelEn,
+            rows: rows,
+          ),
+        );
+      }
+    }
+
+    // أي قسم إضافي مش من ضمن الشيما (زي "أخرى" أو أي حاجة قديمة)
+    for (final entry in specsByCategory.entries) {
+      final isKnownCategory =
+          carSpecCategories.any((c) => c.key == entry.key);
+      if (isKnownCategory || entry.value.isEmpty) continue;
+
+      final rows = entry.value.entries
+          .where((e) => e.value.trim().isNotEmpty)
+          .map((e) => _SpecRow(label: e.key, value: e.value))
+          .toList();
+      if (rows.isNotEmpty) {
+        sections.add(
+          _SpecSection(
+            title: isArabic ? 'مواصفات أخرى' : 'Other Specs',
+            rows: rows,
+          ),
+        );
+      }
+    }
+
+    if (sections.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            isArabic ? 'مواصفات تفصيلية' : 'DETAILED SPECIFICATIONS',
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...sections.map(
+            (section) => _ExtraSpecCategoryTile(
+              title: section.title,
+              rows: section.rows,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // بيترجم القيمة الخام المخزّنة (زي "led" أو "true") لنص واضح
+  // للعميل حسب نوع البند في الشيما.
+  String _formatSpecValue(CarSpecItem item, String rawValue, bool isArabic) {
+    switch (item.type) {
+      case CarSpecType.toggle:
+        return isArabic ? 'متوفر' : 'Available';
+
+      case CarSpecType.choice:
+        for (final option in item.options) {
+          if (option.value == rawValue) {
+            var label = isArabic ? option.labelAr : option.labelEn;
+            final unit = isArabic ? item.unitAr : item.unitEn;
+            if (unit != null && unit.isNotEmpty) {
+              label = '$label $unit';
+            }
+            return label;
+          }
+        }
+        return rawValue;
+
+      case CarSpecType.multiChoice:
+        final selectedValues = rawValue.split(',').map((s) => s.trim());
+        final labels = selectedValues.map((v) {
+          for (final option in item.options) {
+            if (option.value == v) {
+              return isArabic ? option.labelAr : option.labelEn;
+            }
+          }
+          return v;
+        });
+        return labels.join(isArabic ? '، ' : ', ');
+    }
+  }
+}
+
+class _SpecSection {
+  final String title;
+  final List<_SpecRow> rows;
+  _SpecSection({required this.title, required this.rows});
+}
+
+class _SpecRow {
+  final String label;
+  final String value;
+  _SpecRow({required this.label, required this.value});
+}
+
+class _ExtraSpecCategoryTile extends StatelessWidget {
+  final String title;
+  final List<_SpecRow> rows;
+
+  const _ExtraSpecCategoryTile({required this.title, required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black12),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding:
+              const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+          ),
+          children: [
+            for (final row in rows)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        row.label,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      row.value,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

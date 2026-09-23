@@ -155,9 +155,12 @@ class Car {
   }
 
   // ==========================================================
-  // EXTRA SPECS (flexible key → value, e.g. "ACC": "نعم")
+  // EXTRA SPECS — محتفظين بتقسيم الأقسام (القيادة، الإضاءة،
+  // الأمان...) عشان نقدر نعرضهم كقوائم مطوية لكل قسم في صفحة
+  // تفاصيل السيارة، بدل ما يبقوا مسطّحين في قايمة واحدة.
+  // شكلها: { "lighting": {"headlights_type": "led"}, ... }
   // ==========================================================
-  final Map<String, String> extraSpecs;
+  final Map<String, Map<String, String>> extraSpecsByCategory;
 
   // ==========================================================
   // STATUS + INVENTORY
@@ -235,7 +238,7 @@ class Car {
     this.viewCount = 0,
 
     // Extra specs
-    this.extraSpecs = const {},
+    this.extraSpecsByCategory = const {},
 
     // Status + inventory
     this.carStatus = 'available',
@@ -289,23 +292,26 @@ class Car {
       offerEndDate: (map['offer_end_date'] ?? '').toString(),
       isFeatured: (map['is_featured'] ?? false) as bool,
       viewCount: (map['view_count'] ?? 0) as int,
-      // بقت "extra_specs" مخزّنة كمجموعات حسب القسم (القيادة، الأمان...)
-      // { "driving": {"ACC": "نعم"}, "safety": {...} } — نحولها هنا
-      // لقائمة مسطّحة (اسم المواصفة: قيمتها) عشان العرض.
-      extraSpecs: (map['extra_specs'] is Map)
+      // "extra_specs" مخزّنة كمجموعات حسب القسم (القيادة، الأمان...)
+      // { "driving": {"ACC": "نعم"}, "safety": {...} } — بنحتفظ
+      // بالتقسيم ده عشان نعرضه كقوائم مطوية لكل قسم.
+      extraSpecsByCategory: (map['extra_specs'] is Map)
           ? () {
-              final flat = <String, String>{};
+              final grouped = <String, Map<String, String>>{};
               (map['extra_specs'] as Map).forEach((catKey, catValue) {
                 if (catValue is Map) {
+                  final inner = <String, String>{};
                   catValue.forEach((k, v) {
-                    flat[k.toString()] = v.toString();
+                    inner[k.toString()] = v.toString();
                   });
+                  grouped[catKey.toString()] = inner;
                 } else {
                   // توافق مع البيانات القديمة المسطّحة (من غير أقسام)
-                  flat[catKey.toString()] = catValue.toString();
+                  grouped.putIfAbsent('other', () => {});
+                  grouped['other']![catKey.toString()] = catValue.toString();
                 }
               });
-              return flat;
+              return grouped;
             }()
           : const {},
       carStatus: (map['car_status'] ?? 'available') as String,

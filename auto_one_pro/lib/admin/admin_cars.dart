@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/constants.dart';
 import '../shared/widgets.dart';
+import '../shared/car_specs_schema.dart';
 import '../admin/admin_shared.dart';
 
 // ============================================================
@@ -645,6 +646,11 @@ class _CarFormPageState extends State<CarFormPage> {
   // مواصفات إضافية مرنة، كل واحدة مربوطة بقسم (القيادة، الأمان...)
   List<ExtraSpecEntry> extraSpecEntries = [];
 
+  // قيم الـ40 بند المعروفة (من car_specs_schema.dart) — key البند
+  // نفسه هو المفتاح، والقيمة زي ما هتتخزن (مثلاً "led"، أو "true"
+  // للبنود اللي نوعها toggle، أو "electric,heated" للمتعدد الاختيار)
+  Map<String, String> structuredSpecValues = {};
+
   // الألوان المتاحة في المتجر كله، وإيه اللي متحدد للسيارة دي
   List<Map<String, dynamic>> allColors = [];
   List<Map<String, dynamic>> allBrands = [];
@@ -752,13 +758,20 @@ class _CarFormPageState extends State<CarFormPage> {
         if (catValue is Map) {
           // النسخة الجديدة: مواصفات مقسّمة على أقسام
           catValue.forEach((k, v) {
-            extraSpecEntries.add(
-              ExtraSpecEntry(
-                category: catKey.toString(),
-                keyCtrl: TextEditingController(text: k.toString()),
-                valueCtrl: TextEditingController(text: v.toString()),
-              ),
-            );
+            // لو المفتاح ده من ضمن الـ40 بند المعروفة في الشيما،
+            // بيتحط في structuredSpecValues (هيتعرض بالواجهة
+            // المنظّمة)، مش في القايمة الحرة القديمة.
+            if (findCarSpecItem(k.toString()) != null) {
+              structuredSpecValues[k.toString()] = v.toString();
+            } else {
+              extraSpecEntries.add(
+                ExtraSpecEntry(
+                  category: catKey.toString(),
+                  keyCtrl: TextEditingController(text: k.toString()),
+                  valueCtrl: TextEditingController(text: v.toString()),
+                ),
+              );
+            }
           });
         } else {
           // بيانات قديمة كانت مسطّحة من غير أقسام — نحطها تحت "أخرى"
@@ -1894,6 +1907,15 @@ class _CarFormPageState extends State<CarFormPage> {
           grouped.putIfAbsent(entry.category, () => {});
           grouped[entry.category]![k] = v;
         }
+        // الـ40 بند المنظّمة من car_specs_schema.dart — كل واحد
+        // بيتحط تحت القسم بتاعه الصحيح تلقائيًا
+        structuredSpecValues.forEach((key, value) {
+          if (value.trim().isEmpty) return;
+          final categoryKey = findCarSpecCategoryKey(key);
+          if (categoryKey == null) return;
+          grouped.putIfAbsent(categoryKey, () => {});
+          grouped[categoryKey]![key] = value;
+        });
         return grouped;
       }(),
     };
@@ -2726,6 +2748,37 @@ class _CarFormPageState extends State<CarFormPage> {
                 label: isArabic ? 'تاريخ الوصول' : 'Arrival date',
               ),
 
+              const SizedBox(height: 24),
+              Text(
+                isArabic ? 'مواصفات تفصيلية' : 'Detailed Specifications',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                isArabic
+                    ? 'فعّلي بس البنود المتوفرة فعليًا في السيارة دي؛ أي بند تسيبيه من غير تفعيل مش هيبان للعميل خالص.'
+                    : 'Only enable the items actually available in this car; anything left off won\'t show to customers at all.',
+                style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 10),
+              for (final category in carSpecCategories)
+                _StructuredSpecCategoryTile(
+                  category: category,
+                  isArabic: isArabic,
+                  values: structuredSpecValues,
+                  onChanged: (key, value) {
+                    setState(() {
+                      if (value == null) {
+                        structuredSpecValues.remove(key);
+                      } else {
+                        structuredSpecValues[key] = value;
+                      }
+                    });
+                  },
+                ),
+
               const SizedBox(height: 10),
               const SizedBox(height: 24),
               SizedBox(
@@ -2766,3 +2819,211 @@ class _CarFormPageState extends State<CarFormPage> {
   }
 }
 
+
+// ============================================================
+// STRUCTURED SPEC CATEGORY TILE (قسم واحد من الـ40 بند المنظّمة،
+// كل بند جواه مفتاح تشغيل + اختيارات لو النوع choice/multiChoice)
+// ============================================================
+class _StructuredSpecCategoryTile extends StatelessWidget {
+  final CarSpecCategory category;
+  final bool isArabic;
+  final Map<String, String> values;
+  final void Function(String key, String? value) onChanged;
+
+  const _StructuredSpecCategoryTile({
+    required this.category,
+    required this.isArabic,
+    required this.values,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final activeCount =
+        category.items.where((item) => values.containsKey(item.key)).length;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black12),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  isArabic ? category.labelAr : category.labelEn,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              if (activeCount > 0)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '$activeCount',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          children: [
+            for (final item in category.items)
+              _StructuredSpecItemTile(
+                item: item,
+                isArabic: isArabic,
+                currentValue: values[item.key],
+                onChanged: (value) => onChanged(item.key, value),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// STRUCTURED SPEC ITEM TILE (بند واحد: مفتاح تشغيل + اختيارات)
+// ============================================================
+class _StructuredSpecItemTile extends StatelessWidget {
+  final CarSpecItem item;
+  final bool isArabic;
+  final String? currentValue; // null = مش متوفرة في السيارة دي
+  final void Function(String? value) onChanged;
+
+  const _StructuredSpecItemTile({
+    required this.item,
+    required this.isArabic,
+    required this.currentValue,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isEnabled = currentValue != null;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  isArabic ? item.labelAr : item.labelEn,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Switch(
+                value: isEnabled,
+                activeColor: Colors.red,
+                onChanged: (value) {
+                  if (!value) {
+                    onChanged(null);
+                    return;
+                  }
+                  // بنفعّل البند: لو toggle، القيمة نفسها 'true'. لو
+                  // choice/multiChoice، بنبدأ باختيار أول قيمة تلقائيًا
+                  // عشان يبقى فيه قيمة صالحة على طول.
+                  if (item.type == CarSpecType.toggle) {
+                    onChanged('true');
+                  } else if (item.options.isNotEmpty) {
+                    onChanged(item.options.first.value);
+                  } else {
+                    onChanged('true');
+                  }
+                },
+              ),
+            ],
+          ),
+          if (isEnabled && item.type != CarSpecType.toggle) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: item.options.map((option) {
+                final baseLabel = isArabic ? option.labelAr : option.labelEn;
+                final unit = isArabic ? item.unitAr : item.unitEn;
+                final displayLabel =
+                    (unit != null && unit.isNotEmpty && item.type == CarSpecType.choice)
+                        ? '$baseLabel $unit'
+                        : baseLabel;
+
+                final selectedSet = (currentValue ?? '')
+                    .split(',')
+                    .map((s) => s.trim())
+                    .where((s) => s.isNotEmpty)
+                    .toSet();
+
+                final isSelected = item.type == CarSpecType.choice
+                    ? currentValue == option.value
+                    : selectedSet.contains(option.value);
+
+                return InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () {
+                    if (item.type == CarSpecType.choice) {
+                      onChanged(option.value);
+                      return;
+                    }
+                    // multiChoice: نضيف/نشيل القيمة دي من القايمة
+                    final updated = {...selectedSet};
+                    if (updated.contains(option.value)) {
+                      updated.remove(option.value);
+                    } else {
+                      updated.add(option.value);
+                    }
+                    // لو اتشالت كل الاختيارات، نقفل البند تلقائيًا
+                    onChanged(updated.isEmpty ? null : updated.join(','));
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.red : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected ? Colors.red : Colors.black12,
+                      ),
+                    ),
+                    child: Text(
+                      displayLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
