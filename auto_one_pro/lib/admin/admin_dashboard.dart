@@ -597,7 +597,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         badgeCount: newRequests,
       ),
       _AdminTabDef(
-        label: isArabic ? 'الماركات والفئات' : 'Brands & Categories',
+        label: isArabic ? 'الماركات' : 'Brands',
         icon: Icons.category_rounded,
         width: 160,
         pageBuilder: () => AdminBrandsCategoriesPage(isArabic: isArabic),

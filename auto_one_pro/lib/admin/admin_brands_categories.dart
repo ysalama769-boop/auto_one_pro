@@ -8,7 +8,7 @@ import '../shared/widgets.dart';
 import 'admin_cars.dart';
 
 // ============================================================
-// ADMIN BRANDS & CATEGORIES
+// ADMIN BRANDS
 // ============================================================
 class AdminBrandsCategoriesPage extends StatefulWidget {
   final bool isArabic;
@@ -22,9 +22,7 @@ class AdminBrandsCategoriesPage extends StatefulWidget {
 
 class _AdminBrandsCategoriesPageState
     extends State<AdminBrandsCategoriesPage> {
-  bool showBrands = true;
   List<Map<String, dynamic>> brands = [];
-  List<Map<String, dynamic>> categories = [];
   bool isLoading = true;
   bool isUploadingLogo = false;
   // عدد السيارات لكل ماركة، حسب اسمها (name_en لو موجود، وإلا name_ar)
@@ -55,9 +53,11 @@ class _AdminBrandsCategoriesPageState
         final path =
             'brands/${DateTime.now().millisecondsSinceEpoch}_$safeName';
 
-        await Supabase.instance.client.storage
-            .from('car_images')
-            .uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: true));
+        await Supabase.instance.client.storage.from('car_images').uploadBinary(
+              path,
+              bytes,
+              fileOptions: const FileOptions(upsert: true),
+            );
 
         final publicUrl = Supabase.instance.client.storage
             .from('car_images')
@@ -97,26 +97,21 @@ class _AdminBrandsCategoriesPageState
           .from('brands')
           .select()
           .order('name_ar');
-      final c = await Supabase.instance.client
-          .from('categories')
-          .select()
-          .order('name_ar');
       // بنجيب أسامي ماركات كل السيارات (عمود واحد بس)، عشان نحسب
       // عدد السيارات لكل ماركة من غير ما نجيب كل بيانات السيارات
-      final carsBrandsResponse = await Supabase.instance.client
-          .from('cars')
-          .select('brand');
+      final carsBrandsResponse =
+          await Supabase.instance.client.from('cars').select('brand');
 
       final counts = <String, int>{};
       for (final row in (carsBrandsResponse as List)) {
-        final brandName = (row['brand'] ?? '').toString().trim().toLowerCase();
+        final brandName =
+            (row['brand'] ?? '').toString().trim().toLowerCase();
         if (brandName.isEmpty) continue;
         counts[brandName] = (counts[brandName] ?? 0) + 1;
       }
 
       setState(() {
         brands = List<Map<String, dynamic>>.from(b as List);
-        categories = List<Map<String, dynamic>>.from(c as List);
         carCountByBrand = counts;
         isLoading = false;
       });
@@ -126,13 +121,12 @@ class _AdminBrandsCategoriesPageState
   }
 
   Future<void> _toggleActive(Map<String, dynamic> item, bool value) async {
-    final table = showBrands ? 'brands' : 'categories';
     setState(() {
       item['is_active'] = value;
     });
     try {
       await Supabase.instance.client
-          .from(table)
+          .from('brands')
           .update({'is_active': value}).eq('id', item['id'] as int);
     } catch (e) {
       setState(() {
@@ -152,43 +146,40 @@ class _AdminBrandsCategoriesPageState
         TextEditingController(text: existing?['name_ar']?.toString() ?? '');
     final nameEnCtrl =
         TextEditingController(text: existing?['name_en']?.toString() ?? '');
-    final logoCtrl = TextEditingController(
-      text: showBrands ? (existing?['logo']?.toString() ?? '') : '',
-    );
+    final logoCtrl =
+        TextEditingController(text: existing?['logo']?.toString() ?? '');
 
     final saved = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-        title: Text(
-          existing == null
-              ? (isArabic ? 'إضافة' : 'Add')
-              : (isArabic ? 'تعديل' : 'Edit'),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameArCtrl,
-                decoration: InputDecoration(
-                  labelText: isArabic ? 'الاسم بالعربي' : 'Name (Arabic)',
+          title: Text(
+            existing == null
+                ? (isArabic ? 'ماركة جديدة' : 'New brand')
+                : (isArabic ? 'تعديل الماركة' : 'Edit brand'),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameArCtrl,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'الاسم بالعربي' : 'Name (Arabic)',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: nameEnCtrl,
-                decoration: InputDecoration(
-                  labelText: isArabic ? 'الاسم بالإنجليزي' : 'Name (English)',
-                  helperText: showBrands
-                      ? (isArabic
-                          ? 'لازم يطابق بالظبط اسم الماركة المكتوب في بيانات السيارات (مثال: Toyota)'
-                          : 'Must match the brand name exactly as used on car records')
-                      : null,
-                  helperMaxLines: 2,
+                const SizedBox(height: 10),
+                TextField(
+                  controller: nameEnCtrl,
+                  decoration: InputDecoration(
+                    labelText:
+                        isArabic ? 'الاسم بالإنجليزي' : 'Name (English)',
+                    helperText: isArabic
+                        ? 'لازم يطابق بالظبط اسم الماركة المكتوب في بيانات السيارات (مثال: Toyota)'
+                        : 'Must match the brand name exactly as used on car records',
+                    helperMaxLines: 2,
+                  ),
                 ),
-              ),
-              if (showBrands) ...[
                 const SizedBox(height: 10),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,38 +211,36 @@ class _AdminBrandsCategoriesPageState
                   ],
                 ),
               ],
-            ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(isArabic ? 'حفظ' : 'Save'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(isArabic ? 'حفظ' : 'Save'),
-          ),
-        ],
-      ),
       ),
     );
 
     if (saved != true) return;
 
-    final table = showBrands ? 'brands' : 'categories';
     final payload = {
       'name_ar': nameArCtrl.text.trim(),
       'name_en': nameEnCtrl.text.trim(),
-      if (showBrands) 'logo': logoCtrl.text.trim(),
+      'logo': logoCtrl.text.trim(),
     };
 
     try {
       if (existing == null) {
-        await Supabase.instance.client.from(table).insert(payload);
+        await Supabase.instance.client.from('brands').insert(payload);
       } else {
         await Supabase.instance.client
-            .from(table)
+            .from('brands')
             .update(payload)
             .eq('id', existing['id'] as int);
       }
@@ -259,15 +248,15 @@ class _AdminBrandsCategoriesPageState
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isArabic ? 'حصلت مشكلة' : 'Something went wrong')),
+        SnackBar(
+            content: Text(isArabic ? 'حصلت مشكلة' : 'Something went wrong')),
       );
     }
   }
 
   Future<void> _delete(int id) async {
-    final table = showBrands ? 'brands' : 'categories';
     try {
-      await Supabase.instance.client.from(table).delete().eq('id', id);
+      await Supabase.instance.client.from('brands').delete().eq('id', id);
       _loadAll();
     } catch (e) {
       // silent
@@ -276,8 +265,6 @@ class _AdminBrandsCategoriesPageState
 
   @override
   Widget build(BuildContext context) {
-    final list = showBrands ? brands : categories;
-
     return Scaffold(
       backgroundColor: const Color(0xfff5f5f5),
       floatingActionButton: FloatingActionButton.extended(
@@ -286,70 +273,46 @@ class _AdminBrandsCategoriesPageState
         foregroundColor: Colors.white,
         onPressed: () => _openForm(),
         icon: const Icon(Icons.add_rounded),
-        label: Text(
-          showBrands
-              ? (isArabic ? 'ماركة جديدة' : 'New brand')
-              : (isArabic ? 'فئة جديدة' : 'New category'),
-        ),
+        label: Text(isArabic ? 'ماركة جديدة' : 'New brand'),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => setState(() => showBrands = true),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: showBrands ? Colors.red : null,
-                      foregroundColor: showBrands ? Colors.white : Colors.black,
-                    ),
-                    child: Text(isArabic ? 'الماركات' : 'Brands'),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.red))
+          : brands.isEmpty
+              ? Center(
+                  child: Text(
+                    isArabic ? 'لا يوجد ماركات بعد' : 'No brands yet',
+                    style: const TextStyle(color: Colors.black54),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => setState(() => showBrands = false),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: !showBrands ? Colors.red : null,
-                      foregroundColor: !showBrands ? Colors.white : Colors.black,
-                    ),
-                    child: Text(isArabic ? 'الفئات' : 'Categories'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.red))
-                : list.isEmpty
-                    ? Center(
-                        child: Text(
-                          isArabic ? 'لا يوجد عناصر بعد' : 'No items yet',
-                          style: const TextStyle(color: Colors.black54),
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 90),
-                        itemCount: list.length,
-                        itemBuilder: (context, index) {
-                          final item = list[index];
-                          final brandKey = showBrands
-                              ? ((item['name_en'] ?? '').toString().isNotEmpty
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final columns = constraints.maxWidth >= 900
+                        ? 3
+                        : constraints.maxWidth >= 600
+                            ? 2
+                            : 1;
+                    final cardWidth =
+                        (constraints.maxWidth - 14 * 2 - (columns - 1) * 12) /
+                            columns;
+
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 90),
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: brands.map((item) {
+                          final brandKey =
+                              (item['name_en'] ?? '').toString().isNotEmpty
                                   ? (item['name_en'] ?? '').toString()
-                                  : (item['name_ar'] ?? '').toString())
-                              : null;
-                          final carCount = brandKey == null
+                                  : (item['name_ar'] ?? '').toString();
+                          final carCount = brandKey.isEmpty
                               ? 0
-                              : (carCountByBrand[brandKey.trim().toLowerCase()] ??
+                              : (carCountByBrand[
+                                      brandKey.trim().toLowerCase()] ??
                                   0);
 
                           void openBrandCars() {
-                            if (brandKey == null || brandKey.isEmpty) return;
+                            if (brandKey.isEmpty) return;
                             Navigator.of(context).push(
                               smoothRoute(
                                 AdminCarsPage(
@@ -360,63 +323,70 @@ class _AdminBrandsCategoriesPageState
                             );
                           }
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // ====================================
-                                // خط الشجرة (بيبان بس للماركات)
-                                // ====================================
-                                if (showBrands)
-                                  SizedBox(
-                                    width: 26,
-                                    height: 64,
-                                    child: CustomPaint(
-                                      painter: _TreeBranchPainter(
-                                        isArabic: isArabic,
-                                        isLast: index == list.length - 1,
+                          return SizedBox(
+                            width: cardWidth,
+                            child: HoverLift(
+                              scale: 1.02,
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14),
+                                onTap: brandKey.isEmpty ? null : openBrandCars,
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 6,
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                Expanded(
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(12),
-                                    onTap: showBrands ? openBrandCars : null,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                            color: Colors.black12,
-                                            blurRadius: 6,
-                                          ),
-                                        ],
-                                      ),
-                                      child: Row(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
                                         children: [
-                                          if (showBrands) ...[
-                                            Container(
-                                              width: 36,
-                                              height: 36,
-                                              decoration: BoxDecoration(
-                                                color: Colors.red
-                                                    .withValues(alpha: 0.08),
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: const Icon(
-                                                Icons
-                                                    .account_tree_rounded,
-                                                color: Colors.red,
-                                                size: 18,
-                                              ),
+                                          Container(
+                                            width: 46,
+                                            height: 46,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade100,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
-                                            const SizedBox(width: 10),
-                                          ],
+                                            child:
+                                                (item['logo'] ?? '')
+                                                        .toString()
+                                                        .isEmpty
+                                                    ? const Icon(
+                                                        Icons
+                                                            .directions_car_filled_rounded,
+                                                        color: Colors.black26,
+                                                      )
+                                                    : ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                        child: Image.network(
+                                                          item['logo']
+                                                              .toString(),
+                                                          fit: BoxFit.contain,
+                                                          errorBuilder: (_,
+                                                                  __, ___) =>
+                                                              const Icon(
+                                                            Icons
+                                                                .broken_image_outlined,
+                                                            color: Colors
+                                                                .black26,
+                                                          ),
+                                                        ),
+                                                      ),
+                                          ),
+                                          const SizedBox(width: 10),
                                           Expanded(
                                             child: Column(
                                               crossAxisAlignment:
@@ -429,6 +399,9 @@ class _AdminBrandsCategoriesPageState
                                                     fontWeight:
                                                         FontWeight.w800,
                                                   ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                                 Text(
                                                   (item['name_en'] ?? '')
@@ -437,42 +410,47 @@ class _AdminBrandsCategoriesPageState
                                                     fontSize: 12,
                                                     color: Colors.black54,
                                                   ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                             ),
                                           ),
-                                          if (showBrands) ...[
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 10,
-                                                vertical: 5,
-                                              ),
-                                              decoration: BoxDecoration(
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: carCount > 0
+                                                  ? Colors.green
+                                                      .withValues(alpha: .1)
+                                                  : Colors.black
+                                                      .withValues(alpha: .06),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              isArabic
+                                                  ? '$carCount سيارة'
+                                                  : '$carCount cars',
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w800,
                                                 color: carCount > 0
-                                                    ? Colors.green
-                                                        .withValues(alpha: .1)
-                                                    : Colors.black
-                                                        .withValues(
-                                                            alpha: .06),
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                isArabic
-                                                    ? '$carCount سيارة'
-                                                    : '$carCount cars',
-                                                style: TextStyle(
-                                                  fontSize: 11.5,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: carCount > 0
-                                                      ? Colors.green.shade700
-                                                      : Colors.black45,
-                                                ),
+                                                    ? Colors.green.shade700
+                                                    : Colors.black45,
                                               ),
                                             ),
-                                            const SizedBox(width: 6),
-                                          ],
+                                          ),
+                                          const Spacer(),
                                           Switch(
                                             value: (item['is_active'] ??
                                                 true) as bool,
@@ -485,7 +463,12 @@ class _AdminBrandsCategoriesPageState
                                                 _openForm(existing: item),
                                             icon: const Icon(
                                                 Icons.edit_outlined),
+                                            iconSize: 20,
+                                            padding: EdgeInsets.zero,
+                                            constraints:
+                                                const BoxConstraints(),
                                           ),
+                                          const SizedBox(width: 12),
                                           IconButton(
                                             onPressed: () =>
                                                 _delete(item['id'] as int),
@@ -493,60 +476,24 @@ class _AdminBrandsCategoriesPageState
                                               Icons.delete_outline_rounded,
                                               color: Colors.red,
                                             ),
+                                            iconSize: 20,
+                                            padding: EdgeInsets.zero,
+                                            constraints:
+                                                const BoxConstraints(),
                                           ),
-                                          if (showBrands)
-                                            const Icon(
-                                              Icons.chevron_left_rounded,
-                                              color: Colors.black26,
-                                            ),
                                         ],
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
                           );
-                        },
+                        }).toList(),
                       ),
-          ),
-        ],
-      ),
+                    );
+                  },
+                ),
     );
   }
-}
-
-// ============================================================
-// TREE BRANCH PAINTER (خط شجري بسيط بيوصل كل ماركة بالخط الرأسي)
-// ============================================================
-class _TreeBranchPainter extends CustomPainter {
-  final bool isArabic;
-  final bool isLast;
-
-  _TreeBranchPainter({required this.isArabic, required this.isLast});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black26
-      ..strokeWidth = 1.6
-      ..style = PaintingStyle.stroke;
-
-    // في RTL الخط الرأسي بيبان على اليمين، وفي LTR على الشمال —
-    // نفس ترتيب قراءة القايمة.
-    final x = isArabic ? size.width - 4 : 4.0;
-    final midY = size.height / 2;
-
-    // الخط الرأسي: من فوق لحد نص الكارت، وبيكمل لتحت لو مش آخر
-    // عنصر (عشان يوصل للماركة اللي بعده)
-    canvas.drawLine(Offset(x, 0), Offset(x, isLast ? midY : size.height), paint);
-
-    // الخط الأفقي القصير اللي بيوصل للكارت
-    final endX = isArabic ? x - 14 : x + 14;
-    canvas.drawLine(Offset(x, midY), Offset(endX, midY), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _TreeBranchPainter oldDelegate) =>
-      oldDelegate.isLast != isLast || oldDelegate.isArabic != isArabic;
 }

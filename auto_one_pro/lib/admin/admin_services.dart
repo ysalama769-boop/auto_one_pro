@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin/admin_shared.dart';
+import '../shared/widgets.dart';
 
 // ============================================================
 // ADMIN SERVICE PACKAGES (باقات الخدمات - AUTOCARE plus وغيرها)
@@ -493,16 +494,32 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
                   )
-                : ListView.separated(
-                    itemCount: packages.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final columns = constraints.maxWidth >= 900
+                          ? 3
+                          : constraints.maxWidth >= 600
+                              ? 2
+                              : 1;
+                      return GridView.builder(
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          mainAxisExtent: 108,
+                        ),
+                        itemCount: packages.length,
+                        itemBuilder: (context, index) {
                       final p = packages[index];
                       final pdf = (p['pdf_url'] ?? '').toString();
                       final priceBefore = p['price_before'];
                       final priceAfter = p['price_after'];
 
-                      return Container(
+                      return HoverLift(
+                        scale: 1.02,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -514,6 +531,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
                                     isArabic
@@ -524,6 +542,8 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w800,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 4),
                                   Row(
@@ -582,6 +602,9 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                             ),
                           ],
                         ),
+                        ),
+                      );
+                        },
                       );
                     },
                   ),
