@@ -1458,6 +1458,44 @@ String _searchAlias(Car car) {
                   allFilteredCars.take(_visibleCarsCount).toList();
 
               if (filteredCars.isEmpty) {
+                // لو قاعدة البيانات نفسها فاضية (فشل تحميل من الأساس)،
+                // مش بس البحث/الفلتر مطلعش نتيجة، بنوري رسالة مختلفة
+                // توضح إن المشكلة في الاتصال مش في البحث.
+                if (cars.isEmpty) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 55,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.wifi_off_rounded,
+                          size: 50,
+                          color: Colors.black26,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          widget.isArabic
+                              ? 'تعذّر تحميل السيارات، تأكد من اتصالك بالإنترنت'
+                              : 'Failed to load cars, please check your internet connection',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
                 return Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(

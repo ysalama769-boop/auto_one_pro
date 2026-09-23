@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin/admin_shared.dart';
+import '../shared/widgets.dart';
 
 // ============================================================
 // ADMIN FINANCING PARTNERS (جهات التمويل المعتمدة)
@@ -330,14 +331,30 @@ class _AdminFinancingPartnersPageState
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
                   )
-                : ListView.separated(
-                    itemCount: partners.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final columns = constraints.maxWidth >= 900
+                          ? 3
+                          : constraints.maxWidth >= 600
+                              ? 2
+                              : 1;
+                      return GridView.builder(
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          mainAxisExtent: 88,
+                        ),
+                        itemCount: partners.length,
+                        itemBuilder: (context, index) {
                       final p = partners[index];
                       final logo = (p['logo_url'] ?? '').toString();
 
-                      return Container(
+                      return HoverLift(
+                        scale: 1.02,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -383,6 +400,8 @@ class _AdminFinancingPartnersPageState
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             IconButton(
@@ -403,6 +422,9 @@ class _AdminFinancingPartnersPageState
                             ),
                           ],
                         ),
+                        ),
+                      );
+                        },
                       );
                     },
                   ),

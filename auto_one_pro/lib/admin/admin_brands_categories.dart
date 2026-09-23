@@ -27,6 +27,8 @@ class _AdminBrandsCategoriesPageState
   List<Map<String, dynamic>> categories = [];
   bool isLoading = true;
   bool isUploadingLogo = false;
+  // عدد السيارات لكل ماركة، حسب اسمها (name_en لو موجود، وإلا name_ar)
+  Map<String, int> carCountByBrand = {};
 
   Future<void> _pickAndUploadLogo(
     TextEditingController target,
@@ -99,9 +101,23 @@ class _AdminBrandsCategoriesPageState
           .from('categories')
           .select()
           .order('name_ar');
+      // بنجيب أسامي ماركات كل السيارات (عمود واحد بس)، عشان نحسب
+      // عدد السيارات لكل ماركة من غير ما نجيب كل بيانات السيارات
+      final carsBrandsResponse = await Supabase.instance.client
+          .from('cars')
+          .select('brand');
+
+      final counts = <String, int>{};
+      for (final row in (carsBrandsResponse as List)) {
+        final brandName = (row['brand'] ?? '').toString().trim().toLowerCase();
+        if (brandName.isEmpty) continue;
+        counts[brandName] = (counts[brandName] ?? 0) + 1;
+      }
+
       setState(() {
         brands = List<Map<String, dynamic>>.from(b as List);
         categories = List<Map<String, dynamic>>.from(c as List);
+        carCountByBrand = counts;
         isLoading = false;
       });
     } catch (e) {
@@ -327,94 +343,169 @@ class _AdminBrandsCategoriesPageState
                                   ? (item['name_en'] ?? '').toString()
                                   : (item['name_ar'] ?? '').toString())
                               : null;
-                          return InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: brandKey == null || brandKey.isEmpty
-                                ? null
-                                : () {
-                                    Navigator.of(context).push(
-                                      smoothRoute(
-                                        AdminCarsPage(
-                                          isArabic: isArabic,
-                                          filterBrand: brandKey,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            child: Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: const [
-                                BoxShadow(color: Colors.black12, blurRadius: 6),
-                              ],
-                            ),
+                          final carCount = brandKey == null
+                              ? 0
+                              : (carCountByBrand[brandKey.trim().toLowerCase()] ??
+                                  0);
+
+                          void openBrandCars() {
+                            if (brandKey == null || brandKey.isEmpty) return;
+                            Navigator.of(context).push(
+                              smoothRoute(
+                                AdminCarsPage(
+                                  isArabic: isArabic,
+                                  filterBrand: brandKey,
+                                ),
+                              ),
+                            );
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
                             child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        (item['name_ar'] ?? '').toString(),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                        ),
+                                // ====================================
+                                // خط الشجرة (بيبان بس للماركات)
+                                // ====================================
+                                if (showBrands)
+                                  SizedBox(
+                                    width: 26,
+                                    height: 64,
+                                    child: CustomPaint(
+                                      painter: _TreeBranchPainter(
+                                        isArabic: isArabic,
+                                        isLast: index == list.length - 1,
                                       ),
-                                      Text(
-                                        (item['name_en'] ?? '').toString(),
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.black54,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Switch(
-                                  value: (item['is_active'] ?? true) as bool,
-                                  activeColor: Colors.red,
-                                  onChanged: (value) =>
-                                      _toggleActive(item, value),
-                                ),
-                                if (brandKey != null && brandKey.isNotEmpty)
-                                  IconButton(
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        smoothRoute(
-                                          AdminCarsPage(
-                                            isArabic: isArabic,
-                                            filterBrand: brandKey,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(
-                                      Icons.directions_car_filled_rounded,
-                                      color: Colors.black54,
                                     ),
-                                    tooltip: isArabic
-                                        ? 'عرض سيارات الماركة'
-                                        : 'View brand cars',
                                   ),
-                                IconButton(
-                                  onPressed: () => _openForm(existing: item),
-                                  icon: const Icon(Icons.edit_outlined),
-                                ),
-                                IconButton(
-                                  onPressed: () =>
-                                      _delete(item['id'] as int),
-                                  icon: const Icon(
-                                    Icons.delete_outline_rounded,
-                                    color: Colors.red,
+                                Expanded(
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: showBrands ? openBrandCars : null,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Colors.black12,
+                                            blurRadius: 6,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          if (showBrands) ...[
+                                            Container(
+                                              width: 36,
+                                              height: 36,
+                                              decoration: BoxDecoration(
+                                                color: Colors.red
+                                                    .withValues(alpha: 0.08),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: const Icon(
+                                                Icons
+                                                    .account_tree_rounded,
+                                                color: Colors.red,
+                                                size: 18,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10),
+                                          ],
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  (item['name_ar'] ?? '')
+                                                      .toString(),
+                                                  style: const TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.w800,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  (item['name_en'] ?? '')
+                                                      .toString(),
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          if (showBrands) ...[
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                                vertical: 5,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: carCount > 0
+                                                    ? Colors.green
+                                                        .withValues(alpha: .1)
+                                                    : Colors.black
+                                                        .withValues(
+                                                            alpha: .06),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Text(
+                                                isArabic
+                                                    ? '$carCount سيارة'
+                                                    : '$carCount cars',
+                                                style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: carCount > 0
+                                                      ? Colors.green.shade700
+                                                      : Colors.black45,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                          ],
+                                          Switch(
+                                            value: (item['is_active'] ??
+                                                true) as bool,
+                                            activeColor: Colors.red,
+                                            onChanged: (value) =>
+                                                _toggleActive(item, value),
+                                          ),
+                                          IconButton(
+                                            onPressed: () =>
+                                                _openForm(existing: item),
+                                            icon: const Icon(
+                                                Icons.edit_outlined),
+                                          ),
+                                          IconButton(
+                                            onPressed: () =>
+                                                _delete(item['id'] as int),
+                                            icon: const Icon(
+                                              Icons.delete_outline_rounded,
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                          if (showBrands)
+                                            const Icon(
+                                              Icons.chevron_left_rounded,
+                                              color: Colors.black26,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
                           );
                         },
                       ),
@@ -425,3 +516,37 @@ class _AdminBrandsCategoriesPageState
   }
 }
 
+// ============================================================
+// TREE BRANCH PAINTER (خط شجري بسيط بيوصل كل ماركة بالخط الرأسي)
+// ============================================================
+class _TreeBranchPainter extends CustomPainter {
+  final bool isArabic;
+  final bool isLast;
+
+  _TreeBranchPainter({required this.isArabic, required this.isLast});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black26
+      ..strokeWidth = 1.6
+      ..style = PaintingStyle.stroke;
+
+    // في RTL الخط الرأسي بيبان على اليمين، وفي LTR على الشمال —
+    // نفس ترتيب قراءة القايمة.
+    final x = isArabic ? size.width - 4 : 4.0;
+    final midY = size.height / 2;
+
+    // الخط الرأسي: من فوق لحد نص الكارت، وبيكمل لتحت لو مش آخر
+    // عنصر (عشان يوصل للماركة اللي بعده)
+    canvas.drawLine(Offset(x, 0), Offset(x, isLast ? midY : size.height), paint);
+
+    // الخط الأفقي القصير اللي بيوصل للكارت
+    final endX = isArabic ? x - 14 : x + 14;
+    canvas.drawLine(Offset(x, midY), Offset(endX, midY), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _TreeBranchPainter oldDelegate) =>
+      oldDelegate.isLast != isLast || oldDelegate.isArabic != isArabic;
+}

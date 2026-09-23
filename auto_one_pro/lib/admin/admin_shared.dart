@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/widgets.dart';
 import '../shared/constants.dart';
+import 'admin_dashboard.dart';
 
 // ============================================================
 // ADMIN GATE (تسجيل دخول حقيقي عن طريق Supabase Auth)
@@ -51,8 +52,15 @@ class AdminSectionScaffold extends StatelessWidget {
           ),
           actions: [
             TextButton.icon(
-              onPressed: () =>
-                  Navigator.of(context).popUntil((route) => route.isFirst),
+              onPressed: () {
+                // بنستبدل كل الصفحات المفتوحة فوق صفحة الموقع العام
+                // بصفحة الداشبورد نفسها، بدل ما نرجع لصفحة الموقع
+                // العام بالغلط (كان ده الخطأ القديم).
+                Navigator.of(context).pushAndRemoveUntil(
+                  smoothRoute(AdminDashboard(isArabic: isArabic)),
+                  (route) => route.isFirst,
+                );
+              },
               icon: const Icon(Icons.dashboard_rounded, color: Colors.white),
               label: Text(
                 isArabic ? 'الداشبورد' : 'Dashboard',

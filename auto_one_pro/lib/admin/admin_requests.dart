@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin/admin_shared.dart';
+import '../shared/widgets.dart';
 
 // ============================================================
 // ADMIN CUSTOMER REQUESTS (تمويل / تجربة قيادة / استفسار)
@@ -167,16 +168,33 @@ class _AdminRequestsPageState extends State<AdminRequestsPage> {
 
     return RefreshIndicator(
       onRefresh: _loadRequests,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(14),
-        itemCount: requests.length,
-        itemBuilder: (context, index) {
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth >= 1000
+              ? 3
+              : constraints.maxWidth >= 640
+                  ? 2
+                  : 1;
+          final cardWidth =
+              (constraints.maxWidth - 14 * 2 - (columns - 1) * 12) / columns;
+
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(14),
+            child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: List.generate(requests.length, (index) {
           final r = requests[index];
           final status = (r['status'] ?? 'new') as String;
           final type = (r['request_type'] ?? 'inquiry') as String;
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
+          return SizedBox(
+            width: cardWidth,
+            child: HoverLift(
+              scale: 1.015,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -331,6 +349,11 @@ class _AdminRequestsPageState extends State<AdminRequestsPage> {
                 ),
               ],
             ),
+              ),
+            ),
+          );
+        }),
+      ),
           );
         },
       ),

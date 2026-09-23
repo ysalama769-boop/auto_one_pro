@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin/admin_shared.dart';
+import '../shared/widgets.dart';
 
 class AdminBookingsBody extends StatefulWidget {
   final bool isArabic;
@@ -289,16 +290,35 @@ class _AdminBookingsBodyState extends State<AdminBookingsBody> {
                           style: const TextStyle(color: Colors.black54),
                         ),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: bookings.length,
-                        itemBuilder: (context, index) {
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          final columns = constraints.maxWidth >= 1000
+                              ? 3
+                              : constraints.maxWidth >= 640
+                                  ? 2
+                                  : 1;
+                          final cardWidth = (constraints.maxWidth -
+                                  16 * 2 -
+                                  (columns - 1) * 14) /
+                              columns;
+
+                          return SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(16),
+                            child: Wrap(
+                        spacing: 14,
+                        runSpacing: 14,
+                        children: List.generate(bookings.length, (index) {
                           final booking = bookings[index];
                           final status =
                               (booking['status'] ?? 'pending') as String;
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 14),
+                          return SizedBox(
+                            width: cardWidth,
+                            child: HoverLift(
+                              scale: 1.015,
+                              borderRadius: BorderRadius.circular(14),
+                              child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white,
@@ -465,11 +485,16 @@ class _AdminBookingsBodyState extends State<AdminBookingsBody> {
                                 ),
                               ],
                             ),
-                          );
-                        },
-                      ),
-            ),
-          ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+              );
+            },
+          ),
+        ),
+      ],
         ),
       ),
     );

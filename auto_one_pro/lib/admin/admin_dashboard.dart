@@ -588,13 +588,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         badgeCount: pendingBookings,
       ),
       _AdminTabDef(
-        label: isArabic ? 'المخزون' : 'Inventory',
-        icon: Icons.directions_car_filled_rounded,
-        width: 130,
-        pageBuilder: () => AdminCarsPage(isArabic: isArabic),
-        roles: const ['admin', 'inventory', 'editor'],
-      ),
-      _AdminTabDef(
         id: 'requests',
         label: isArabic ? 'طلبات العملاء' : 'Requests',
         icon: Icons.support_agent_rounded,

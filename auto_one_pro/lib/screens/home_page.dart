@@ -753,6 +753,37 @@ if (featuredCars.isEmpty && cars.isNotEmpty) {
   featuredCars.addAll(cars.take(5));
 }
 
+    // لو السيارات مش موجودة خالص (فشل التحميل من الأساس، مش بس
+    // مفيش سيارات مميزة)، نوري رسالة واضحة بدل قسم فاضي بدون تفسير
+    if (cars.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.wifi_off_rounded,
+              size: 36,
+              color: Colors.black26,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              widget.isArabic
+                  ? 'تعذّر تحميل السيارات، تأكد من اتصالك بالإنترنت'
+                  : 'Failed to load cars, please check your internet connection',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.black54,
+                fontSize: 13.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     // بقت بتتسحب لجنب زي شريط الماركات، بدل ما تتلف على أكتر من صف.
     // السهمين متحطين فوق الشريط نفسه (Stack) على الحافة اليمين
     // والشمال، مش قسم منفصل فوقه.
@@ -1208,24 +1239,6 @@ class BrandStrip extends StatefulWidget {
 
 class _BrandStripState extends State<BrandStrip>
     with SingleTickerProviderStateMixin {
-  // القايمة الثابتة القديمة، بتستخدم كـ fallback بس لو حصلت مشكلة
-  // في تحميل الماركات من قاعدة البيانات (زي مشكلة في الشبكة)
-  static const Map<String, String> _fallbackBrandLogos = {
-    'Toyota': 'assets/brands/logo-toyota1.jpg',
-    'Kia': 'assets/brands/logo-kia1.jpg',
-    'Jetour': 'assets/brands/logo-jetour1.png',
-    'Nissan': 'assets/brands/logo-nissan1.jpg',
-    'Ford': 'assets/brands/logo-ford1.jpg',
-    'BAIC': 'assets/brands/logo-baic1.jpg',
-    'BYD': 'assets/brands/logo-byd1.png',
-    'MG': 'assets/brands/logo-mg1.jpg',
-    'Chery': 'assets/brands/logo-chery1.png',
-    'Hyundai': 'assets/brands/logo-hyundai1.jpg',
-    'Geely': 'assets/brands/logo-geely1.jpg',
-    'RELY': 'assets/brands/logo-rely1.jpg',
-    'JAC': 'assets/brands/logo-jac1.png',
-  };
-
   List<Map<String, String>> brandItems = [];
   bool isLoading = true;
 
@@ -1308,11 +1321,6 @@ class _BrandStripState extends State<BrandStrip>
 
       final rows = List<Map<String, dynamic>>.from(response as List);
 
-      if (rows.isEmpty) {
-        _useFallback();
-        return;
-      }
-
       setState(() {
         brandItems = rows.map((row) {
           final label = widget.isArabic
@@ -1329,22 +1337,11 @@ class _BrandStripState extends State<BrandStrip>
         isLoading = false;
       });
     } catch (e) {
-      _useFallback();
+      // لو حصلت مشكلة في التحميل، القسم هيختفي من الصفحة (مفيش
+      // ماركات احتياطية مكررة في الكود دلوقتي — قاعدة البيانات هي
+      // المصدر الوحيد للماركات).
+      if (mounted) setState(() => isLoading = false);
     }
-  }
-
-  void _useFallback() {
-    if (!mounted) return;
-    setState(() {
-      brandItems = _fallbackBrandLogos.entries
-          .map((e) => {
-                'label': e.key,
-                'matchKey': e.key,
-                'logo': e.value,
-              })
-          .toList();
-      isLoading = false;
-    });
   }
 
   Widget _buildBrandItem(Map<String, String> item) {
