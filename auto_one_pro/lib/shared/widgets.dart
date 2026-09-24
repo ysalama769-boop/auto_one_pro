@@ -142,7 +142,7 @@ class AutoOneHeader extends StatelessWidget {
                  MediaQuery.of(context).size.width < 700;
     // عرض المنطقة البيضا المنحنية اللي بتبان تحت اللوجو وزرار
     // "الرئيسية"، عشان ألوان اللوجو تبان واضحة فوق خلفية فاتحة
-    final whiteZoneWidth = isMobile ? 150.0 : 340.0;
+    final whiteZoneWidth = isMobile ? 150.0 : 500.0;
 
     return Container(
       decoration: transparent
@@ -1841,6 +1841,7 @@ class AutoOneFooter extends StatelessWidget {
               const SizedBox(width: 7),
               Text(
                 displayNumber,
+                textDirection: TextDirection.ltr,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -1986,7 +1987,7 @@ class AutoOneFooter extends StatelessWidget {
           item(
             isArabic ? 'التمويل' : 'Financing',
             () => Navigator.of(context).push(
-              smoothRoute(ServicesPage(isArabic: isArabic)),
+              smoothRoute(CarsPage(isArabic: isArabic)),
             ),
           ),
           item(
@@ -2349,26 +2350,33 @@ class _NewsletterSubscribeBlockState
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
           LayoutBuilder(
             builder: (context, constraints) {
               final fields = [
                 SizedBox(
-                  width: constraints.maxWidth >= 420 ? 160 : double.infinity,
+                  width: constraints.maxWidth >= 420
+                      ? (widget.compact ? 100 : 160)
+                      : double.infinity,
                   child: ElevatedButton(
                     onPressed: isSubmitting ? null : _subscribe,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: kFooterColor,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: EdgeInsets.symmetric(
+                        vertical: widget.compact ? 9 : 14,
+                      ),
+                      textStyle: TextStyle(
+                        fontSize: widget.compact ? 12 : 14,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     child: isSubmitting
                         ? SizedBox(
-                            width: 16,
-                            height: 16,
+                            width: 14,
+                            height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: kFooterColor,
@@ -2379,21 +2387,24 @@ class _NewsletterSubscribeBlockState
                 ),
                 SizedBox(
                   width: constraints.maxWidth >= 420
-                      ? constraints.maxWidth - 172
+                      ? constraints.maxWidth - (widget.compact ? 112 : 172)
                       : double.infinity,
                   child: TextField(
                     controller: emailCtrl,
                     textDirection: TextDirection.ltr,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: widget.compact ? 12.5 : 14,
+                    ),
                     decoration: InputDecoration(
                       hintText:
                           isArabic ? 'بريدك الإلكتروني' : 'Your email',
                       hintStyle: TextStyle(color: Colors.white70),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.08),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 14,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: widget.compact ? 9 : 14,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),

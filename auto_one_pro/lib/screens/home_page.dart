@@ -1340,6 +1340,16 @@ class _BrandStripState extends State<BrandStrip>
 
       final rows = List<Map<String, dynamic>>.from(response as List);
 
+      // بنجيب برند كل سيارة متاحة، ونعدّ عدد السيارات لكل ماركة،
+      // عشان نوريها كبادج لطيف تحت كل ماركة في الشريط.
+      final carsResponse = await Supabase.instance.client
+          .from('cars')
+          .select('brand')
+          .eq('is_available', true);
+      final carBrands = List<Map<String, dynamic>>.from(carsResponse as List)
+          .map((r) => (r['brand'] ?? '').toString().trim().toLowerCase())
+          .toList();
+
       setState(() {
         brandItems = rows.map((row) {
           final label = widget.isArabic
@@ -1347,10 +1357,14 @@ class _BrandStripState extends State<BrandStrip>
               : ((row['name_en'] ?? row['name_ar'] ?? '').toString());
           final matchKey =
               (row['name_en'] ?? row['name_ar'] ?? '').toString();
+          final count = carBrands
+              .where((b) => b == matchKey.trim().toLowerCase())
+              .length;
           return {
             'label': label,
             'matchKey': matchKey,
             'logo': (row['logo'] ?? '').toString(),
+            'count': count.toString(),
           };
         }).toList();
         isLoading = false;
@@ -1367,6 +1381,7 @@ class _BrandStripState extends State<BrandStrip>
     final label = item['label']!;
     final matchKey = item['matchKey']!;
     final logo = item['logo']!;
+    final count = item['count'] ?? '0';
 
     return SizedBox(
       width: _itemWidth,
@@ -1378,6 +1393,9 @@ class _BrandStripState extends State<BrandStrip>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
               Container(
                 width: 112,
                 height: 112,
@@ -1420,6 +1438,38 @@ class _BrandStripState extends State<BrandStrip>
                           );
                         },
                       ),
+              ),
+                  if (count != '0')
+                    Positioned(
+                      bottom: -2,
+                      right: -2,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          count,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 12),
               Text(
@@ -2193,7 +2243,7 @@ class _FinancingPartnersCarouselState
   double _offset = 0;
   bool _isPaused = false;
 
-  static const double _itemWidth = 132;
+  static const double _itemWidth = 160;
   static const double _speed = 45; // pixels per second
 
   @override
@@ -2249,9 +2299,9 @@ class _FinancingPartnersCarouselState
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 84,
-            height: 84,
-            padding: const EdgeInsets.all(14),
+            width: 104,
+            height: 104,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
@@ -2279,7 +2329,7 @@ class _FinancingPartnersCarouselState
                 ? const Icon(
                     Icons.account_balance_rounded,
                     color: Colors.red,
-                    size: 28,
+                    size: 36,
                   )
                 : carImageAdaptive(
                     logo,
@@ -2287,14 +2337,14 @@ class _FinancingPartnersCarouselState
                     showWatermark: false,
                   ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             name,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 12.5,
+              fontSize: 14.5,
               fontWeight: FontWeight.w700,
               color: Colors.black87,
             ),
@@ -2345,7 +2395,7 @@ class _FinancingPartnersCarouselState
           ),
           const SizedBox(height: 30),
           SizedBox(
-            height: 170,
+            height: 205,
             child: MouseRegion(
               onEnter: (_) => _isPaused = true,
               onExit: (_) => _isPaused = false,
@@ -2612,7 +2662,7 @@ class _ReviewsCarouselState extends State<_ReviewsCarousel> {
             builder: (context, constraints) {
               final perPage = constraints.maxWidth >= 700 ? 4 : 1;
               final pageCount = (reviews.length / perPage).ceil();
-              final cardAreaHeight = perPage == 4 ? 190.0 : 210.0;
+              final cardAreaHeight = perPage == 4 ? 230.0 : 250.0;
 
               return Column(
                 children: [
