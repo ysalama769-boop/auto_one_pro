@@ -1963,6 +1963,10 @@ class AutoOneFooter extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 1150),
             child: Column(
               children: [
+                _NewsletterSubscribeBlock(isArabic: isArabic),
+
+                const SizedBox(height: 28),
+
                 LayoutBuilder(
                   builder: (context, constraints) {
                     if (constraints.maxWidth >= 800) {
@@ -2043,6 +2047,203 @@ class AutoOneFooter extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// NEWSLETTER SUBSCRIBE BLOCK (اشترك في نشرتنا البريدية)
+// ============================================================
+// بتاخد إيميل الزائر وتسجّله في جدول newsletter_subscribers في
+// Supabase، مع تحقق بسيط من صحة شكل الإيميل ومنع التكرار.
+// ============================================================
+class _NewsletterSubscribeBlock extends StatefulWidget {
+  final bool isArabic;
+  const _NewsletterSubscribeBlock({required this.isArabic});
+
+  @override
+  State<_NewsletterSubscribeBlock> createState() =>
+      _NewsletterSubscribeBlockState();
+}
+
+class _NewsletterSubscribeBlockState
+    extends State<_NewsletterSubscribeBlock> {
+  final TextEditingController emailCtrl = TextEditingController();
+  bool isSubmitting = false;
+  String? statusMessage;
+  bool isError = false;
+
+  bool get isArabic => widget.isArabic;
+
+  @override
+  void dispose() {
+    emailCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _subscribe() async {
+    final email = emailCtrl.text.trim();
+    final isValidEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+
+    if (!isValidEmail) {
+      setState(() {
+        isError = true;
+        statusMessage =
+            isArabic ? 'اكتب بريد إلكتروني صحيح' : 'Enter a valid email';
+      });
+      return;
+    }
+
+    setState(() {
+      isSubmitting = true;
+      statusMessage = null;
+    });
+
+    try {
+      await Supabase.instance.client.from('newsletter_subscribers').insert({
+        'email': email,
+      });
+      setState(() {
+        isSubmitting = false;
+        isError = false;
+        statusMessage =
+            isArabic ? 'تم الاشتراك بنجاح، شكرًا لك!' : 'Subscribed, thank you!';
+        emailCtrl.clear();
+      });
+    } on PostgrestException catch (e) {
+      setState(() {
+        isSubmitting = false;
+        isError = true;
+        // كود 23505 معناه الإيميل ده مسجّل قبل كده (unique constraint)
+        statusMessage = e.code == '23505'
+            ? (isArabic
+                ? 'الإيميل ده مشترك بالفعل'
+                : 'This email is already subscribed')
+            : (isArabic ? 'حصل خطأ، جرّب تاني' : 'Something went wrong');
+      });
+    } catch (_) {
+      setState(() {
+        isSubmitting = false;
+        isError = true;
+        statusMessage = isArabic ? 'حصل خطأ، جرّب تاني' : 'Something went wrong';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment:
+            isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Text(
+            isArabic ? 'اشترك في نشرتنا البريدية' : 'Subscribe to our newsletter',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final fields = [
+                SizedBox(
+                  width: constraints.maxWidth >= 420 ? 160 : double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isSubmitting ? null : _subscribe,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: isSubmitting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(isArabic ? 'اشتراك' : 'Subscribe'),
+                  ),
+                ),
+                SizedBox(
+                  width: constraints.maxWidth >= 420
+                      ? constraints.maxWidth - 172
+                      : double.infinity,
+                  child: TextField(
+                    controller: emailCtrl,
+                    textDirection: TextDirection.ltr,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText:
+                          isArabic ? 'بريدك الإلكتروني' : 'Your email',
+                      hintStyle: TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: 0.08),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Colors.white24),
+                      ),
+                    ),
+                  ),
+                ),
+              ];
+
+              if (constraints.maxWidth >= 420) {
+                return Row(
+                  textDirection:
+                      isArabic ? TextDirection.rtl : TextDirection.ltr,
+                  children: [
+                    fields[1],
+                    const SizedBox(width: 10),
+                    fields[0],
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  fields[1],
+                  const SizedBox(height: 10),
+                  fields[0],
+                ],
+              );
+            },
+          ),
+          if (statusMessage != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              statusMessage!,
+              style: TextStyle(
+                color: isError ? Colors.redAccent.shade100 : Colors.greenAccent.shade100,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

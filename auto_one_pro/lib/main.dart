@@ -8,6 +8,7 @@ import 'shared/auth.dart';
 import 'shared/push_notifications.dart';
 import 'shared/repository.dart';
 import 'shared/widgets.dart';
+import 'shared/ai_chat_widget.dart';
 import 'screens/home_page.dart';
 import 'screens/cars_page.dart';
 import 'screens/car_details_page.dart';
@@ -109,6 +110,18 @@ class _AutoOneAppState extends State<AutoOneApp> {
           seedColor: Colors.red,
         ),
       ),
+
+      // بيلف كل صفحة في الموقع بـ Stack فيه زرار الشات عائم
+      // فوقها، عشان يفضل ظاهر في كل الصفحات من غير ما نضيفه
+      // لكل صفحة لوحدها. مش بيبان وقت شاشة التحميل الأولى.
+      builder: (context, child) {
+        return Stack(
+          children: [
+            if (child != null) child,
+            if (!showSplash) AiChatBubble(isArabic: isArabic),
+          ],
+        );
+      },
 
       home: showSplash
           ? SplashScreen(
