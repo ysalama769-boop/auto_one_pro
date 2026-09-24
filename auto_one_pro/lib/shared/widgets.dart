@@ -14,6 +14,7 @@ import '../screens/services_page.dart';
 import '../screens/car_details_page.dart';
 import '../screens/favorites_page.dart';
 import '../screens/comparison_page.dart';
+import '../screens/cars_page.dart';
 import '../screens/request_car_page.dart';
 import '../screens/brands_page.dart';
 import '../screens/auth_page.dart';
@@ -1634,14 +1635,22 @@ class AutoOneFooter extends StatelessWidget {
   }
 
   Widget _columnTitle(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        color: Colors.black87,
-        fontSize: 15,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
-      ),
+    return Column(
+      crossAxisAlignment:
+          isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.2,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(width: 26, height: 2.5, color: Colors.white),
+      ],
     );
   }
 
@@ -1656,13 +1665,27 @@ class AutoOneFooter extends StatelessWidget {
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontSize: 14,
-              height: 1.5,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+            children: [
+              Icon(
+                isArabic
+                    ? Icons.chevron_left_rounded
+                    : Icons.chevron_right_rounded,
+                size: 16,
+                color: Colors.white54,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1683,10 +1706,10 @@ class AutoOneFooter extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              color: Colors.black54,
+              color: Colors.white54,
               fontSize: 12,
               decoration: TextDecoration.underline,
-              decorationColor: Colors.black26,
+              decorationColor: Colors.white24,
             ),
           ),
         ),
@@ -1709,12 +1732,12 @@ class AutoOneFooter extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.location_on_rounded,
-                  size: 17, color: Colors.redAccent),
+                  size: 17, color: Colors.white),
               const SizedBox(width: 7),
               Text(
                 text,
                 style: const TextStyle(
-                  color: Colors.black87,
+                  color: Colors.white70,
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -1740,15 +1763,46 @@ class AutoOneFooter extends StatelessWidget {
             textDirection: TextDirection.ltr,
             children: [
               const Icon(Icons.phone_rounded,
-                  size: 17, color: Colors.redAccent),
+                  size: 17, color: Colors.white),
               const SizedBox(width: 7),
               Text(
                 displayNumber,
                 style: const TextStyle(
-                  color: Colors.black87,
+                  color: Colors.white,
                   fontSize: 14,
                   height: 1.5,
                   fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _emailLine(String email) {
+    return HoverLift(
+      scale: 1.02,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: () => _openLink('mailto:$email'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            textDirection: TextDirection.ltr,
+            children: [
+              const Icon(Icons.email_rounded,
+                  size: 17, color: Colors.white),
+              const SizedBox(width: 7),
+              Text(
+                email,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  height: 1.5,
                 ),
               ),
             ],
@@ -1787,7 +1841,7 @@ class AutoOneFooter extends StatelessWidget {
     }
 
     // ============================================================
-    // COLUMN 2 — CONTACT (لوحده: الرقم الموحّد + السوشيال ميديا)
+    // COLUMN 2 — CONTACT (الهاتف + الإيميل + النشرة البريدية)
     // ============================================================
     Widget contactColumn() {
       return Column(
@@ -1796,10 +1850,187 @@ class AutoOneFooter extends StatelessWidget {
           _columnTitle(isArabic ? 'تواصل معنا' : 'Contact Us'),
           const SizedBox(height: 14),
           _phoneLine('+966 54 157 7894', 'tel:+966541577894'),
-          const SizedBox(height: 12),
+          _emailLine('info@autoone.com'),
+          const SizedBox(height: 14),
+          _NewsletterSubscribeBlock(isArabic: isArabic, compact: true),
+        ],
+      );
+    }
+
+    // ============================================================
+    // COLUMN 2B — SERVICES (خدماتنا)
+    // ============================================================
+    Widget servicesColumn(BuildContext context) {
+      Widget item(String label, VoidCallback onTap) {
+        return HoverLift(
+          scale: 1.03,
+          borderRadius: BorderRadius.circular(6),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(6),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                textDirection:
+                    isArabic ? TextDirection.rtl : TextDirection.ltr,
+                children: [
+                  Icon(
+                    isArabic
+                        ? Icons.chevron_left_rounded
+                        : Icons.chevron_right_rounded,
+                    size: 16,
+                    color: Colors.white54,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: crossAxis,
+        children: [
+          _columnTitle(isArabic ? 'خدماتنا' : 'Our Services'),
+          const SizedBox(height: 14),
+          item(
+            isArabic ? 'شراء سيارة' : 'Buy a car',
+            () => Navigator.of(context).push(
+              smoothRoute(CarsPage(isArabic: isArabic)),
+            ),
+          ),
+          item(
+            isArabic ? 'التمويل' : 'Financing',
+            () => Navigator.of(context).push(
+              smoothRoute(ServicesPage(isArabic: isArabic)),
+            ),
+          ),
+          item(
+            isArabic ? 'المفضلة' : 'Favorites',
+            () => Navigator.of(context).push(
+              smoothRoute(FavoritesPage(isArabic: isArabic)),
+            ),
+          ),
+          item(
+            isArabic ? 'مقارنة السيارات' : 'Compare cars',
+            () => Navigator.of(context).push(
+              smoothRoute(ComparisonPage(isArabic: isArabic)),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // ============================================================
+    // COLUMN 3 — QUICK LINKS
+    // ============================================================
+    Widget linksColumn(BuildContext context) {
+      Widget item(String label, VoidCallback onTap) {
+        return HoverLift(
+          scale: 1.03,
+          borderRadius: BorderRadius.circular(6),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(6),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                textDirection:
+                    isArabic ? TextDirection.rtl : TextDirection.ltr,
+                children: [
+                  Icon(
+                    isArabic
+                        ? Icons.chevron_left_rounded
+                        : Icons.chevron_right_rounded,
+                    size: 16,
+                    color: Colors.white54,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: crossAxis,
+        children: [
+          _columnTitle(isArabic ? 'روابط سريعة' : 'Quick Links'),
+          const SizedBox(height: 14),
+          _quickLink(context, isArabic ? 'الرئيسية' : 'Home'),
+          _quickLink(context, isArabic ? 'تصفح السيارات' : 'Browse Cars'),
+          item(
+            isArabic ? 'قيّم تجربتك معانا' : 'Rate your experience',
+            () => showReviewSubmissionSheet(context, isArabic),
+          ),
+          item(
+            isArabic ? 'فروعنا' : 'Our Branches',
+            () => Navigator.of(context).push(
+              smoothRoute(BranchesPage(isArabic: isArabic)),
+            ),
+          ),
+          item(
+            isArabic ? 'الخدمات' : 'Services',
+            () => Navigator.of(context).push(
+              smoothRoute(ServicesPage(isArabic: isArabic)),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // ============================================================
+    // COLUMN 4 — LOGO & TAGLINE
+    // ============================================================
+    Widget logoColumn() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/logo-autoone.png',
+            height: 46,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stack) =>
+                const SizedBox.shrink(),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: 230,
+            child: Text(
+              isArabic
+                  ? 'معرض سيارات موثوق، نوفّر لك أفضل السيارات بأسعار تنافسية وتجربة شراء سهلة.'
+                  : 'A trusted car showroom offering the best cars at competitive prices.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                height: 1.7,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Wrap(
-            alignment:
-                isArabic ? WrapAlignment.end : WrapAlignment.start,
+            alignment: WrapAlignment.center,
             spacing: 10,
             runSpacing: 10,
             children: [
@@ -1839,161 +2070,29 @@ class AutoOneFooter extends StatelessWidget {
       );
     }
 
-    // ============================================================
-    // COLUMN 3 — QUICK LINKS
-    // ============================================================
-    Widget linksColumn(BuildContext context) {
-      return Column(
-        crossAxisAlignment: crossAxis,
-        children: [
-          _columnTitle(isArabic ? 'روابط سريعة' : 'Quick Links'),
-          const SizedBox(height: 14),
-          _quickLink(context, isArabic ? 'الرئيسية' : 'Home'),
-          _quickLink(context, isArabic ? 'تصفح السيارات' : 'Browse Cars'),
-          HoverLift(
-            scale: 1.03,
-            borderRadius: BorderRadius.circular(6),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(6),
-              onTap: () => showReviewSubmissionSheet(context, isArabic),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Text(
-                  isArabic ? 'قيّم تجربتك معانا' : 'Rate your experience',
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          HoverLift(
-            scale: 1.03,
-            borderRadius: BorderRadius.circular(6),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(6),
-              onTap: () {
-                Navigator.of(context).push(
-                  smoothRoute(BranchesPage(isArabic: isArabic)),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Text(
-                  isArabic ? 'فروعنا' : 'Our Branches',
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          HoverLift(
-            scale: 1.03,
-            borderRadius: BorderRadius.circular(6),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(6),
-              onTap: () {
-                Navigator.of(context).push(
-                  smoothRoute(ServicesPage(isArabic: isArabic)),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Text(
-                  isArabic ? 'الخدمات' : 'Services',
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    // ============================================================
-    // COLUMN 4 — LOGO & TAGLINE
-    // ============================================================
-    Widget logoColumn() {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Image.asset(
-            'assets/logo-autoone.png',
-            height: 46,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stack) =>
-                const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: 230,
-            child: Text(
-              isArabic
-                  ? 'معرض سيارات موثوق، نوفّر لك أفضل السيارات بأسعار تنافسية وتجربة شراء سهلة.'
-                  : 'A trusted car showroom offering the best cars at competitive prices.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 13,
-                height: 1.7,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Container(
         width: double.infinity,
-        color: kHeaderColor,
+        color: kFooterColor,
         padding: const EdgeInsets.only(top: 36, left: 20, right: 20),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1150),
+            constraints: const BoxConstraints(maxWidth: 1200),
             child: Column(
               children: [
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    if (constraints.maxWidth >= 800) {
-                      // شاشة واسعة: 4 أعمدة جنب بعض، والنشرة البريدية
-                      // تحت عمودي الشعار وتواصل معنا بس
+                    if (constraints.maxWidth >= 900) {
+                      // شاشة واسعة: 5 أعمدة جنب بعض (النشرة البريدية
+                      // بقت جوّه عمود "تواصل معنا" نفسه)
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            flex: 2,
-                            child: Column(
-                              crossAxisAlignment: isArabic
-                                  ? CrossAxisAlignment.end
-                                  : CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(child: logoColumn()),
-                                    Expanded(child: contactColumn()),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                _NewsletterSubscribeBlock(
-                                  isArabic: isArabic,
-                                ),
-                              ],
-                            ),
-                          ),
+                          Expanded(child: logoColumn()),
                           Expanded(child: linksColumn(context)),
+                          Expanded(child: servicesColumn(context)),
+                          Expanded(child: contactColumn()),
                           Expanded(child: locationColumn()),
                         ],
                       );
@@ -2006,10 +2105,13 @@ class AutoOneFooter extends StatelessWidget {
                       runSpacing: 30,
                       children: [
                         SizedBox(width: halfWidth, child: logoColumn()),
-                        SizedBox(width: halfWidth, child: contactColumn()),
                         SizedBox(width: halfWidth, child: linksColumn(context)),
+                        SizedBox(
+                          width: halfWidth,
+                          child: servicesColumn(context),
+                        ),
+                        SizedBox(width: halfWidth, child: contactColumn()),
                         SizedBox(width: halfWidth, child: locationColumn()),
-                        _NewsletterSubscribeBlock(isArabic: isArabic),
                       ],
                     );
                   },
@@ -2019,7 +2121,7 @@ class AutoOneFooter extends StatelessWidget {
 
                 Container(
                   height: 1,
-                  color: Colors.black12,
+                  color: Colors.white12,
                 ),
 
                 const SizedBox(height: 16),
@@ -2037,7 +2139,7 @@ class AutoOneFooter extends StatelessWidget {
                     ),
                     const Text(
                       '•',
-                      style: TextStyle(color: Colors.black26, fontSize: 12),
+                      style: TextStyle(color: Colors.white24, fontSize: 12),
                     ),
                     _policyLink(
                       context,
@@ -2046,14 +2148,14 @@ class AutoOneFooter extends StatelessWidget {
                     ),
                     const Text(
                       '•',
-                      style: TextStyle(color: Colors.black26, fontSize: 12),
+                      style: TextStyle(color: Colors.white24, fontSize: 12),
                     ),
                     Text(
                       isArabic
                           ? '© ${DateTime.now().year} AUTO ONE — جميع الحقوق محفوظة'
                           : '© ${DateTime.now().year} AUTO ONE — All rights reserved',
                       style: const TextStyle(
-                        color: Colors.black54,
+                        color: Colors.white54,
                         fontSize: 12,
                       ),
                     ),
@@ -2078,7 +2180,11 @@ class AutoOneFooter extends StatelessWidget {
 // ============================================================
 class _NewsletterSubscribeBlock extends StatefulWidget {
   final bool isArabic;
-  const _NewsletterSubscribeBlock({required this.isArabic});
+  final bool compact;
+  const _NewsletterSubscribeBlock({
+    required this.isArabic,
+    this.compact = false,
+  });
 
   @override
   State<_NewsletterSubscribeBlock> createState() =>
@@ -2151,26 +2257,19 @@ class _NewsletterSubscribeBlockState
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0A0A0A),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Text(
-            isArabic ? 'اشترك في نشرتنا البريدية' : 'Subscribe to our newsletter',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-            ),
+    final content = Column(
+      crossAxisAlignment:
+          isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          isArabic ? 'اشترك في نشرتنا البريدية' : 'Subscribe to our newsletter',
+          style: TextStyle(
+            color: widget.compact ? Colors.white70 : Colors.white,
+            fontSize: widget.compact ? 13 : 14,
+            fontWeight: FontWeight.w800,
           ),
-          const SizedBox(height: 10),
+        ),
+        const SizedBox(height: 10),
           LayoutBuilder(
             builder: (context, constraints) {
               final fields = [
@@ -2179,20 +2278,20 @@ class _NewsletterSubscribeBlockState
                   child: ElevatedButton(
                     onPressed: isSubmitting ? null : _subscribe,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white,
+                      foregroundColor: kFooterColor,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     child: isSubmitting
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: kFooterColor,
                             ),
                           )
                         : Text(isArabic ? 'اشتراك' : 'Subscribe'),
@@ -2255,14 +2354,25 @@ class _NewsletterSubscribeBlockState
             Text(
               statusMessage!,
               style: TextStyle(
-                color: isError ? Colors.redAccent.shade100 : Colors.greenAccent.shade100,
+                color: isError ? Colors.yellow.shade100 : Colors.greenAccent.shade100,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ],
+    );
+
+    if (widget.compact) return content;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A0A0A),
+        borderRadius: BorderRadius.circular(14),
       ),
+      child: content,
     );
   }
 }
