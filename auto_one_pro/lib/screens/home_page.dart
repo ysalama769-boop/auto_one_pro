@@ -42,8 +42,12 @@ class _HomePageState extends State<HomePage> {
    if (size.width == 0 || size.height == 0) return;
    final dx = (localPosition.dx / size.width - 0.5) * 2; // -1..1
    final dy = (localPosition.dy / size.height - 0.5) * 2; // -1..1
+   final newOffset = Offset(dx * 10, dy * 10);
+   // بنتجاهل التحديثات اللي فرق حركتها ضئيل جدًا، عشان منعملش
+   // setState مع كل بكسل يتحرك بيه الماوس (ده كان سبب الهزة)
+   if ((newOffset - _heroParallax).distance < 1.5) return;
    setState(() {
-     _heroParallax = Offset(dx * 10, dy * 10);
+     _heroParallax = newOffset;
    });
  }
 
@@ -289,8 +293,23 @@ final List<Map<String, String>> slideButtons = [
                                     heroBanners[safeImageIndex].url,
                                   ),
                                   scale: 1.06,
-                                  child: Transform.translate(
-                                    offset: _heroParallax,
+                                  child: TweenAnimationBuilder<Offset>(
+                                    // بدل ما الصورة تقفز فورًا مع كل حركة
+                                    // ماوس صغيرة، بتنساب بنعومة للمكان
+                                    // الجديد — وده اللي بيشيل إحساس الهزة
+                                    tween: Tween<Offset>(
+                                      begin: _heroParallax,
+                                      end: _heroParallax,
+                                    ),
+                                    duration:
+                                        const Duration(milliseconds: 220),
+                                    curve: Curves.easeOut,
+                                    builder: (context, value, child) {
+                                      return Transform.translate(
+                                        offset: value,
+                                        child: child,
+                                      );
+                                    },
                                     child: _HeroMedia(
                                       item: heroBanners[safeImageIndex],
                                     ),

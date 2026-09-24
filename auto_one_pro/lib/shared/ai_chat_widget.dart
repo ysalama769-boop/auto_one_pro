@@ -17,6 +17,24 @@ class AiChatBubble extends StatefulWidget {
 class _AiChatBubbleState extends State<AiChatBubble> {
   bool isOpen = false;
   bool isHovering = false;
+  // نفس إحساس الـ parallax بتاع الهيرو، بس على شخصية المساعد
+  Offset _avatarParallax = Offset.zero;
+
+  void _onAvatarHover(Offset localPosition, Size size) {
+    if (size.width == 0 || size.height == 0) return;
+    final dx = (localPosition.dx / size.width - 0.5) * 2; // -1..1
+    final dy = (localPosition.dy / size.height - 0.5) * 2; // -1..1
+    final newOffset = Offset(dx * 6, dy * 6);
+    if ((newOffset - _avatarParallax).distance < 1.0) return;
+    setState(() => _avatarParallax = newOffset);
+  }
+
+  void _resetAvatarParallax() {
+    setState(() {
+      isHovering = false;
+      _avatarParallax = Offset.zero;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,30 +50,48 @@ class _AiChatBubbleState extends State<AiChatBubble> {
             )
           : MouseRegion(
               onEnter: (_) => setState(() => isHovering = true),
-              onExit: (_) => setState(() => isHovering = false),
+              onExit: (_) => _resetAvatarParallax(),
+              onHover: (event) => _onAvatarHover(
+                event.localPosition,
+                const Size(90, 130),
+              ),
               child: GestureDetector(
                 onTap: () => setState(() => isOpen = true),
                 child: AnimatedScale(
                   scale: isHovering ? 1.08 : 1.0,
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
-                  child: SizedBox(
-                    width: 90,
-                    height: 130,
-                    child: Image.asset(
-                      'assets/chat-bot-avatar.webp',
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 62,
-                        height: 62,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                        ),
-                        child: const Icon(
-                          Icons.support_agent_rounded,
-                          color: Colors.red,
-                          size: 32,
+                  child: TweenAnimationBuilder<Offset>(
+                    tween: Tween<Offset>(
+                      begin: _avatarParallax,
+                      end: _avatarParallax,
+                    ),
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOut,
+                    builder: (context, value, child) {
+                      return Transform.translate(
+                        offset: value,
+                        child: child,
+                      );
+                    },
+                    child: SizedBox(
+                      width: 90,
+                      height: 130,
+                      child: Image.asset(
+                        'assets/chat-bot-avatar.webp',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 62,
+                          height: 62,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                          child: const Icon(
+                            Icons.support_agent_rounded,
+                            color: Colors.red,
+                            size: 32,
+                          ),
                         ),
                       ),
                     ),
