@@ -140,6 +140,10 @@ class AutoOneHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile =
                  MediaQuery.of(context).size.width < 700;
+    // عرض المنطقة البيضا المنحنية اللي بتبان تحت اللوجو وزرار
+    // "الرئيسية"، عشان ألوان اللوجو تبان واضحة فوق خلفية فاتحة
+    final whiteZoneWidth = isMobile ? 150.0 : 340.0;
+
     return Container(
       decoration: transparent
           ? BoxDecoration(
@@ -152,11 +156,38 @@ class AutoOneHeader extends StatelessWidget {
                 ],
               ),
             )
-          : const BoxDecoration(
-              color: Color.fromARGB(255, 238, 221, 221),
+          : null,
+      child: Stack(
+        children: [
+          if (!transparent) ...[
+            // خلفية حمراء متدرّجة، نفس تدرّج زرار "احجز الآن"
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: kBrandGradient,
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
+              ),
             ),
+            // منطقة بيضا منحنية تحت اللوجو والرئيسية، عشان اللوجو
+            // يبان بألوانه الحقيقية فوق خلفية فاتحة
+            Positioned(
+              top: 0,
+              bottom: 0,
+              right: isArabic ? 0 : null,
+              left: isArabic ? null : 0,
+              width: whiteZoneWidth,
+              child: ClipPath(
+                clipper: _HeaderCurveClipper(fromRight: isArabic),
+                child: Container(color: Colors.white),
+              ),
+            ),
+          ],
 
-      child: SafeArea(
+          SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: 40,
@@ -262,14 +293,14 @@ InkWell(
           Text(
             isArabic ? 'سياراتنا' : 'OUR CARS',
             style: TextStyle(
-              color: transparent ? Colors.white : Colors.black87,
+              color: Colors.white,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
           ),
           Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: transparent ? Colors.white : Colors.black87,
+            color: Colors.white,
             size: 18,
           ),
         ],
@@ -342,14 +373,14 @@ InkWell(
           Text(
             isArabic ? 'عن أوتو ون' : 'ABOUT AUTO ONE',
             style: TextStyle(
-              color: transparent ? Colors.white : Colors.black87,
+              color: Colors.white,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
           ),
           Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: transparent ? Colors.white : Colors.black87,
+            color: Colors.white,
             size: 18,
           ),
         ],
@@ -413,7 +444,7 @@ InkWell(
                   children: [
                     Icon(
                       Icons.notifications_outlined,
-                      color: transparent ? Colors.white : Colors.black87,
+                      color: Colors.white,
                       size: 22,
                     ),
                     if (count > 0)
@@ -472,7 +503,7 @@ InkWell(
               padding: const EdgeInsets.all(8),
               child: Icon(
                 Icons.person_outline_rounded,
-                color: transparent ? Colors.white : Colors.black87,
+                color: Colors.white,
                 size: 22,
               ),
             ),
@@ -483,7 +514,7 @@ InkWell(
       return PopupMenuButton<String>(
         icon: Icon(
           Icons.account_circle_rounded,
-          color: transparent ? Colors.white : Colors.black87,
+          color: Colors.white,
           size: 24,
         ),
         onSelected: (value) {
@@ -858,6 +889,8 @@ if (isMobile)
           ),
         ),
       ),
+        ],
+      ),
     );
   }
 }
@@ -927,6 +960,47 @@ PopupMenuItem<String> _megaMenuItem({
       ),
     ),
   );
+}
+
+// ============================================================
+// HEADER CURVE CLIPPER — بيرسم شكل منحني بين المنطقة البيضا
+// (تحت اللوجو والرئيسية) والخلفية الحمراء الباقية من الهيدر
+// ============================================================
+class _HeaderCurveClipper extends CustomClipper<Path> {
+  final bool fromRight; // المنطقة البيضا على اليمين (عربي) ولا الشمال
+
+  _HeaderCurveClipper({required this.fromRight});
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    if (fromRight) {
+      // المنطقة البيضا على اليمين، والمنحنى بيبان في حافتها الشمال
+      path.moveTo(0, 0);
+      path.lineTo(size.width * 0.72, 0);
+      path.quadraticBezierTo(
+        size.width, size.height * 0.5,
+        size.width * 0.72, size.height,
+      );
+      path.lineTo(0, size.height);
+      path.close();
+    } else {
+      // المنطقة البيضا على الشمال، والمنحنى بيبان في حافتها اليمين
+      path.moveTo(size.width, 0);
+      path.lineTo(size.width * 0.28, 0);
+      path.quadraticBezierTo(
+        0, size.height * 0.5,
+        size.width * 0.28, size.height,
+      );
+      path.lineTo(size.width, size.height);
+      path.close();
+    }
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant _HeaderCurveClipper oldClipper) =>
+      oldClipper.fromRight != fromRight;
 }
 
 class HeaderButton extends StatelessWidget {
@@ -2074,7 +2148,13 @@ class AutoOneFooter extends StatelessWidget {
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Container(
         width: double.infinity,
-        color: kFooterColor,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: kBrandGradient,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+        ),
         padding: const EdgeInsets.only(top: 36, left: 20, right: 20),
         child: Center(
           child: ConstrainedBox(

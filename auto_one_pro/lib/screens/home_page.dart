@@ -1267,7 +1267,7 @@ class _BrandStripState extends State<BrandStrip>
   double _offset = 0;
   bool _isPaused = false;
 
-  static const double _itemWidth = 128;
+  static const double _itemWidth = 155;
   static const double _speed = 40; // بكسل في الثانية
 
   @override
@@ -1379,9 +1379,9 @@ class _BrandStripState extends State<BrandStrip>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 92,
-                height: 92,
-                padding: const EdgeInsets.all(16),
+                width: 112,
+                height: 112,
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
@@ -1405,7 +1405,7 @@ class _BrandStripState extends State<BrandStrip>
                 child: logo.isEmpty
                     ? const Icon(
                         Icons.directions_car_filled_rounded,
-                        size: 34,
+                        size: 42,
                         color: Colors.red,
                       )
                     : carImageAdaptive(
@@ -1415,20 +1415,20 @@ class _BrandStripState extends State<BrandStrip>
                         errorBuilder: (context, error, stackTrace) {
                           return const Icon(
                             Icons.directions_car_filled_rounded,
-                            size: 34,
+                            size: 42,
                             color: Colors.red,
                           );
                         },
                       ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Text(
                 label,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 15,
                   fontWeight: FontWeight.w800,
                   color: Colors.black87,
                 ),
@@ -1461,7 +1461,7 @@ class _BrandStripState extends State<BrandStrip>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
-        vertical: 45,
+        vertical: 60,
         horizontal: 20,
       ),
       color: Colors.white,
@@ -1498,7 +1498,7 @@ class _BrandStripState extends State<BrandStrip>
             alignment: Alignment.center,
             children: [
               SizedBox(
-                height: 164,
+                height: 200,
                 child: MouseRegion(
                   onEnter: (_) => _isPaused = true,
                   onExit: (_) => _isPaused = false,

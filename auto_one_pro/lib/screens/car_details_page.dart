@@ -1965,7 +1965,7 @@ Widget build(BuildContext context) {
   ),
 ),
 floatingActionButtonLocation:
-    FloatingActionButtonLocation.startFloat,
+    FloatingActionButtonLocation.endFloat,
 
   appBar: AppBar(
         backgroundColor: kHeaderColor,
