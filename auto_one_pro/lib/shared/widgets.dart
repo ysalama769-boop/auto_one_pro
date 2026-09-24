@@ -1720,14 +1720,14 @@ class AutoOneFooter extends StatelessWidget {
         Text(
           text,
           style: const TextStyle(
-            color: Colors.white,
+            color: Colors.black87,
             fontSize: 15,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.2,
           ),
         ),
         const SizedBox(height: 6),
-        Container(width: 26, height: 2.5, color: Colors.white),
+        Container(width: 26, height: 2.5, color: Colors.red),
       ],
     );
   }
@@ -1752,13 +1752,13 @@ class AutoOneFooter extends StatelessWidget {
                     ? Icons.chevron_left_rounded
                     : Icons.chevron_right_rounded,
                 size: 16,
-                color: Colors.white54,
+                color: Colors.black38,
               ),
               const SizedBox(width: 4),
               Text(
                 label,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: Colors.black87,
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -1784,10 +1784,10 @@ class AutoOneFooter extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              color: Colors.white54,
+              color: Colors.black54,
               fontSize: 12,
               decoration: TextDecoration.underline,
-              decorationColor: Colors.white24,
+              decorationColor: Colors.black26,
             ),
           ),
         ),
@@ -1810,12 +1810,12 @@ class AutoOneFooter extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.location_on_rounded,
-                  size: 17, color: Colors.white),
+                  size: 17, color: Colors.redAccent),
               const SizedBox(width: 7),
               Text(
                 text,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: Colors.black87,
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -1841,13 +1841,13 @@ class AutoOneFooter extends StatelessWidget {
             textDirection: TextDirection.ltr,
             children: [
               const Icon(Icons.phone_rounded,
-                  size: 17, color: Colors.white),
+                  size: 17, color: Colors.redAccent),
               const SizedBox(width: 7),
               Text(
                 displayNumber,
                 textDirection: TextDirection.ltr,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black87,
                   fontSize: 14,
                   height: 1.5,
                   fontWeight: FontWeight.w600,
@@ -1874,12 +1874,12 @@ class AutoOneFooter extends StatelessWidget {
             textDirection: TextDirection.ltr,
             children: [
               const Icon(Icons.email_rounded,
-                  size: 17, color: Colors.white),
+                  size: 17, color: Colors.redAccent),
               const SizedBox(width: 7),
               Text(
                 email,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: Colors.black87,
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -1959,13 +1959,13 @@ class AutoOneFooter extends StatelessWidget {
                         ? Icons.chevron_left_rounded
                         : Icons.chevron_right_rounded,
                     size: 16,
-                    color: Colors.white54,
+                    color: Colors.black38,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     label,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: Colors.black87,
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -2033,13 +2033,13 @@ class AutoOneFooter extends StatelessWidget {
                         ? Icons.chevron_left_rounded
                         : Icons.chevron_right_rounded,
                     size: 16,
-                    color: Colors.white54,
+                    color: Colors.black38,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     label,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: Colors.black87,
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -2101,7 +2101,7 @@ class AutoOneFooter extends StatelessWidget {
                   : 'A trusted car showroom offering the best cars at competitive prices.',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white70,
+                color: Colors.black54,
                 fontSize: 13,
                 height: 1.7,
               ),
@@ -2154,11 +2154,7 @@ class AutoOneFooter extends StatelessWidget {
       child: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: kBrandGradient,
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+          color: Colors.white,
         ),
         padding: const EdgeInsets.only(top: 36, left: 20, right: 20),
         child: Center(
@@ -2206,7 +2202,7 @@ class AutoOneFooter extends StatelessWidget {
 
                 Container(
                   height: 1,
-                  color: Colors.white12,
+                  color: Colors.black12,
                 ),
 
                 const SizedBox(height: 16),
@@ -2224,7 +2220,7 @@ class AutoOneFooter extends StatelessWidget {
                     ),
                     const Text(
                       '•',
-                      style: TextStyle(color: Colors.white24, fontSize: 12),
+                      style: TextStyle(color: Colors.black26, fontSize: 12),
                     ),
                     _policyLink(
                       context,
@@ -2233,14 +2229,14 @@ class AutoOneFooter extends StatelessWidget {
                     ),
                     const Text(
                       '•',
-                      style: TextStyle(color: Colors.white24, fontSize: 12),
+                      style: TextStyle(color: Colors.black26, fontSize: 12),
                     ),
                     Text(
                       isArabic
                           ? '© ${DateTime.now().year} AUTO ONE — جميع الحقوق محفوظة'
                           : '© ${DateTime.now().year} AUTO ONE — All rights reserved',
                       style: const TextStyle(
-                        color: Colors.white54,
+                        color: Colors.black54,
                         fontSize: 12,
                       ),
                     ),
@@ -2349,7 +2345,7 @@ class _NewsletterSubscribeBlockState
         Text(
           isArabic ? 'اشترك في نشرتنا البريدية' : 'Subscribe to our newsletter',
           style: TextStyle(
-            color: widget.compact ? Colors.white70 : Colors.white,
+            color: widget.compact ? Colors.black54 : Colors.black87,
             fontSize: widget.compact ? 13 : 14,
             fontWeight: FontWeight.w800,
           ),
@@ -2365,8 +2361,8 @@ class _NewsletterSubscribeBlockState
                   child: ElevatedButton(
                     onPressed: isSubmitting ? null : _subscribe,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: kFooterColor,
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(
                         vertical: widget.compact ? 9 : 14,
                       ),
@@ -2378,12 +2374,12 @@ class _NewsletterSubscribeBlockState
                       ),
                     ),
                     child: isSubmitting
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 14,
                             height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: kFooterColor,
+                              color: Colors.white,
                             ),
                           )
                         : Text(isArabic ? 'اشتراك' : 'Subscribe'),
@@ -2397,26 +2393,26 @@ class _NewsletterSubscribeBlockState
                     controller: emailCtrl,
                     textDirection: TextDirection.ltr,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Colors.black87,
                       fontSize: widget.compact ? 12.5 : 14,
                     ),
                     decoration: InputDecoration(
                       hintText:
                           isArabic ? 'بريدك الإلكتروني' : 'Your email',
-                      hintStyle: TextStyle(color: Colors.white70),
+                      hintStyle: const TextStyle(color: Colors.black38),
                       filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.08),
+                      fillColor: Colors.grey.shade100,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: widget.compact ? 9 : 14,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.white24),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.white24),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
                       ),
                     ),
                   ),
@@ -2449,7 +2445,7 @@ class _NewsletterSubscribeBlockState
             Text(
               statusMessage!,
               style: TextStyle(
-                color: isError ? Colors.yellow.shade100 : Colors.greenAccent.shade100,
+                color: isError ? Colors.red : Colors.green.shade700,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),

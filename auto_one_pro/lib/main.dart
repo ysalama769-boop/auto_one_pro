@@ -53,9 +53,14 @@ class AutoOneApp extends StatefulWidget {
 
 class _AutoOneAppState extends State<AutoOneApp> {
   bool isArabic = true;
-  bool showSplash = true;
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _handleDeepLink();
+  }
 
   // بتفتح صفحة السيارة تلقائيًا لو الرابط جاي بـ ?car=رقم (رابط مشاركة)
   void _handleDeepLink() {
@@ -118,97 +123,24 @@ class _AutoOneAppState extends State<AutoOneApp> {
         return Stack(
           children: [
             if (child != null) child,
-            if (!showSplash) AiChatBubble(isArabic: isArabic),
+            AiChatBubble(isArabic: isArabic),
           ],
         );
       },
 
-      home: showSplash
-          ? SplashScreen(
-              isArabic: isArabic,
-              onLanguageChanged: () {
-                setState(() {
-                  isArabic = !isArabic;
-                });
-              },
-              onFinished: () {
-                setState(() {
-                  showSplash = false;
-                });
-                _handleDeepLink();
-              },
-            )
-          : AutoOneShell(
-              isArabic: isArabic,
-              onLanguageChanged: () {
-                setState(() {
-                  isArabic = !isArabic;
-                });
-              },
-            ),
-    );
-  }
-}
-
-
-// ============================================================
-// SPLASH SCREEN
-// ============================================================
-
-class SplashScreen extends StatefulWidget {
-  final bool isArabic;
-  final VoidCallback onLanguageChanged;
-  final VoidCallback onFinished;
-
-  const SplashScreen({
-    super.key,
-    required this.isArabic,
-    required this.onLanguageChanged,
-    required this.onFinished,
-  });
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _bootstrap();
-  }
-
-  Future<void> _bootstrap() async {
-    // بيجيب بيانات السيارات وإعدادات الرئيسية من Supabase، من غير
-    // أي تأخير مصطنع — بمجرد ما البيانات تجهز، بنكمل على طول.
-    await Future.wait([
-      loadCarsFromSupabase(),
-      loadHomepageSettings(),
-    ]);
-
-    if (mounted) {
-      widget.onFinished();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection:
-          widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        // نفس خلفية شاشة التحميل الأولى (اللي في index.html)، عشان
-        // الانتقال بينهم يبقى سلس ومش حاسة إنها شاشة تانية منفصلة —
-        // من غير لوجو تاني ولا أنيميشن، بس مؤشر تحميل بسيط.
-        backgroundColor: Colors.white,
-        body: const Center(
-          child: PulsingDots(),
-        ),
+      home: AutoOneShell(
+        isArabic: isArabic,
+        onLanguageChanged: () {
+          setState(() {
+            isArabic = !isArabic;
+          });
+        },
       ),
     );
   }
 }
+
+
 
 
 // ============================================================

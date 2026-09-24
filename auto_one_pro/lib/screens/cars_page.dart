@@ -69,6 +69,9 @@ Future<void> _loadRemainingCarsInBackground() async {
   String selectedModel = 'ALL';
   // نوع الجسم (SUV / سيدان / جيب) — فلتر منفصل عن باقي الفلاتر
   String selectedBodyType = 'ALL';
+  // اسم الماركة المفتوحة حاليًا في عمود الماركات الجانبي (بتوري
+  // الأنواع تحتها)، أو null لو مفيش ماركة مفتوحة
+  String? expandedSidebarBrand;
 
   // فلترة السعر والترتيب
   double? minPrice;
@@ -459,6 +462,34 @@ String _searchAlias(Car car) {
     return ['ALL', ...values];
   }
 
+  // بترجع أنواع الهيكل (SUV/سيدان/جيب...) المتاحة فعليًا لماركة
+  // معيّنة، عشان عمود الماركات الجانبي يوريها تحت كل ماركة.
+  List<String> _bodyTypesForBrand(String brand) {
+    final values = cars
+        .where((car) => car.brand == brand)
+        .map((car) => car.category.trim().toUpperCase())
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .toList();
+    values.sort();
+    return values;
+  }
+
+  String _bodyTypeLabel(String value) {
+    switch (value) {
+      case 'SUV':
+        return widget.isArabic ? 'إس يو في' : 'SUV';
+      case 'SEDAN':
+        return widget.isArabic ? 'سيدان' : 'Sedan';
+      case 'JEEP':
+        return widget.isArabic ? 'جيب' : 'Jeep';
+      case 'HATCHBACK':
+        return widget.isArabic ? 'هاتشباك' : 'Hatchback';
+      default:
+        return value;
+    }
+  }
+
   // ============================================================
   // TYPE LIST
   // ============================================================
@@ -536,42 +567,6 @@ String _searchAlias(Car car) {
   double _parsePrice(String price) {
     final digits = price.replaceAll(RegExp(r'[^0-9.]'), '');
     return double.tryParse(digits) ?? 0;
-  }
-
-  Widget _bodyTypeFilterChip(String value, String label) {
-    final isSelected = selectedBodyType == value;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () {
-        setState(() {
-          selectedBodyType = value;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.red : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 8,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-          ),
-        ),
-      ),
-    );
   }
 
   List<Car> get filteredCars {
@@ -1246,11 +1241,6 @@ String _searchAlias(Car car) {
         : ((hs?['hero_subtitle_en'] as String?)?.trim().isNotEmpty == true
             ? hs!['hero_subtitle_en'] as String
             : 'SEARCH AND FIND YOUR PERFECT CAR');
-    // بانر صفحة السيارات بقى ليه حقل خاص بيه في لوحة التحكم
-    // (بانر صورة واحدة)، مش بيشارك صور الهيرو بتاعة الرئيسية زي
-    // ما كان قبل كده.
-    final carsPageBanner = (hs?['cars_page_banner'] ?? '').toString();
-
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -1258,21 +1248,6 @@ String _searchAlias(Car car) {
             padding: const EdgeInsets.all(30),
             child: Column(
               children: [
-          if (carsPageBanner.trim().isNotEmpty) ...[
-            SizedBox(
-              height: 160,
-              width: double.infinity,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: carImageAdaptive(
-                  carsPageBanner,
-                  fit: BoxFit.cover,
-                  showWatermark: false,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
           Text(
             heroSubtitle,
             style: const TextStyle(
@@ -1282,6 +1257,41 @@ String _searchAlias(Car car) {
 
           const SizedBox(height: 30),
 
+          LayoutBuilder(
+            builder: (context, sidebarConstraints) {
+              final sidebar = _BrandsFilterSidebar(
+                isArabic: widget.isArabic,
+                brands: inventoryBrands
+                    .where((b) => b != 'ALL')
+                    .toList(),
+                bodyTypesForBrand: _bodyTypesForBrand,
+                bodyTypeLabel: _bodyTypeLabel,
+                selectedBrand: selectedBrand,
+                selectedBodyType: selectedBodyType,
+                expandedBrand: expandedSidebarBrand,
+                onBrandExpandToggle: (brand) {
+                  setState(() {
+                    expandedSidebarBrand =
+                        expandedSidebarBrand == brand ? null : brand;
+                  });
+                },
+                onTypeSelected: (brand, type) {
+                  setState(() {
+                    selectedBrand = brand;
+                    selectedBodyType = type;
+                  });
+                },
+                onClear: () {
+                  setState(() {
+                    selectedBrand = 'ALL';
+                    selectedBodyType = 'ALL';
+                  });
+                },
+                onOpenAdvancedFilters: () => _showFilters(context),
+              );
+
+              final mainContent = Column(
+                  children: [
           Row(
             children: [
               Expanded(
@@ -1321,41 +1331,6 @@ String _searchAlias(Car car) {
                   ),
                 ),
               ),
-
-              const SizedBox(width: 12),
-
-              ElevatedButton.icon(
-                onPressed: () => _showFilters(context),
-                icon: const Icon(
-                  Icons.tune_rounded,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  widget.isArabic ? 'فلتر' : 'FILTER',
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(110, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 14),
-
-          // BODY TYPE FILTER (الكل / SUV / سيدان / جيب)
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _bodyTypeFilterChip('ALL', widget.isArabic ? 'الكل' : 'All'),
-              _bodyTypeFilterChip('SUV', widget.isArabic ? 'إس يو في' : 'SUV'),
-              _bodyTypeFilterChip('SEDAN', widget.isArabic ? 'سيدان' : 'Sedan'),
-              _bodyTypeFilterChip('JEEP', widget.isArabic ? 'جيب' : 'Jeep'),
             ],
           ),
 
@@ -1644,13 +1619,36 @@ String _searchAlias(Car car) {
             },
           ),
               ],
-            ),
+                );
+
+              final isWide = sidebarConstraints.maxWidth >= 900;
+              if (isWide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    sidebar,
+                    const SizedBox(width: 20),
+                    Expanded(child: mainContent),
+                  ],
+                );
+              }
+              return Column(
+                children: [
+                  sidebar,
+                  const SizedBox(height: 20),
+                  mainContent,
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: 20),
           AutoOneFooter(isArabic: widget.isArabic),
         ],
       ),
+    ),
+    ],
+    ),
     );
   }
    }
@@ -1724,3 +1722,243 @@ class _ShowMoreCarsButton extends StatelessWidget {
   }
 }
 
+
+// ============================================================
+// BRANDS FILTER SIDEBAR (عمود جانبي بجانب شبكة السيارات — كل
+// ماركة ليها سهم يفتح أنواع الهيكل تحتها، ودوسة على نوع تفلتر
+// السيارات فورًا في نفس الصفحة، من غير أي انتقال)
+// ============================================================
+class _BrandsFilterSidebar extends StatelessWidget {
+  final bool isArabic;
+  final List<String> brands;
+  final List<String> Function(String brand) bodyTypesForBrand;
+  final String Function(String value) bodyTypeLabel;
+  final String selectedBrand;
+  final String selectedBodyType;
+  final String? expandedBrand;
+  final ValueChanged<String> onBrandExpandToggle;
+  final void Function(String brand, String type) onTypeSelected;
+  final VoidCallback onClear;
+  final VoidCallback onOpenAdvancedFilters;
+
+  const _BrandsFilterSidebar({
+    required this.isArabic,
+    required this.brands,
+    required this.bodyTypesForBrand,
+    required this.bodyTypeLabel,
+    required this.selectedBrand,
+    required this.selectedBodyType,
+    required this.expandedBrand,
+    required this.onBrandExpandToggle,
+    required this.onTypeSelected,
+    required this.onClear,
+    required this.onOpenAdvancedFilters,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasActiveFilter = selectedBrand != 'ALL' || selectedBodyType != 'ALL';
+
+    return Container(
+      width: 240,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  isArabic ? 'الماركات' : 'Brands',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              if (hasActiveFilter)
+                InkWell(
+                  onTap: onClear,
+                  child: Text(
+                    isArabic ? 'مسح' : 'Clear',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (final brand in brands) ...[
+            _BrandRow(
+              brand: brand,
+              isExpanded: expandedBrand == brand,
+              isSelectedNoType:
+                  selectedBrand == brand && selectedBodyType == 'ALL',
+              onHeaderTap: () => onBrandExpandToggle(brand),
+              types: bodyTypesForBrand(brand),
+              typeLabel: bodyTypeLabel,
+              selectedType:
+                  selectedBrand == brand ? selectedBodyType : null,
+              onTypeTap: (type) => onTypeSelected(brand, type),
+            ),
+          ],
+          const SizedBox(height: 6),
+          Divider(color: Colors.grey.shade200),
+          const SizedBox(height: 4),
+          InkWell(
+            onTap: onOpenAdvancedFilters,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.tune_rounded, size: 18, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(
+                    isArabic ? 'فلاتر متقدمة' : 'Advanced filters',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BrandRow extends StatelessWidget {
+  final String brand;
+  final bool isExpanded;
+  final bool isSelectedNoType;
+  final VoidCallback onHeaderTap;
+  final List<String> types;
+  final String Function(String value) typeLabel;
+  final String? selectedType;
+  final ValueChanged<String> onTypeTap;
+
+  const _BrandRow({
+    required this.brand,
+    required this.isExpanded,
+    required this.isSelectedNoType,
+    required this.onHeaderTap,
+    required this.types,
+    required this.typeLabel,
+    required this.selectedType,
+    required this.onTypeTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onHeaderTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            decoration: BoxDecoration(
+              color: isExpanded || isSelectedNoType
+                  ? Colors.red.withValues(alpha: 0.06)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    brand,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: isExpanded || isSelectedNoType
+                          ? Colors.red
+                          : Colors.black87,
+                    ),
+                  ),
+                ),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 180),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 20,
+                    color: isExpanded ? Colors.red : Colors.black45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: isExpanded
+              ? Padding(
+                  padding: const EdgeInsetsDirectional.only(
+                    start: 14,
+                    top: 4,
+                    bottom: 6,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final type in types)
+                        InkWell(
+                          onTap: () => onTypeTap(type),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  selectedType == type
+                                      ? Icons.check_box_rounded
+                                      : Icons.check_box_outline_blank_rounded,
+                                  size: 18,
+                                  color: selectedType == type
+                                      ? Colors.red
+                                      : Colors.black38,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  typeLabel(type),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (types.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Text(
+                            '—',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
+}
