@@ -16,42 +16,48 @@ class AiChatBubble extends StatefulWidget {
 
 class _AiChatBubbleState extends State<AiChatBubble> {
   bool isOpen = false;
+  bool isHovering = false;
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
       bottom: 20,
-      right: widget.isArabic ? null : 20,
-      left: widget.isArabic ? 20 : null,
+      // الجهة التانية من الشاشة (عكس ما كانت)
+      right: widget.isArabic ? 20 : null,
+      left: widget.isArabic ? null : 20,
       child: isOpen
           ? _ChatPanel(
               isArabic: widget.isArabic,
               onClose: () => setState(() => isOpen = false),
             )
-          : GestureDetector(
-              onTap: () => setState(() => isOpen = true),
-              child: Container(
-                width: 62,
-                height: 62,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/chat-bot-avatar.webp',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.support_agent_rounded,
-                      color: Colors.red,
-                      size: 32,
+          : MouseRegion(
+              onEnter: (_) => setState(() => isHovering = true),
+              onExit: (_) => setState(() => isHovering = false),
+              child: GestureDetector(
+                onTap: () => setState(() => isOpen = true),
+                child: AnimatedScale(
+                  scale: isHovering ? 1.08 : 1.0,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  child: SizedBox(
+                    width: 90,
+                    height: 130,
+                    child: Image.asset(
+                      'assets/chat-bot-avatar.webp',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 62,
+                        height: 62,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: const Icon(
+                          Icons.support_agent_rounded,
+                          color: Colors.red,
+                          size: 32,
+                        ),
+                      ),
                     ),
                   ),
                 ),

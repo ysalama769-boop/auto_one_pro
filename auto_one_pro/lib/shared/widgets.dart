@@ -1963,19 +1963,36 @@ class AutoOneFooter extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 1150),
             child: Column(
               children: [
-                _NewsletterSubscribeBlock(isArabic: isArabic),
-
-                const SizedBox(height: 28),
-
                 LayoutBuilder(
                   builder: (context, constraints) {
                     if (constraints.maxWidth >= 800) {
-                      // شاشة واسعة: 4 أعمدة جنب بعض
+                      // شاشة واسعة: 4 أعمدة جنب بعض، والنشرة البريدية
+                      // تحت عمودي الشعار وتواصل معنا بس
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: logoColumn()),
-                          Expanded(child: contactColumn()),
+                          Expanded(
+                            flex: 2,
+                            child: Column(
+                              crossAxisAlignment: isArabic
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: logoColumn()),
+                                    Expanded(child: contactColumn()),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                _NewsletterSubscribeBlock(
+                                  isArabic: isArabic,
+                                ),
+                              ],
+                            ),
+                          ),
                           Expanded(child: linksColumn(context)),
                           Expanded(child: locationColumn()),
                         ],
@@ -1992,6 +2009,7 @@ class AutoOneFooter extends StatelessWidget {
                         SizedBox(width: halfWidth, child: contactColumn()),
                         SizedBox(width: halfWidth, child: linksColumn(context)),
                         SizedBox(width: halfWidth, child: locationColumn()),
+                        _NewsletterSubscribeBlock(isArabic: isArabic),
                       ],
                     );
                   },
@@ -2135,9 +2153,9 @@ class _NewsletterSubscribeBlockState
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.18),
+        color: const Color(0xFF0A0A0A),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
