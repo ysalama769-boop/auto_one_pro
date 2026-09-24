@@ -18,8 +18,13 @@ class RequestCarPage extends StatefulWidget {
 class _RequestCarPageState extends State<RequestCarPage> {
   final nameCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
+  final cityCtrl = TextEditingController();
+  final carCtrl = TextEditingController();
+  final emailCtrl = TextEditingController();
   final messageCtrl = TextEditingController();
   bool isSubmitting = false;
+  String customerType = 'individual'; // individual | company
+  String paymentMethod = 'cash'; // cash | financing
 
   bool get isArabic => widget.isArabic;
 
@@ -27,6 +32,9 @@ class _RequestCarPageState extends State<RequestCarPage> {
   void dispose() {
     nameCtrl.dispose();
     phoneCtrl.dispose();
+    cityCtrl.dispose();
+    carCtrl.dispose();
+    emailCtrl.dispose();
     messageCtrl.dispose();
     super.dispose();
   }
@@ -48,13 +56,14 @@ class _RequestCarPageState extends State<RequestCarPage> {
   Future<void> _submit() async {
     if (nameCtrl.text.trim().isEmpty ||
         phoneCtrl.text.trim().isEmpty ||
-        messageCtrl.text.trim().isEmpty) {
+        cityCtrl.text.trim().isEmpty ||
+        carCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             isArabic
-                ? 'من فضلك املأ كل الحقول'
-                : 'Please fill in all fields',
+                ? 'من فضلك املأ كل الحقول المطلوبة'
+                : 'Please fill in all required fields',
           ),
         ),
       );
@@ -63,10 +72,34 @@ class _RequestCarPageState extends State<RequestCarPage> {
 
     setState(() => isSubmitting = true);
     try {
+      // بنجمع كل التفاصيل الإضافية (نوع العميل، طريقة الدفع،
+      // المدينة، السيارة، الإيميل) في حقل notes بشكل مرتّب
+      // وواضح، من غير ما نحتاج نضيف أعمدة جديدة في قاعدة البيانات.
+      final buffer = StringBuffer();
+      buffer.writeln(
+        '${isArabic ? 'نوع العميل' : 'Customer type'}: '
+        '${customerType == 'company' ? (isArabic ? 'شركات' : 'Company') : (isArabic ? 'أفراد' : 'Individual')}',
+      );
+      buffer.writeln(
+        '${isArabic ? 'طريقة الدفع' : 'Payment method'}: '
+        '${paymentMethod == 'financing' ? (isArabic ? 'تمويل' : 'Financing') : (isArabic ? 'كاش' : 'Cash')}',
+      );
+      buffer.writeln('${isArabic ? 'المدينة' : 'City'}: ${cityCtrl.text.trim()}');
+      buffer.writeln(
+          '${isArabic ? 'السيارة المطلوبة' : 'Requested car'}: ${carCtrl.text.trim()}');
+      if (emailCtrl.text.trim().isNotEmpty) {
+        buffer.writeln(
+            '${isArabic ? 'البريد الإلكتروني' : 'Email'}: ${emailCtrl.text.trim()}');
+      }
+      if (messageCtrl.text.trim().isNotEmpty) {
+        buffer.writeln();
+        buffer.writeln(messageCtrl.text.trim());
+      }
+
       await Supabase.instance.client.from('customer_requests').insert({
         'customer_name': nameCtrl.text.trim(),
         'phone': phoneCtrl.text.trim(),
-        'notes': messageCtrl.text.trim(),
+        'notes': buffer.toString().trim(),
         'request_type': 'car_request',
         'status': 'new',
         'user_id': Supabase.instance.client.auth.currentUser?.id,
@@ -75,6 +108,9 @@ class _RequestCarPageState extends State<RequestCarPage> {
       if (!mounted) return;
       nameCtrl.clear();
       phoneCtrl.clear();
+      cityCtrl.clear();
+      carCtrl.clear();
+      emailCtrl.clear();
       messageCtrl.clear();
       setState(() => isSubmitting = false);
 
@@ -98,6 +134,130 @@ class _RequestCarPageState extends State<RequestCarPage> {
         ),
       );
     }
+  }
+
+  Widget _radioRow({
+    required String label,
+    required List<(String, String)> options,
+    required String groupValue,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 13, color: Colors.black54),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: options.map((opt) {
+            final isSelected = groupValue == opt.$2;
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () => onChanged(opt.$2),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected
+                            ? Colors.red
+                            : Colors.grey.shade300,
+                        width: isSelected ? 1.6 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.radio_button_checked_rounded
+                              : Icons.radio_button_off_rounded,
+                          size: 18,
+                          color: isSelected ? Colors.red : Colors.black38,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          opt.$1,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _fieldsGrid(List<Widget> fields) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 420) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: fields[0]),
+              const SizedBox(width: 14),
+              Expanded(child: fields[1]),
+            ],
+          );
+        }
+        return Column(children: fields);
+      },
+    );
+  }
+
+  Widget _requestField({
+    required TextEditingController controller,
+    required String label,
+    String? hint,
+    TextInputType? keyboardType,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            decoration: InputDecoration(
+              hintText: hint,
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -141,7 +301,7 @@ class _RequestCarPageState extends State<RequestCarPage> {
               ),
 
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
+                constraints: const BoxConstraints(maxWidth: 640),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
@@ -161,55 +321,136 @@ class _RequestCarPageState extends State<RequestCarPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isArabic ? 'تواصل معنا' : 'Contact Us',
+                          isArabic ? 'بيانات الطلب' : 'Request Details',
                           style: const TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 18,
                           ),
                         ),
+                        const SizedBox(height: 16),
+
+                        // نوع الطلب — بادج توضيحي بس
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                isArabic ? 'نوع الطلب' : 'Request type',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const Spacer(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFBF0DD),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: const Color(0xFFE0C48C),
+                                  ),
+                                ),
+                                child: Text(
+                                  isArabic ? 'شراء الآن' : 'Buy Now',
+                                  style: const TextStyle(
+                                    color: Color(0xFF8A5A1E),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: 18),
-                        TextField(
-                          controller: nameCtrl,
-                          decoration: InputDecoration(
-                            labelText: isArabic ? 'الاسم الكامل' : 'Full name',
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+
+                        _radioRow(
+                          label: isArabic ? 'نوع العميل' : 'Customer type',
+                          options: [
+                            (
+                              isArabic ? 'أفراد' : 'Individual',
+                              'individual'
                             ),
-                          ),
+                            (isArabic ? 'شركات' : 'Company', 'company'),
+                          ],
+                          groupValue: customerType,
+                          onChanged: (v) =>
+                              setState(() => customerType = v),
                         ),
                         const SizedBox(height: 14),
-                        TextField(
-                          controller: phoneCtrl,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            labelText: isArabic ? 'رقم الهاتف' : 'Phone number',
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
+                        _radioRow(
+                          label: isArabic ? 'طريقة الدفع' : 'Payment method',
+                          options: [
+                            (isArabic ? 'كاش' : 'Cash', 'cash'),
+                            (isArabic ? 'تمويل' : 'Financing', 'financing'),
+                          ],
+                          groupValue: paymentMethod,
+                          onChanged: (v) =>
+                              setState(() => paymentMethod = v),
                         ),
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: messageCtrl,
-                          maxLines: 4,
-                          decoration: InputDecoration(
-                            labelText: isArabic ? 'الرسالة' : 'Message',
-                            hintText: isArabic
-                                ? 'اكتب مواصفات السيارة اللي بتدوّر عليها (الماركة، الموديل، الميزانية...)'
-                                : 'Describe the car you are looking for',
-                            alignLabelWithHint: true,
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                        const SizedBox(height: 18),
+
+                        _fieldsGrid([
+                          _requestField(
+                            controller: nameCtrl,
+                            label: customerType == 'company'
+                                ? (isArabic
+                                    ? 'اسم المسؤول'
+                                    : "Manager's name")
+                                : (isArabic ? 'الاسم الكامل' : 'Full name'),
                           ),
-                        ),
-                        const SizedBox(height: 20),
+                          _requestField(
+                            controller: phoneCtrl,
+                            label: isArabic ? 'رقم الجوال' : 'Mobile number',
+                            hint: '05xxxxxxxx',
+                            keyboardType: TextInputType.phone,
+                          ),
+                        ]),
+                        _fieldsGrid([
+                          _requestField(
+                            controller: cityCtrl,
+                            label: isArabic ? 'المدينة' : 'City',
+                          ),
+                          _requestField(
+                            controller: carCtrl,
+                            label: isArabic
+                                ? 'السيارة المطلوبة'
+                                : 'Requested car',
+                            hint: isArabic
+                                ? 'مثال: تويوتا كامري 2026'
+                                : 'e.g. Toyota Camry 2026',
+                          ),
+                        ]),
+                        _fieldsGrid([
+                          _requestField(
+                            controller: emailCtrl,
+                            label: isArabic
+                                ? 'البريد الإلكتروني (اختياري)'
+                                : 'Email (optional)',
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          _requestField(
+                            controller: messageCtrl,
+                            label: isArabic
+                                ? 'ملاحظات إضافية (اختياري)'
+                                : 'Additional notes (optional)',
+                          ),
+                        ]),
+
+                        const SizedBox(height: 6),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
