@@ -167,6 +167,27 @@ Future<void> loadFinancingPartners() async {
   }
 }
 
+// شعار كل ماركة (اسم الماركة بالإنجليزي → رابط الصورة)، مستخدم
+// في أي مكان محتاج يعرض شعارات الماركات (شريط الماركات في
+// الرئيسية، عمود الفلترة في صفحة السيارات...)
+Map<String, String> brandLogosCache = {};
+
+Future<void> loadBrandLogos() async {
+  try {
+    final response = await Supabase.instance.client
+        .from('brands')
+        .select('name_en, logo');
+    final rows = List<Map<String, dynamic>>.from(response as List);
+    brandLogosCache = {
+      for (final row in rows)
+        if ((row['name_en'] ?? '').toString().trim().isNotEmpty)
+          (row['name_en'] as String).trim(): (row['logo'] ?? '').toString(),
+    };
+  } catch (e) {
+    debugPrint('AUTO_ONE_DEBUG: تعذّر تحميل شعارات الماركات: $e');
+  }
+}
+
 // ============================================================
 // CUSTOMER REVIEWS (تقييمات العملاء - الموافَق عليها بس)
 // ============================================================

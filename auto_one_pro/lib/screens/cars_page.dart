@@ -72,6 +72,8 @@ Future<void> _loadRemainingCarsInBackground() async {
   // اسم الماركة المفتوحة حاليًا في عمود الماركات الجانبي (بتوري
   // الأنواع تحتها)، أو null لو مفيش ماركة مفتوحة
   String? expandedSidebarBrand;
+  // اسم الموديل المختار من عمود الماركات الجانبي (زي "إلنترا")
+  String selectedCarName = 'ALL';
 
   // فلترة السعر والترتيب
   double? minPrice;
@@ -490,6 +492,19 @@ String _searchAlias(Car car) {
     }
   }
 
+  // بترجع أسماء الموديلات المتاحة فعليًا لماركة معيّنة (زي
+  // "إلنترا"، "توسان")، عشان عمود الماركات الجانبي يوريها.
+  List<String> _modelsForBrand(String brand) {
+    final values = cars
+        .where((car) => car.brand == brand)
+        .map((car) => car.name.trim())
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .toList();
+    values.sort();
+    return values;
+  }
+
   // ============================================================
   // TYPE LIST
   // ============================================================
@@ -601,6 +616,9 @@ String _searchAlias(Car car) {
           selectedBodyType == 'ALL' ||
           car.category.trim().toUpperCase() == selectedBodyType;
 
+      final matchesCarName =
+          selectedCarName == 'ALL' || car.name.trim() == selectedCarName;
+
       final price = _parsePrice(car.price);
       final matchesMinPrice = minPrice == null || price >= minPrice!;
       final matchesMaxPrice = maxPrice == null || price <= maxPrice!;
@@ -612,6 +630,7 @@ String _searchAlias(Car car) {
     matchesModel &&
     matchesOffer &&
     matchesBodyType &&
+    matchesCarName &&
     matchesMinPrice &&
     matchesMaxPrice;
     }).toList();
@@ -1264,10 +1283,10 @@ String _searchAlias(Car car) {
                 brands: inventoryBrands
                     .where((b) => b != 'ALL')
                     .toList(),
-                bodyTypesForBrand: _bodyTypesForBrand,
-                bodyTypeLabel: _bodyTypeLabel,
+                bodyTypesForBrand: _modelsForBrand,
+                bodyTypeLabel: (value) => value,
                 selectedBrand: selectedBrand,
-                selectedBodyType: selectedBodyType,
+                selectedBodyType: selectedCarName,
                 expandedBrand: expandedSidebarBrand,
                 onBrandExpandToggle: (brand) {
                   setState(() {
@@ -1278,13 +1297,13 @@ String _searchAlias(Car car) {
                 onTypeSelected: (brand, type) {
                   setState(() {
                     selectedBrand = brand;
-                    selectedBodyType = type;
+                    selectedCarName = type;
                   });
                 },
                 onClear: () {
                   setState(() {
                     selectedBrand = 'ALL';
-                    selectedBodyType = 'ALL';
+                    selectedCarName = 'ALL';
                   });
                 },
                 onOpenAdvancedFilters: () => _showFilters(context),
@@ -1877,6 +1896,18 @@ class _BrandRow extends StatelessWidget {
             ),
             child: Row(
               children: [
+                if ((brandLogosCache[brand] ?? '').isNotEmpty) ...[
+                  SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: carImageAdaptive(
+                      brandLogosCache[brand]!,
+                      fit: BoxFit.contain,
+                      showWatermark: false,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 Expanded(
                   child: Text(
                     brand,

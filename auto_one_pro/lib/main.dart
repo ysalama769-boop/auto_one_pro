@@ -59,6 +59,17 @@ class _AutoOneAppState extends State<AutoOneApp> {
   @override
   void initState() {
     super.initState();
+    // البيانات دي كانت بتتحمّل قبل كده وقت شاشة التحميل القديمة —
+    // دلوقتي بنحمّلها هنا بدل كده، من غير ما نستنى أي شاشة تمهيدية.
+    // وبعد ما تخلص، بنعمل setState عشان الصفحة تتحدّث بالبيانات
+    // الجديدة (لأن قايمة cars مش مرتبطة بـ ValueNotifier).
+    Future.wait([
+      loadCarsFromSupabase(),
+      loadHomepageSettings(),
+      loadBrandLogos(),
+    ]).then((_) {
+      if (mounted) setState(() {});
+    });
     _handleDeepLink();
   }
 

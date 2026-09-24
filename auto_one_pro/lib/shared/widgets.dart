@@ -138,12 +138,6 @@ class AutoOneHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile =
-                 MediaQuery.of(context).size.width < 700;
-    // عرض المنطقة البيضا المنحنية اللي بتبان تحت اللوجو وزرار
-    // "الرئيسية"، عشان ألوان اللوجو تبان واضحة فوق خلفية فاتحة
-    final whiteZoneWidth = isMobile ? 150.0 : 500.0;
-
     return Container(
       decoration: transparent
           ? BoxDecoration(
@@ -156,38 +150,8 @@ class AutoOneHeader extends StatelessWidget {
                 ],
               ),
             )
-          : null,
-      child: Stack(
-        children: [
-          if (!transparent) ...[
-            // خلفية حمراء متدرّجة، نفس تدرّج زرار "احجز الآن"
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: kBrandGradient,
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                ),
-              ),
-            ),
-            // منطقة بيضا منحنية تحت اللوجو والرئيسية، عشان اللوجو
-            // يبان بألوانه الحقيقية فوق خلفية فاتحة
-            Positioned(
-              top: 0,
-              bottom: 0,
-              right: isArabic ? 0 : null,
-              left: isArabic ? null : 0,
-              width: whiteZoneWidth,
-              child: ClipPath(
-                clipper: _HeaderCurveClipper(fromRight: isArabic),
-                child: Container(color: Colors.white),
-              ),
-            ),
-          ],
-
-          SafeArea(
+          : const BoxDecoration(color: Colors.white),
+      child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: 40,
@@ -293,14 +257,14 @@ InkWell(
           Text(
             isArabic ? 'سياراتنا' : 'OUR CARS',
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.black87,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
           ),
           Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: Colors.white,
+            color: Colors.black87,
             size: 18,
           ),
         ],
@@ -373,14 +337,14 @@ InkWell(
           Text(
             isArabic ? 'عن أوتو ون' : 'ABOUT AUTO ONE',
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.black87,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
           ),
           Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: Colors.white,
+            color: Colors.black87,
             size: 18,
           ),
         ],
@@ -503,7 +467,7 @@ InkWell(
               padding: const EdgeInsets.all(8),
               child: Icon(
                 Icons.person_outline_rounded,
-                color: Colors.white,
+                color: Colors.black87,
                 size: 22,
               ),
             ),
@@ -514,7 +478,7 @@ InkWell(
       return PopupMenuButton<String>(
         icon: Icon(
           Icons.account_circle_rounded,
-          color: Colors.white,
+          color: Colors.black87,
           size: 24,
         ),
         onSelected: (value) {
@@ -635,7 +599,7 @@ if (isMobile)
           children: [
             const Icon(
               Icons.menu,
-              color: Colors.white,
+              color: Colors.black87,
               size: 30,
             ),
             if (notifCount > 0)
@@ -889,8 +853,6 @@ if (isMobile)
           ),
         ),
       ),
-        ],
-      ),
     );
   }
 }
@@ -960,51 +922,6 @@ PopupMenuItem<String> _megaMenuItem({
       ),
     ),
   );
-}
-
-// ============================================================
-// HEADER CURVE CLIPPER — بيرسم شكل منحني بين المنطقة البيضا
-// (تحت اللوجو والرئيسية) والخلفية الحمراء الباقية من الهيدر
-// ============================================================
-class _HeaderCurveClipper extends CustomClipper<Path> {
-  final bool fromRight; // المنطقة البيضا على اليمين (عربي) ولا الشمال
-
-  _HeaderCurveClipper({required this.fromRight});
-
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    if (fromRight) {
-      // المنطقة البيضا على اليمين، فالحد اللي بيبان (اللي بيلاقي
-      // الأحمر) هو الحافة الشمال بتاعتها — المنحنى لازم يكون هنا
-      final curveX = size.width * 0.18;
-      path.moveTo(size.width, 0);
-      path.lineTo(curveX, 0);
-      path.quadraticBezierTo(
-        0, size.height * 0.5,
-        curveX, size.height,
-      );
-      path.lineTo(size.width, size.height);
-      path.close();
-    } else {
-      // المنطقة البيضا على الشمال، فالحد اللي بيبان هو الحافة
-      // اليمين بتاعتها
-      final curveX = size.width * 0.82;
-      path.moveTo(0, 0);
-      path.lineTo(curveX, 0);
-      path.quadraticBezierTo(
-        size.width, size.height * 0.5,
-        curveX, size.height,
-      );
-      path.lineTo(0, size.height);
-      path.close();
-    }
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant _HeaderCurveClipper oldClipper) =>
-      oldClipper.fromRight != fromRight;
 }
 
 class HeaderButton extends StatelessWidget {
@@ -1720,14 +1637,14 @@ class AutoOneFooter extends StatelessWidget {
         Text(
           text,
           style: const TextStyle(
-            color: Colors.black87,
+            color: Colors.white,
             fontSize: 15,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.2,
           ),
         ),
         const SizedBox(height: 6),
-        Container(width: 26, height: 2.5, color: Colors.red),
+        Container(width: 26, height: 2.5, color: Colors.white),
       ],
     );
   }
@@ -1752,13 +1669,13 @@ class AutoOneFooter extends StatelessWidget {
                     ? Icons.chevron_left_rounded
                     : Icons.chevron_right_rounded,
                 size: 16,
-                color: Colors.black38,
+                color: Colors.white54,
               ),
               const SizedBox(width: 4),
               Text(
                 label,
                 style: const TextStyle(
-                  color: Colors.black87,
+                  color: Colors.white70,
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -1784,10 +1701,10 @@ class AutoOneFooter extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              color: Colors.black54,
+              color: Colors.white54,
               fontSize: 12,
               decoration: TextDecoration.underline,
-              decorationColor: Colors.black26,
+              decorationColor: Colors.white24,
             ),
           ),
         ),
@@ -1810,12 +1727,12 @@ class AutoOneFooter extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.location_on_rounded,
-                  size: 17, color: Colors.redAccent),
+                  size: 17, color: Colors.white),
               const SizedBox(width: 7),
               Text(
                 text,
                 style: const TextStyle(
-                  color: Colors.black87,
+                  color: Colors.white70,
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -1841,13 +1758,13 @@ class AutoOneFooter extends StatelessWidget {
             textDirection: TextDirection.ltr,
             children: [
               const Icon(Icons.phone_rounded,
-                  size: 17, color: Colors.redAccent),
+                  size: 17, color: Colors.white),
               const SizedBox(width: 7),
               Text(
                 displayNumber,
                 textDirection: TextDirection.ltr,
                 style: const TextStyle(
-                  color: Colors.black87,
+                  color: Colors.white,
                   fontSize: 14,
                   height: 1.5,
                   fontWeight: FontWeight.w600,
@@ -1874,12 +1791,12 @@ class AutoOneFooter extends StatelessWidget {
             textDirection: TextDirection.ltr,
             children: [
               const Icon(Icons.email_rounded,
-                  size: 17, color: Colors.redAccent),
+                  size: 17, color: Colors.white),
               const SizedBox(width: 7),
               Text(
                 email,
                 style: const TextStyle(
-                  color: Colors.black87,
+                  color: Colors.white70,
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -1959,13 +1876,13 @@ class AutoOneFooter extends StatelessWidget {
                         ? Icons.chevron_left_rounded
                         : Icons.chevron_right_rounded,
                     size: 16,
-                    color: Colors.black38,
+                    color: Colors.white54,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     label,
                     style: const TextStyle(
-                      color: Colors.black87,
+                      color: Colors.white70,
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -2033,13 +1950,13 @@ class AutoOneFooter extends StatelessWidget {
                         ? Icons.chevron_left_rounded
                         : Icons.chevron_right_rounded,
                     size: 16,
-                    color: Colors.black38,
+                    color: Colors.white54,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     label,
                     style: const TextStyle(
-                      color: Colors.black87,
+                      color: Colors.white70,
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -2101,7 +2018,7 @@ class AutoOneFooter extends StatelessWidget {
                   : 'A trusted car showroom offering the best cars at competitive prices.',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.black54,
+                color: Colors.white70,
                 fontSize: 13,
                 height: 1.7,
               ),
@@ -2154,7 +2071,11 @@ class AutoOneFooter extends StatelessWidget {
       child: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          color: Colors.white,
+          gradient: LinearGradient(
+            colors: kBrandGradient,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
         ),
         padding: const EdgeInsets.only(top: 36, left: 20, right: 20),
         child: Center(
@@ -2202,7 +2123,7 @@ class AutoOneFooter extends StatelessWidget {
 
                 Container(
                   height: 1,
-                  color: Colors.black12,
+                  color: Colors.white12,
                 ),
 
                 const SizedBox(height: 16),
@@ -2220,7 +2141,7 @@ class AutoOneFooter extends StatelessWidget {
                     ),
                     const Text(
                       '•',
-                      style: TextStyle(color: Colors.black26, fontSize: 12),
+                      style: TextStyle(color: Colors.white24, fontSize: 12),
                     ),
                     _policyLink(
                       context,
@@ -2229,14 +2150,14 @@ class AutoOneFooter extends StatelessWidget {
                     ),
                     const Text(
                       '•',
-                      style: TextStyle(color: Colors.black26, fontSize: 12),
+                      style: TextStyle(color: Colors.white24, fontSize: 12),
                     ),
                     Text(
                       isArabic
                           ? '© ${DateTime.now().year} AUTO ONE — جميع الحقوق محفوظة'
                           : '© ${DateTime.now().year} AUTO ONE — All rights reserved',
                       style: const TextStyle(
-                        color: Colors.black54,
+                        color: Colors.white54,
                         fontSize: 12,
                       ),
                     ),
@@ -2345,7 +2266,7 @@ class _NewsletterSubscribeBlockState
         Text(
           isArabic ? 'اشترك في نشرتنا البريدية' : 'Subscribe to our newsletter',
           style: TextStyle(
-            color: widget.compact ? Colors.black54 : Colors.black87,
+            color: widget.compact ? Colors.white70 : Colors.white,
             fontSize: widget.compact ? 13 : 14,
             fontWeight: FontWeight.w800,
           ),
@@ -2361,8 +2282,8 @@ class _NewsletterSubscribeBlockState
                   child: ElevatedButton(
                     onPressed: isSubmitting ? null : _subscribe,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white,
+                      foregroundColor: kFooterColor,
                       padding: EdgeInsets.symmetric(
                         vertical: widget.compact ? 9 : 14,
                       ),
@@ -2379,7 +2300,7 @@ class _NewsletterSubscribeBlockState
                             height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: kFooterColor,
                             ),
                           )
                         : Text(isArabic ? 'اشتراك' : 'Subscribe'),
@@ -2393,26 +2314,26 @@ class _NewsletterSubscribeBlockState
                     controller: emailCtrl,
                     textDirection: TextDirection.ltr,
                     style: TextStyle(
-                      color: Colors.black87,
+                      color: Colors.white,
                       fontSize: widget.compact ? 12.5 : 14,
                     ),
                     decoration: InputDecoration(
                       hintText:
                           isArabic ? 'بريدك الإلكتروني' : 'Your email',
-                      hintStyle: const TextStyle(color: Colors.black38),
+                      hintStyle: TextStyle(color: Colors.white70),
                       filled: true,
-                      fillColor: Colors.grey.shade100,
+                      fillColor: Colors.white.withValues(alpha: 0.08),
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: widget.compact ? 9 : 14,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderSide: BorderSide(color: Colors.white24),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderSide: BorderSide(color: Colors.white24),
                       ),
                     ),
                   ),
@@ -2445,7 +2366,7 @@ class _NewsletterSubscribeBlockState
             Text(
               statusMessage!,
               style: TextStyle(
-                color: isError ? Colors.red : Colors.green.shade700,
+                color: isError ? Colors.yellow.shade100 : Colors.greenAccent.shade100,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
