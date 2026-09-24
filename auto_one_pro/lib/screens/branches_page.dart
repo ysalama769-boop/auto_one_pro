@@ -1,3 +1,5 @@
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,6 +21,8 @@ class BranchesPage extends StatefulWidget {
 
 class _BranchesPageState extends State<BranchesPage> {
   bool get isArabic => widget.isArabic;
+  int selectedBranchIndex = 0;
+  final Set<String> _registeredViews = {};
 
   final nameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
@@ -279,6 +283,32 @@ class _BranchesPageState extends State<BranchesPage> {
     }
   }
 
+  // بنستخرج نفس كلمة البحث من رابط البحث العادي (اللي كل فرع أصلاً
+  // شايله)، ونبني بيها رابط "embed" يعرض خريطة تفاعلية حقيقية من
+  // غير ما نحتاج مفتاح Google Maps API.
+  String _embedUrlFromSearchUrl(String searchUrl) {
+    final uri = Uri.tryParse(searchUrl);
+    final query = uri?.queryParameters['query'] ?? '';
+    return 'https://maps.google.com/maps?q=${Uri.encodeComponent(query)}&z=15&output=embed';
+  }
+
+  String _registerMapView(int branchIndex, String embedUrl) {
+    final viewType = 'branch-map-$branchIndex';
+    if (!_registeredViews.contains(viewType)) {
+      _registeredViews.add(viewType);
+      ui_web.platformViewRegistry.registerViewFactory(viewType, (int _) {
+        final iframe = html.IFrameElement()
+          ..src = embedUrl
+          ..style.border = 'none'
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..allowFullscreen = true;
+        return iframe;
+      });
+    }
+    return viewType;
+  }
+
   @override
   Widget build(BuildContext context) {
   Future<void> openLink(String link) async {
@@ -407,86 +437,14 @@ Container(
           builder: (context, constraints) {
             final isWide = constraints.maxWidth >= 900;
 
-            final branchesColumn = Column(
-              children: branches.map((branch) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () => openLink(branch['map']!),
-                    child: Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.black12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 14,
-                            offset: Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 58,
-                            height: 58,
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.06),
-                              shape: BoxShape.circle,
-                            ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                'assets/google_maps_pin.png',
-                                width: 36,
-                                height: 36,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isArabic
-                                      ? branch['nameAr']!
-                                      : branch['nameEn']!,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  isArabic
-                                      ? branch['addressAr']!
-                                      : branch['addressEn']!,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.black54,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            isArabic
-                                ? Icons.chevron_left_rounded
-                                : Icons.chevron_right_rounded,
-                            color: Colors.black38,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+            final branchesColumn = _BranchTabsAndMap(
+              isArabic: isArabic,
+              branches: branches,
+              selectedIndex: selectedBranchIndex,
+              onSelect: (i) => setState(() => selectedBranchIndex = i),
+              embedUrlBuilder: _embedUrlFromSearchUrl,
+              viewRegistrar: _registerMapView,
+              onOpenInGoogleMaps: openLink,
             );
 
             final contactColumn = _contactColumn();
@@ -519,6 +477,178 @@ Container(
           ),
         ),
       ),
+    );
+  }
+}
+
+// ============================================================
+// BRANCH TABS + EMBEDDED MAP (تبويب أحمر بالفروع + خريطة تفاعلية
+// حقيقية للفرع المختار، بدل قايمة الكروت القديمة)
+// ============================================================
+class _BranchTabsAndMap extends StatelessWidget {
+  final bool isArabic;
+  final List<Map<String, dynamic>> branches;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+  final String Function(String searchUrl) embedUrlBuilder;
+  final String Function(int index, String embedUrl) viewRegistrar;
+  final Future<void> Function(String link) onOpenInGoogleMaps;
+
+  const _BranchTabsAndMap({
+    required this.isArabic,
+    required this.branches,
+    required this.selectedIndex,
+    required this.onSelect,
+    required this.embedUrlBuilder,
+    required this.viewRegistrar,
+    required this.onOpenInGoogleMaps,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final branch = branches[selectedIndex];
+    final embedUrl = embedUrlBuilder(branch['map']!.toString());
+    final viewType = viewRegistrar(selectedIndex, embedUrl);
+
+    return Column(
+      children: [
+        // ==================================================
+        // شريط التبويب الأحمر
+        // ==================================================
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: kBrandGradient,
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            children: List.generate(branches.length, (i) {
+              final b = branches[i];
+              final isSelected = i == selectedIndex;
+              final label = isArabic ? b['nameAr']! : b['nameEn']!;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: () => onSelect(i),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 22,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.22)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(24),
+                      border: isSelected
+                          ? const Border(
+                              bottom: BorderSide(
+                                color: Colors.white,
+                                width: 2.5,
+                              ),
+                            )
+                          : null,
+                    ),
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        // ==================================================
+        // الخريطة التفاعلية
+        // ==================================================
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(18),
+          ),
+          child: SizedBox(
+            height: 420,
+            width: double.infinity,
+            child: Stack(
+              children: [
+                HtmlElementView(viewType: viewType),
+                Positioned(
+                  top: 12,
+                  left: isArabic ? null : 12,
+                  right: isArabic ? 12 : null,
+                  child: Material(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    elevation: 2,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () => onOpenInGoogleMaps(branch['map']!.toString()),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 9,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.open_in_new_rounded, size: 15),
+                            const SizedBox(width: 6),
+                            Text(
+                              isArabic
+                                  ? 'الفتح في خرائط Google'
+                                  : 'Open in Google Maps',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 14),
+
+        // ==================================================
+        // عنوان الفرع المختار
+        // ==================================================
+        Row(
+          children: [
+            const Icon(Icons.location_on_rounded,
+                color: Colors.red, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                isArabic ? branch['addressAr']! : branch['addressEn']!,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
