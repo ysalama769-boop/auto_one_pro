@@ -975,24 +975,28 @@ class _HeaderCurveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final path = Path();
     if (fromRight) {
-      // المنطقة البيضا على اليمين، والمنحنى بيبان في حافتها الشمال
-      path.moveTo(0, 0);
-      path.lineTo(size.width * 0.72, 0);
-      path.quadraticBezierTo(
-        size.width, size.height * 0.5,
-        size.width * 0.72, size.height,
-      );
-      path.lineTo(0, size.height);
-      path.close();
-    } else {
-      // المنطقة البيضا على الشمال، والمنحنى بيبان في حافتها اليمين
+      // المنطقة البيضا على اليمين، فالحد اللي بيبان (اللي بيلاقي
+      // الأحمر) هو الحافة الشمال بتاعتها — المنحنى لازم يكون هنا
+      final curveX = size.width * 0.18;
       path.moveTo(size.width, 0);
-      path.lineTo(size.width * 0.28, 0);
+      path.lineTo(curveX, 0);
       path.quadraticBezierTo(
         0, size.height * 0.5,
-        size.width * 0.28, size.height,
+        curveX, size.height,
       );
       path.lineTo(size.width, size.height);
+      path.close();
+    } else {
+      // المنطقة البيضا على الشمال، فالحد اللي بيبان هو الحافة
+      // اليمين بتاعتها
+      final curveX = size.width * 0.82;
+      path.moveTo(0, 0);
+      path.lineTo(curveX, 0);
+      path.quadraticBezierTo(
+        size.width, size.height * 0.5,
+        curveX, size.height,
+      );
+      path.lineTo(0, size.height);
       path.close();
     }
     return path;
