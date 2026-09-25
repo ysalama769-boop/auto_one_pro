@@ -84,10 +84,10 @@ Future<void> _loadRemainingCarsInBackground() async {
   double? maxPrice;
   String sortOption = 'newest'; // newest, price_asc, price_desc
 
-  // عرض السيارات على دفعات (25 في كل مرة) بدل ما نعرضهم كلهم مرة
-  // واحدة، وده بيسرّع فتح الصفحة لما يكون عدد السيارات كبير.
-  static const int _carsPerPage = 20;
-  int _visibleCarsCount = _carsPerPage;
+  // عرض السيارات في صفحات ثابتة (16 سيارة = 4×4) بدل التحميل
+  // التدريجي، عشان ارتفاع الشبكة يفضل ثابت ومتوقّع دايمًا.
+  static const int _carsPerPage = 16;
+  int _currentPage = 1;
   String _lastFilterSignature = '';
 
   final TextEditingController controller =
@@ -1396,9 +1396,7 @@ String _searchAlias(Car car) {
   builder: (context, constraints) {
     int columns = 1;
 
-    if (constraints.maxWidth >= 1400) {
-      columns = 5;
-    } else if (constraints.maxWidth >= 1100) {
+    if (constraints.maxWidth >= 1100) {
       columns = 4;
     } else if (constraints.maxWidth >= 800) {
       columns = 2;
@@ -1408,18 +1406,27 @@ String _searchAlias(Car car) {
 
               final allFilteredCars = filteredCars;
 
-              // لو الفلتر أو البحث اتغيّر، نرجع نعرض أول 25 سيارة بس
-              // تاني بدل ما نفضل عارضين نفس العدد القديم على فلتر جديد.
+              // لو الفلتر أو البحث اتغيّر، نرجع لأول صفحة تاني بدل
+              // ما نفضل واقفين في صفحة مش موجودة في النتيجة الجديدة.
               final currentSignature =
                   '$search|$selectedBrand|$selectedType|$selectedCategory|'
                   '$selectedModel|$showOffers|$minPrice|$maxPrice|$sortOption|$selectedBodyType';
               if (currentSignature != _lastFilterSignature) {
                 _lastFilterSignature = currentSignature;
-                _visibleCarsCount = _carsPerPage;
+                _currentPage = 1;
               }
 
-              final visibleCars =
-                  allFilteredCars.take(_visibleCarsCount).toList();
+              final totalPages =
+                  (allFilteredCars.length / _carsPerPage).ceil().clamp(
+                        1,
+                        1 << 30,
+                      );
+              if (_currentPage > totalPages) _currentPage = totalPages;
+
+              final visibleCars = allFilteredCars
+                  .skip((_currentPage - 1) * _carsPerPage)
+                  .take(_carsPerPage)
+                  .toList();
 
               if (filteredCars.isEmpty) {
                 // لو قاعدة البيانات نفسها فاضية (فشل تحميل من الأساس)،
@@ -1569,15 +1576,13 @@ String _searchAlias(Car car) {
                       );
                     },
                   ),
-                  if (_visibleCarsCount < allFilteredCars.length) ...[
+                  if (totalPages > 1) ...[
                     const SizedBox(height: 30),
-                    _ShowMoreCarsButton(
-                      isArabic: widget.isArabic,
-                      remaining: allFilteredCars.length - _visibleCarsCount,
-                      onTap: () {
-                        setState(() {
-                          _visibleCarsCount += _carsPerPage;
-                        });
+                    _PageNumbersRow(
+                      currentPage: _currentPage,
+                      totalPages: totalPages,
+                      onPageSelected: (page) {
+                        setState(() => _currentPage = page);
                       },
                     ),
                   ],
@@ -1790,72 +1795,88 @@ String _searchAlias(Car car) {
 // ============================================================
 // SHOW MORE CARS BUTTON (بهوية اوتو ون - نفس تدرج زرار الحجز)
 // ============================================================
-class _ShowMoreCarsButton extends StatelessWidget {
-  final bool isArabic;
-  final int remaining;
-  final VoidCallback onTap;
+class _PageNumbersRow extends StatelessWidget {
+  final int currentPage;
+  final int totalPages;
+  final ValueChanged<int> onPageSelected;
 
-  const _ShowMoreCarsButton({
-    required this.isArabic,
-    required this.remaining,
-    required this.onTap,
+  const _PageNumbersRow({
+    required this.currentPage,
+    required this.totalPages,
+    required this.onPageSelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: HoverLift(
-        borderRadius: BorderRadius.circular(14),
+    Widget pageButton(int page) {
+      final isActive = page == currentPage;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 28,
-              vertical: 16,
-            ),
+          onTap: () => onPageSelected(page),
+          borderRadius: BorderRadius.circular(10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE53935), Color(0xFFB71C1C)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
+              gradient: isActive
+                  ? const LinearGradient(colors: kBrandGradient)
+                  : null,
+              color: isActive ? null : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isActive ? Colors.transparent : Colors.black12,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.red.withValues(alpha: 0.3),
-                  blurRadius: 16,
-                  spreadRadius: 1,
-                ),
-              ],
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.expand_more_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  isArabic ? 'المزيد' : 'More',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
+            child: Text(
+              '$page',
+              style: TextStyle(
+                color: isActive ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
             ),
           ),
         ),
+      );
+    }
+
+    // لو عدد الصفحات كبير، نوري أول صفحتين وآخر صفحتين والصفحة
+    // الحالية وجيرانها بس، مع "..." بينهم، بدل ما نوري كل الأرقام
+    final pages = <int>{};
+    pages.addAll([1, 2, totalPages - 1, totalPages]);
+    for (var p = currentPage - 1; p <= currentPage + 1; p++) {
+      pages.add(p);
+    }
+    final sortedPages =
+        pages.where((p) => p >= 1 && p <= totalPages).toList()..sort();
+
+    final widgets = <Widget>[];
+    int? previous;
+    for (final page in sortedPages) {
+      if (previous != null && page - previous > 1) {
+        widgets.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text('...', style: TextStyle(color: Colors.black45)),
+          ),
+        );
+      }
+      widgets.add(pageButton(page));
+      previous = page;
+    }
+
+    return Center(
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: widgets,
       ),
     );
   }
 }
-
 
 // ============================================================
 // BRANDS FILTER SIDEBAR (عمود جانبي بجانب شبكة السيارات — كل
