@@ -1843,10 +1843,10 @@ Widget build(BuildContext context) {
                 },
               ),
 
-              // NEW / OFFER
+              // NEW / OFFER — مكان اللوجو اللي اتشال (يمين فوق)
               Positioned(
                 top: 12,
-                left: 12,
+                right: 12,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 13,
@@ -1863,57 +1863,6 @@ Widget build(BuildContext context) {
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ),
-
-              // BRAND LOGO
-              if (logo.isNotEmpty)
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    width: 54,
-                    height: 54,
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 8,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Image.asset(
-                      logo,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-
-              // YEAR
-              Positioned(
-                bottom: 10,
-                right: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: Text(
-                    car.year,
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontSize: 11,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -2021,17 +1970,6 @@ Text(
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-
-                        const Text(
-                          'السعر',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
 
                         if (car.isOfferActive && car.oldPrice.isNotEmpty)
                           Text(

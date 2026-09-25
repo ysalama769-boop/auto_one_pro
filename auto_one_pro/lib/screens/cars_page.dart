@@ -74,6 +74,9 @@ Future<void> _loadRemainingCarsInBackground() async {
   String? expandedSidebarBrand;
   // اسم الموديل المختار من عمود الماركات الجانبي (زي "إلنترا")
   String selectedCarName = 'ALL';
+  // بيتفعّل على الموبايل بس، لما تدوسي على زرار الماركات فيفتح
+  // قائمة الماركات كـ Drawer منزلق من جنب الشاشة
+  bool showMobileFilterDrawer = false;
 
   // فلترة السعر والترتيب
   double? minPrice;
@@ -1260,7 +1263,9 @@ String _searchAlias(Car car) {
         : ((hs?['hero_subtitle_en'] as String?)?.trim().isNotEmpty == true
             ? hs!['hero_subtitle_en'] as String
             : 'SEARCH AND FIND YOUR PERFECT CAR');
-    return SingleChildScrollView(
+    return Stack(
+      children: [
+        SingleChildScrollView(
       child: Column(
         children: [
           Padding(
@@ -1309,6 +1314,8 @@ String _searchAlias(Car car) {
                 onOpenAdvancedFilters: () => _showFilters(context),
               );
 
+              final isWide = sidebarConstraints.maxWidth >= 900;
+
               final mainContent = Column(
                   children: [
           Row(
@@ -1350,17 +1357,9 @@ String _searchAlias(Car car) {
                   ),
                 ),
               ),
-            ],
-          ),
 
-          const SizedBox(height: 14),
+              const SizedBox(width: 12),
 
-          // SORT + PRICE RANGE
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
               Container(
                 height: 44,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -1413,6 +1412,35 @@ String _searchAlias(Car car) {
                   ),
                 ),
               ),
+
+              if (!isWide) ...[
+                const SizedBox(width: 10),
+                InkWell(
+                  onTap: () =>
+                      setState(() => showMobileFilterDrawer = true),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.branding_watermark_rounded,
+                      color: Colors.red,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
 
@@ -1640,7 +1668,6 @@ String _searchAlias(Car car) {
               ],
                 );
 
-              final isWide = sidebarConstraints.maxWidth >= 900;
               if (isWide) {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1651,23 +1678,86 @@ String _searchAlias(Car car) {
                   ],
                 );
               }
-              return Column(
-                children: [
-                  sidebar,
-                  const SizedBox(height: 20),
-                  mainContent,
-                ],
-              );
+              // على الموبايل، الماركات بقت زرار صغير جنب البحث،
+              // مش بلوك فوق الشبكة، فالشبكة تفضل في مكانها
+              return mainContent;
             },
           ),
 
           const SizedBox(height: 20),
-          AutoOneFooter(isArabic: widget.isArabic),
         ],
       ),
     ),
+          AutoOneFooter(isArabic: widget.isArabic),
     ],
     ),
+    ),
+
+        // ================================================
+        // MOBILE BRANDS DRAWER (فوق المحتوى، مع تعتيم خلفه)
+        // ================================================
+        if (showMobileFilterDrawer) ...[
+          GestureDetector(
+            onTap: () => setState(() => showMobileFilterDrawer = false),
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.45),
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          Align(
+            alignment: widget.isArabic
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            child: Material(
+              elevation: 8,
+              child: SizedBox(
+                width: 280,
+                height: double.infinity,
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: _BrandsFilterSidebar(
+                      isArabic: widget.isArabic,
+                      brands: inventoryBrands
+                          .where((b) => b != 'ALL')
+                          .toList(),
+                      bodyTypesForBrand: _modelsForBrand,
+                      bodyTypeLabel: (value) => value,
+                      selectedBrand: selectedBrand,
+                      selectedBodyType: selectedCarName,
+                      expandedBrand: expandedSidebarBrand,
+                      onBrandExpandToggle: (brand) {
+                        setState(() {
+                          expandedSidebarBrand =
+                              expandedSidebarBrand == brand ? null : brand;
+                        });
+                      },
+                      onTypeSelected: (brand, type) {
+                        setState(() {
+                          selectedBrand = brand;
+                          selectedCarName = type;
+                          showMobileFilterDrawer = false;
+                        });
+                      },
+                      onClear: () {
+                        setState(() {
+                          selectedBrand = 'ALL';
+                          selectedCarName = 'ALL';
+                        });
+                      },
+                      onOpenAdvancedFilters: () {
+                        setState(() => showMobileFilterDrawer = false);
+                        _showFilters(context);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
    }
