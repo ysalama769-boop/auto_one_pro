@@ -137,8 +137,8 @@ class AutoOneHeader extends StatelessWidget {
   }
 
   @override
-   Widget build(BuildContext context) { 
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
+  Widget build(BuildContext context) {
+    final bool isMobile = MediaQuery.of(context).size.width < 700;
     return Container(
       decoration: transparent
           ? BoxDecoration(
