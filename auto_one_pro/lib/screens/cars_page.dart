@@ -1646,8 +1646,8 @@ String _searchAlias(Car car) {
           Positioned(
             top: 0,
             bottom: 0,
-            right: widget.isArabic ? 0 : null,
-            left: widget.isArabic ? null : 0,
+            right: widget.isArabic ? null : 0,
+            left: widget.isArabic ? 0 : null,
             child: Builder(
               builder: (context) {
                 final screenWidth = MediaQuery.of(context).size.width;
@@ -1659,7 +1659,7 @@ String _searchAlias(Car car) {
                     onHorizontalDragEnd: (details) {
                       final velocity = details.primaryVelocity ?? 0;
                       final opensToward =
-                          widget.isArabic ? velocity < 0 : velocity > 0;
+                          widget.isArabic ? velocity > 0 : velocity < 0;
                       if (opensToward) {
                         setState(() => showMobileFilterDrawer = true);
                       }

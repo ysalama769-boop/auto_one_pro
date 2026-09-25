@@ -101,16 +101,10 @@ void _scrollBy(ScrollController controller, double delta) {
   // ==========================================================
   // صور/فيديوهات الهيرو
   //
-  // بتتقرا من لوحة التحكم (إعدادات الرئيسية > صور البانر)، ولو
-  // الأدمن لسه ما ضافش حاجة، بيرجع لنفس الصور الافتراضية.
+  // بتتقرا من لوحة التحكم (إعدادات الرئيسية > صور البانر) بس،
+  // من غير أي قائمة احتياطية ثابتة — لو لسه ما توصلتش من
+  // سوبابيس، القسم بيوري شاشة تحميل بسيطة بدل صور قديمة.
   // ==========================================================
-
-  static const List<String> _fallbackImages = [
-    'assets/youssefcar22.jpg',
-    'assets/youssefcar3.jpg',
-    'assets/youssefcar4.jpg',
-    'assets/youssefcar5.jpg',
-  ];
 
   List<_HeroBannerItem> get heroBanners {
     final raw = homepageSettings.value?['banner_images'];
@@ -136,13 +130,7 @@ void _scrollBy(ScrollController controller, double delta) {
       if (parsed.isNotEmpty) return parsed;
     }
 
-    return _fallbackImages
-        .map((path) => _HeroBannerItem(
-              url: path,
-              isVideo: false,
-              isAsset: true,
-            ))
-        .toList();
+    return const [];
   }
   
 final List<Map<String, String>> slideTexts = [
@@ -250,6 +238,18 @@ final List<Map<String, String>> slideButtons = [
               final screenHeight = MediaQuery.of(context).size.height;
               final heroHeight =
                   (screenHeight - 75).clamp(420.0, 760.0);
+
+              // لسه مفيش صور وصلت من سوبابيس — بدل ما نوري صور
+              // قديمة ثابتة، نوري شاشة تحميل بسيطة بس
+              if (heroBanners.isEmpty) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: heroHeight,
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Colors.red),
+                  ),
+                );
+              }
 
               return GestureDetector(
                 onHorizontalDragEnd: (details) {
