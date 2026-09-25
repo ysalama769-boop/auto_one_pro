@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/car.dart';
 import '../shared/repository.dart';
+import '../shared/constants.dart';
 import '../shared/widgets.dart';
 import '../screens/home_page.dart';
 import '../admin/admin_shared.dart';
@@ -465,34 +466,6 @@ String _searchAlias(Car car) {
     values.sort();
 
     return ['ALL', ...values];
-  }
-
-  // بترجع أنواع الهيكل (SUV/سيدان/جيب...) المتاحة فعليًا لماركة
-  // معيّنة، عشان عمود الماركات الجانبي يوريها تحت كل ماركة.
-  List<String> _bodyTypesForBrand(String brand) {
-    final values = cars
-        .where((car) => car.brand == brand)
-        .map((car) => car.category.trim().toUpperCase())
-        .where((value) => value.isNotEmpty)
-        .toSet()
-        .toList();
-    values.sort();
-    return values;
-  }
-
-  String _bodyTypeLabel(String value) {
-    switch (value) {
-      case 'SUV':
-        return widget.isArabic ? 'إس يو في' : 'SUV';
-      case 'SEDAN':
-        return widget.isArabic ? 'سيدان' : 'Sedan';
-      case 'JEEP':
-        return widget.isArabic ? 'جيب' : 'Jeep';
-      case 'HATCHBACK':
-        return widget.isArabic ? 'هاتشباك' : 'Hatchback';
-      default:
-        return value;
-    }
   }
 
   // بترجع أسماء الموديلات المتاحة فعليًا لماركة معيّنة (زي
@@ -1362,7 +1335,9 @@ String _searchAlias(Car car) {
 
               Container(
                 height: 44,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isWide ? 14 : 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -1412,35 +1387,6 @@ String _searchAlias(Car car) {
                   ),
                 ),
               ),
-
-              if (!isWide) ...[
-                const SizedBox(width: 10),
-                InkWell(
-                  onTap: () =>
-                      setState(() => showMobileFilterDrawer = true),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 8,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.branding_watermark_rounded,
-                      color: Colors.red,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
 
@@ -1692,6 +1638,85 @@ String _searchAlias(Car car) {
     ],
     ),
     ),
+
+        // ================================================
+        // BRANDS EDGE TAB (دليل ثابت في حافة الشاشة، موبايل بس)
+        // ================================================
+        if (!showMobileFilterDrawer)
+          Positioned(
+            top: 0,
+            bottom: 0,
+            right: widget.isArabic ? 0 : null,
+            left: widget.isArabic ? null : 0,
+            child: Builder(
+              builder: (context) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                if (screenWidth >= 900) return const SizedBox.shrink();
+                return Center(
+                  child: GestureDetector(
+                    onTap: () =>
+                        setState(() => showMobileFilterDrawer = true),
+                    onHorizontalDragEnd: (details) {
+                      final velocity = details.primaryVelocity ?? 0;
+                      final opensToward =
+                          widget.isArabic ? velocity < 0 : velocity > 0;
+                      if (opensToward) {
+                        setState(() => showMobileFilterDrawer = true);
+                      }
+                    },
+                    child: Container(
+                      width: 26,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: kBrandGradient,
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.horizontal(
+                          left: widget.isArabic
+                              ? Radius.zero
+                              : const Radius.circular(14),
+                          right: widget.isArabic
+                              ? const Radius.circular(14)
+                              : Radius.zero,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.directions_car_filled_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(height: 6),
+                          RotatedBox(
+                            quarterTurns: 3,
+                            child: Text(
+                              widget.isArabic ? 'الماركات' : 'BRANDS',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
 
         // ================================================
         // MOBILE BRANDS DRAWER (فوق المحتوى، مع تعتيم خلفه)

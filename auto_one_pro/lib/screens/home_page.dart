@@ -1829,6 +1829,7 @@ Widget build(BuildContext context) {
               carImageAdaptive(
                 car.image,
                 fit: BoxFit.cover,
+                showWatermark: false,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey.shade200,
@@ -1908,8 +1909,43 @@ Widget build(BuildContext context) {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
 
-                        
- 
+                          Row(
+                            children: [
+
+Text(
+  car.brand,
+  maxLines: 1,
+  overflow: TextOverflow.ellipsis,
+  style: const TextStyle(
+    color: Colors.red,
+    fontSize: 13,
+    fontWeight: FontWeight.w900,
+  ),
+),
+
+                              const SizedBox(width: 8),
+
+                              Container(
+                                width: 1,
+                                height: 14,
+                                color: Colors.black12,
+                              ),
+
+                              const SizedBox(width: 8),
+
+                              Text(
+                                car.year,
+                                style: const TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 7),
+
    Text(
     car.displayName(isArabic),
     maxLines: 2,
@@ -1922,44 +1958,6 @@ Widget build(BuildContext context) {
       height: 1.15,
     ),
   ),
-
-
-                          const SizedBox(height: 7),
-
-                          Row(
-                            children: [
-
-Text(
-  car.brand,
-  maxLines: 1,
-  overflow: TextOverflow.ellipsis,
-  style: const TextStyle(
-    color: Colors.red,
-    fontSize: 11,
-    fontWeight: FontWeight.w900,
-  ),
-),
-
-                              const SizedBox(width: 8),
-
-                              Container(
-                                width: 1,
-                                height: 12,
-                                color: Colors.black12,
-                              ),
-
-                              const SizedBox(width: 8),
-
-                              Text(
-                                car.year,
-                                style: const TextStyle(
-                                  color: Colors.black45,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),
