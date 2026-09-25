@@ -68,13 +68,26 @@ class _ServicesPageState extends State<ServicesPage> {
           child: Column(
             children: [
               if (bannerUrl.isNotEmpty)
-                AspectRatio(
-                  aspectRatio: 16 / 5,
-                  child: carImageAdaptive(
-                    bannerUrl,
-                    fit: BoxFit.contain,
-                    showWatermark: false,
-                  ),
+                Stack(
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 16 / 5,
+                      child: carImageAdaptive(
+                        bannerUrl,
+                        fit: BoxFit.contain,
+                        showWatermark: false,
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Center(
+                        child: SectionNavBadge(
+                          isArabic: isArabic,
+                          sectionLabel:
+                              isArabic ? 'الخدمات' : 'Services',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               Container(
                 width: double.infinity,
