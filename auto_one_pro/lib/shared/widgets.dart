@@ -2391,6 +2391,69 @@ class _NewsletterSubscribeBlockState
 }
 
 // ============================================================
+// SCROLL TO TOP BUTTON (يظهر لما تنزلي لتحت، يرجعك لفوق الصفحة)
+// ============================================================
+class ScrollToTopButton extends StatelessWidget {
+  final bool isArabic;
+  final bool visible;
+
+  const ScrollToTopButton({
+    super.key,
+    required this.isArabic,
+    required this.visible,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 20,
+      left: isArabic ? 20 : null,
+      right: isArabic ? null : 20,
+      child: IgnorePointer(
+        ignoring: !visible,
+        child: AnimatedOpacity(
+          opacity: visible ? 1 : 0,
+          duration: const Duration(milliseconds: 200),
+          child: HoverLift(
+            borderRadius: BorderRadius.circular(30),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(30),
+              onTap: () {
+                PrimaryScrollController.maybeOf(context)?.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOut,
+                );
+              },
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: kBrandGradient),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.keyboard_arrow_up_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
 // ADAPTIVE CAR IMAGE (LOCAL ASSET OR NETWORK LINK)
 // ============================================================
 // بتعرض الصورة صح سواء كانت رابط إنترنت (Supabase) أو صورة محلية جوه assets
@@ -2992,68 +3055,6 @@ class SectionNavBadge extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-// ============================================================
-// SCROLL TO TOP BUTTON (يظهر لما تنزلي لتحت، يرجعك لفوق الصفحة)
-// ============================================================
-class ScrollToTopButton extends StatelessWidget {
-  final bool isArabic;
-  final bool visible;
-
-  const ScrollToTopButton({
-    super.key,
-    required this.isArabic,
-    required this.visible,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      bottom: 20,
-      left: isArabic ? 20 : null,
-      right: isArabic ? null : 20,
-      child: IgnorePointer(
-        ignoring: !visible,
-        child: AnimatedOpacity(
-          opacity: visible ? 1 : 0,
-          duration: const Duration(milliseconds: 200),
-          child: HoverLift(
-            borderRadius: BorderRadius.circular(30),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(30),
-              onTap: () {
-                PrimaryScrollController.maybeOf(context)?.animateTo(
-                  0,
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOut,
-                );
-              },
-              child: Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: kBrandGradient),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.keyboard_arrow_up_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

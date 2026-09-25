@@ -977,57 +977,327 @@ class TermsPage extends StatelessWidget {
 
   const TermsPage({super.key, required this.isArabic});
 
+  Widget _sectionCard({
+    required IconData icon,
+    required String title,
+    required Widget body,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black12),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: Colors.red, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          body,
+        ],
+      ),
+    );
+  }
+
+  Widget _p(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        text,
+        style: const TextStyle(
+            fontSize: 14, height: 1.9, color: Colors.black87),
+      ),
+    );
+  }
+
+  Widget _numbered(int n, String title, String body) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            alignment: Alignment.center,
+            margin: const EdgeInsets.only(top: 2),
+            decoration: const BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '$n',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    height: 1.8,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bullet(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 6),
+            child: Icon(Icons.circle, size: 6, color: Colors.red),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13.5,
+                height: 1.8,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final content = isArabic
-        ? '''باستخدامك تطبيق AUTO ONE، فإنك توافقين على الشروط والأحكام التالية.
+    if (!isArabic) {
+      // النسخة الإنجليزية القديمة، محتاجة ترجمة للنص التفصيلي الجديد لاحقًا
+      const content =
+          '''By using the AUTO ONE app, you agree to the following terms and conditions.
 
-**طلبات الحجز**
-الحجز عبر التطبيق هو طلب أولي لحجز السيارة، ولا يعتبر تعاقدًا نهائيًا إلا بعد تأكيده من فريق AUTO ONE.
-
-**دقة البيانات**
-يجب إدخال بيانات صحيحة (الاسم، رقم الجوال، وسيلة التواصل) عند الحجز، لضمان قدرتنا على التواصل معاكِ.
-
-**الأسعار والتوفر**
-الأسعار وتوفر السيارات المعروضة في التطبيق قابلة للتغيير، وسيتم تأكيد التفاصيل النهائية عند التواصل معاكِ.
-
-**التعديل والإلغاء**
-نحتفظ بالحق في قبول أو رفض أي طلب حجز حسب توفر السيارة.
-
-هذا النص عام ويُفضّل مراجعته مع مختص قانوني وتخصيصه حسب طبيعة نشاطك التجاري.'''
-        : '''By using the AUTO ONE app, you agree to the following terms and conditions.
-
-**Booking requests**
+Booking requests
 A booking made through the app is an initial request and is not considered final until confirmed by the AUTO ONE team.
 
-**Accuracy of information**
+Accuracy of information
 You must provide accurate details (name, phone number, contact method) when booking, so we can reach you.
 
-**Pricing and availability**
+Pricing and availability
 Prices and availability shown in the app are subject to change, and final details will be confirmed when we contact you.
 
-**Modification and cancellation**
+Modification and cancellation
 We reserve the right to accept or decline any booking request based on car availability.
 
 This is generic starter text — please review it with a legal professional and customize it to your business.''';
 
+      return Directionality(
+        textDirection: TextDirection.ltr,
+        child: Scaffold(
+          backgroundColor: const Color(0xfff6f6f8),
+          appBar: AppBar(
+            backgroundColor: kHeaderColor,
+            foregroundColor: kHeaderTextColor,
+            title: const Text('Terms & Conditions'),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: const Text(
+                  content,
+                  style: TextStyle(fontSize: 14, height: 1.8),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Directionality(
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: const Color(0xfff6f6f8),
         appBar: AppBar(
           backgroundColor: kHeaderColor,
           foregroundColor: kHeaderTextColor,
-          title: Text(isArabic ? 'الشروط والأحكام' : 'Terms & Conditions'),
+          title: const Text('الشروط والأحكام'),
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 800),
-              child: Text(
-                content,
-                style: const TextStyle(fontSize: 14, height: 1.8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 10),
+                  const Text(
+                    'الشروط والأحكام',
+                    textAlign: TextAlign.center,
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'نحن في معرض اوتو ون نلتزم بالشفافية والوضوح في جميع تعاملاتنا. تحدد هذه الصفحة الشروط والأحكام التي تحكم استخدامك لخدماتنا.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 13.5, color: Colors.black54, height: 1.7),
+                  ),
+                  const SizedBox(height: 28),
+                  _sectionCard(
+                    icon: Icons.gpp_maybe_rounded,
+                    title: 'إخلاء المسؤولية والتنازل عن المطالبات',
+                    body: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _p(
+                            'إن الموقع الإلكتروني والخدمات الإلكترونية المقدمة من خلاله، والمعلومات والمواد والوظائف المتاحة عبره أو التي يمكن الوصول إليها من خلاله، يتم توفيرها لاستخدامكم الشخصي "كما هي" و"كما هي متاحة" دون أي إقرارات أو ضمانات من أي نوع، سواء كانت صريحة أو ضمنية.'),
+                        _p(
+                            'ولا يتحمل معرض اوتو ون للسيارات أي مسؤولية عن أي انقطاعات أو أخطاء أو أعطال قد تنشأ عن استخدام الموقع أو محتوياته أو أي مواقع مرتبطة به، سواء كان ذلك بعلم الشركة أو من دون علمها.'),
+                        _p(
+                            'كما أن أي مراسلات أو معلومات يرسلها المستخدم عبر الموقع لا تُعتبر مملوكة له، ولا تضمن الشركة سريتها بشكل كامل. ويُفهم أن أي استخدام تفاعلي أو عام ضمن الموقع لا يمنح المستخدم أي حقوق أو تراخيص أو امتيازات من أي نوع.'),
+                      ],
+                    ),
+                  ),
+                  _sectionCard(
+                    icon: Icons.security_rounded,
+                    title: 'الحماية من الفيروسات',
+                    body: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _p(
+                            'تبذل إدارة تقنية المعلومات في معرض اوتو ون للسيارات أقصى جهد ممكن لفحص واختبار المحتوى الإلكتروني في جميع المراحل. ومع ذلك، فإننا نوصي المستخدمين دائماً باستخدام برامج الحماية من الفيروسات عند تحميل أي مواد من الإنترنت.'),
+                        _p(
+                            'ولا يتحمل المعرض أي مسؤولية عن أي فقد أو تلف أو ضرر قد يصيب بياناتكم أو أجهزتكم نتيجة الدخول إلى الموقع أو استخدام أي من محتوياته.'),
+                      ],
+                    ),
+                  ),
+                  _sectionCard(
+                    icon: Icons.block_rounded,
+                    title: 'إنهاء الاستخدام',
+                    body: _p(
+                        'تحتفظ الشركة بحقها الكامل، وحسب تقديرها المطلق، في إنهاء أو تقييد أو إيقاف حق المستخدم في الدخول إلى الموقع أو استخدام أي من خدماته دون إشعار مسبق، وذلك لأي سبب، بما في ذلك على سبيل المثال لا الحصر: مخالفة شروط الاستخدام أو القيام بأي سلوك تعتبره الشركة غير قانوني أو ضاراً بالآخرين.'),
+                  ),
+                  _sectionCard(
+                    icon: Icons.rule_rounded,
+                    title: 'شروط عامة',
+                    body: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _numbered(1, 'المواد والمعلومات',
+                            'تقدم جميع المواد والمعلومات والخدمات المتاحة عبر الموقع "كما هي" دون أي التزام بضمان دقتها أو صلاحيتها كعروض أسعار، وهي غير ملزمة للشركة بأي شكل من الأشكال.'),
+                        _numbered(2, 'اللغة الأساسية',
+                            'اللغة العربية هي اللغة الأساسية للموقع، وأي ترجمة يتم توفيرها هي خدمة إضافية لا يُعتمد عليها في تفسير الخلافات.'),
+                        _numbered(3, 'القبول',
+                            'دخولك إلى الموقع واستخدامك له يعني قبولك الكامل وغير المشروط لهذه الشروط والأحكام.'),
+                        _numbered(4, 'عدم الاعتماد على المعلومات',
+                            'نحن لا نضمن أن المعلومات المقدمة على الموقع دقيقة أو كاملة أو محدثة. يجب عليك الحصول على مشورة مهنية قبل اتخاذ أي قرارات بناءً على المحتوى من أحد أعضاء فريق المبيعات لدى شركة الخضر للسيارات أو الاتصال على الرقم الموحد 920011895. يبذل المعرض الجهود الممكنة للتأكد من أن المعلومات الواردة في هذا الموقع صحيحة، لكن لا يمكن ضمان الدقة الكاملة وخلو الأخطاء.'),
+                        _numbered(5, 'الأسعار والأقساط',
+                            'المعلومات المعروضة أو المقدمة عبر هذا الموقع هي للاستفادة والمعلومة الأولية فقط وقد يتم تغييرها دون إشعار ولا تشكل عرضًا لبيع المنتجات. الأسعار هي أسعار بيع التجزئة فقط. الأقساط المحتسبة غير نهائية وتحدد لاحقًا وفقًا لشروط وأحكام شركة التمويل أو البنك الذي سيتم التمويل من خلاله، وتتفاوت بناءً على المبلغ والدفعة المقدمة.'),
+                      ],
+                    ),
+                  ),
+                  _sectionCard(
+                    icon: Icons.assignment_ind_rounded,
+                    title: 'التزامات المستخدم',
+                    body: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _p(
+                            'عند دخولك إلى الموقع، فإنك توافق على استخدام الموقع لأغراض مشروعة فقط، والامتثال لجميع القوانين والأنظمة المعمول بها، والامتناع عن:'),
+                        _bullet(
+                            'ارتكاب أي فعل غير قانوني أو تشجيع الغير على ذلك'),
+                        _bullet(
+                            'إدخال أو نشر أي محتوى غير قانوني أو مسيء أو مخالف للآداب'),
+                        _bullet('انتحال صفة أي شخص أو جهة دون تفويض'),
+                        _bullet(
+                            'تحميل أي ملفات أو برامج تحتوي على فيروسات أو شفرات ضارة'),
+                        _bullet(
+                            'التلاعب أو حذف أو تعديل أي محتوى على الموقع دون إذن'),
+                        _bullet(
+                            'تعطيل أو التدخل في البنية التحتية أو أنظمة الاتصال الخاصة بالموقع'),
+                        _bullet('نشر أي محتوى دعائي أو تجاري غير مصرح به'),
+                        _bullet(
+                            'انتهاك حقوق الملكية الفكرية أو جمع بيانات شخصية عن الآخرين دون إذن'),
+                      ],
+                    ),
+                  ),
+                  _sectionCard(
+                    icon: Icons.how_to_reg_rounded,
+                    title: 'التسجيل',
+                    body: _p(
+                        'بتقديمك معلوماتك الشخصية عبر الموقع، فإنك تقر بأن جميع البيانات المقدمة صحيحة ودقيقة، وأنك لن تسجل أو تحاول الدخول باسم شخص آخر، أو باستخدام اسم مستخدم تعتبره الشركة غير مناسب.'),
+                  ),
+                  _sectionCard(
+                    icon: Icons.edit_note_rounded,
+                    title: 'المحتوى',
+                    body: _p(
+                        'يحتفظ معرض اوتو ون للسيارات بحقه في مراقبة أي محتوى يتم إدخاله من قبل المستخدمين، مع أنه غير ملزم بذلك. ويجوز للمعرض، وفق تقديره، حذف أو تعديل أي محتوى مخالف لهذه الشروط والأحكام دون أي التزام مسبق.'),
+                  ),
+                  _sectionCard(
+                    icon: Icons.gavel_rounded,
+                    title: 'القانون والاختصاص القضائي',
+                    body: _p(
+                        'تخضع هذه الشروط والأحكام للأنظمة والقوانين المعمول بها في المملكة العربية السعودية، وتختص المحاكم السعودية بالنظر في أي نزاع ينشأ عنها.'),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
           ),
@@ -1036,4 +1306,3 @@ This is generic starter text — please review it with a legal professional and 
     );
   }
 }
-

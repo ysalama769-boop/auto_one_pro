@@ -56,6 +56,11 @@ class _AutoOneAppState extends State<AutoOneApp> {
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+  // بيتحكم في السكرول لكل صفحات الموقع مع بعض، عشان زرار "الرجوع
+  // لأعلى الصفحة" يعرف يتابع مكان السكرول الحالي فين.
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollTop = false;
+
   @override
   void initState() {
     super.initState();
@@ -71,6 +76,13 @@ class _AutoOneAppState extends State<AutoOneApp> {
       if (mounted) setState(() {});
     });
     _handleDeepLink();
+
+    _scrollController.addListener(() {
+      final shouldShow = _scrollController.offset > 400;
+      if (shouldShow != _showScrollTop) {
+        setState(() => _showScrollTop = shouldShow);
+      }
+    });
   }
 
   // بتفتح صفحة السيارة تلقائيًا لو الرابط جاي بـ ?car=رقم (رابط مشاركة)
@@ -127,15 +139,24 @@ class _AutoOneAppState extends State<AutoOneApp> {
         ),
       ),
 
-      // بيلف كل صفحة في الموقع بـ Stack فيه زرار الشات عائم
-      // فوقها، عشان يفضل ظاهر في كل الصفحات من غير ما نضيفه
-      // لكل صفحة لوحدها. مش بيبان وقت شاشة التحميل الأولى.
+      // بيلف كل صفحة في الموقع بـ Stack فيه زرار الشات وزرار
+      // الرجوع لأعلى الصفحة عائمين فوقها، عشان يفضلوا ظاهرين في
+      // كل الصفحات من غير ما نضيفهم لكل صفحة لوحدها. وبنحط
+      // PrimaryScrollController مشترك عشان كل صفحة تتصل بيه
+      // تلقائي، فزرار الرجوع لفوق يقدر يتحكم في أي صفحة مفتوحة.
       builder: (context, child) {
-        return Stack(
-          children: [
-            if (child != null) child,
-            AiChatBubble(isArabic: isArabic),
-          ],
+        return PrimaryScrollController(
+          controller: _scrollController,
+          child: Stack(
+            children: [
+              if (child != null) child,
+              AiChatBubble(isArabic: isArabic),
+              ScrollToTopButton(
+                isArabic: isArabic,
+                visible: _showScrollTop,
+              ),
+            ],
+          ),
         );
       },
 
@@ -440,4 +461,3 @@ class _AutoOneShellState extends State<AutoOneShell> {
     );
   }
 }
-
