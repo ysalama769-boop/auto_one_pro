@@ -149,6 +149,14 @@ class _AutoOneAppState extends State<AutoOneApp> {
           controller: _scrollController,
           child: NotificationListener<ScrollNotification>(
             onNotification: (notification) {
+              // في الصفحة كذا شريط سحب أفقي (السيارات المميزة،
+              // شريط الماركات...)، وإشعارات السكرول بتاعتهم كانت
+              // بتوصلنا هنا كمان وتلخبط الحسبة، فده كان سبب اختفاء
+              // وظهور الزرار بسرعة. بنقتصر بس على سكرول الصفحة
+              // الرأسي الأساسي (مش أي سكرول أفقي جوّه الصفحة).
+              if (notification.metrics.axis != Axis.vertical) {
+                return false;
+              }
               _lastScrollContext = notification.context;
               final shouldShow = notification.metrics.pixels > 400;
               if (shouldShow != _showScrollTop) {
