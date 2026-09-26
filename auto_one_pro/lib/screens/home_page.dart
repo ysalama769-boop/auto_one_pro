@@ -225,6 +225,7 @@ final List<Map<String, String>> slideButtons = [
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      primary: true,
       child: Column(
         children: [
           // ====================================================

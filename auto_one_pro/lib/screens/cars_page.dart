@@ -1239,6 +1239,7 @@ String _searchAlias(Car car) {
     return Stack(
       children: [
         SingleChildScrollView(
+      primary: true,
       child: Column(
         children: [
           Padding(

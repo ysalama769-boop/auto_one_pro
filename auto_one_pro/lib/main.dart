@@ -178,6 +178,18 @@ class _AutoOneAppState extends State<AutoOneApp> {
                     isArabic: isArabic,
                     visible: _showScrollTop,
                     onTap: () {
+                      // نجرّب الكنترولر المشترك الأول (دلوقتي الصفحات
+                      // بتتصل بيه صراحةً بـ primary: true)، ولو مش
+                      // متوصّل لأي سبب، نرجع للـ context المسجّل من
+                      // آخر إشعار سكرول كخطة بديلة.
+                      if (_scrollController.hasClients) {
+                        _scrollController.animateTo(
+                          0,
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeOut,
+                        );
+                        return;
+                      }
                       final ctx = _lastScrollContext;
                       if (ctx == null || !ctx.mounted) return;
                       try {
