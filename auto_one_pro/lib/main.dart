@@ -171,12 +171,18 @@ class _AutoOneAppState extends State<AutoOneApp> {
                     visible: _showScrollTop,
                     onTap: () {
                       final ctx = _lastScrollContext;
-                      if (ctx == null) return;
-                      Scrollable.maybeOf(ctx)?.position.animateTo(
-                            0,
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeOut,
-                          );
+                      if (ctx == null || !ctx.mounted) return;
+                      try {
+                        Scrollable.maybeOf(ctx)?.position.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeOut,
+                            );
+                      } catch (e) {
+                        debugPrint(
+                          'AUTO_ONE_DEBUG: تعذّر الرجوع لأعلى الصفحة: $e',
+                        );
+                      }
                     },
                   ),
               ],
