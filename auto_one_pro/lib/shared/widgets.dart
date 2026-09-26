@@ -16,6 +16,7 @@ import '../screens/favorites_page.dart';
 import '../screens/comparison_page.dart';
 import '../screens/cars_page.dart';
 import '../screens/request_car_page.dart';
+import '../screens/financing_request_page.dart';
 import '../screens/brands_page.dart';
 import '../screens/auth_page.dart';
 import '../screens/my_requests_page.dart';
@@ -1050,6 +1051,26 @@ class HeaderButton extends StatelessWidget {
 // ============================================================
 // SMOOTH PAGE ROUTE (fade + slight slide-up)
 // ============================================================
+// بتلف CarsPage بـ Scaffold وAppBar بسيطين، عشان تقدر تتفتح
+// كصفحة قائمة بذاتها (Navigator.push) من أماكن زي روابط الفوتر،
+// من غير ما تبان "ناقصة" (من غير هيدر ولا زرار رجوع) — لأن
+// CarsPage الأصلية مصمّمة تتحط جوّه AutoOneShell مباشرة، مش
+// تتفتح لوحدها.
+Widget _standaloneCarsPage(bool isArabic) {
+  return Directionality(
+    textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+    child: Scaffold(
+      backgroundColor: const Color(0xfff5f5f5),
+      appBar: AppBar(
+        backgroundColor: kHeaderColor,
+        foregroundColor: kHeaderTextColor,
+        title: Text(isArabic ? 'سياراتنا' : 'Our Cars'),
+      ),
+      body: CarsPage(isArabic: isArabic),
+    ),
+  );
+}
+
 Route<T> smoothRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
     transitionDuration: const Duration(milliseconds: 320),
@@ -1961,13 +1982,13 @@ class AutoOneFooter extends StatelessWidget {
           item(
             isArabic ? 'شراء سيارة' : 'Buy a car',
             () => Navigator.of(context).push(
-              smoothRoute(CarsPage(isArabic: isArabic)),
+              smoothRoute(_standaloneCarsPage(isArabic)),
             ),
           ),
           item(
             isArabic ? 'التمويل' : 'Financing',
             () => Navigator.of(context).push(
-              smoothRoute(CarsPage(isArabic: isArabic)),
+              smoothRoute(FinancingRequestPage(isArabic: isArabic)),
             ),
           ),
           item(
