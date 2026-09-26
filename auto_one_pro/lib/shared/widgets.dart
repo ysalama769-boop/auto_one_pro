@@ -151,7 +151,18 @@ class AutoOneHeader extends StatelessWidget {
                 ],
               ),
             )
-          : const BoxDecoration(color: Colors.white),
+          : const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Color(0xFFE53935),
+                  Color(0xFFB71C1C),
+                  Colors.white,
+                ],
+                stops: [0.0, 0.7, 1.0],
+              ),
+            ),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -468,7 +479,7 @@ InkWell(
               padding: const EdgeInsets.all(8),
               child: Icon(
                 Icons.person_outline_rounded,
-                color: Colors.black87,
+                color: Colors.white,
                 size: 22,
               ),
             ),
@@ -479,7 +490,7 @@ InkWell(
       return PopupMenuButton<String>(
         icon: Icon(
           Icons.account_circle_rounded,
-          color: Colors.black87,
+          color: Colors.white,
           size: 24,
         ),
         onSelected: (value) {
@@ -555,10 +566,8 @@ InkWell(
           ),
           child: Text(
             isArabic ? 'EN' : 'AR',
-            style: TextStyle(
-              color: transparent
-                  ? Colors.white
-                  : const Color.fromARGB(255, 12, 12, 12),
+            style: const TextStyle(
+              color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -604,7 +613,7 @@ if (isMobile)
           children: [
             const Icon(
               Icons.menu,
-              color: Colors.black87,
+              color: Colors.white,
               size: 30,
             ),
             if (notifCount > 0)
