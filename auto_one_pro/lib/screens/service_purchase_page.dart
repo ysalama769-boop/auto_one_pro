@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/constants.dart';
 import '../shared/widgets.dart';
-import '../shared/repository.dart';
 import '../admin/admin_shared.dart';
 
 // ============================================================
@@ -40,8 +39,42 @@ class _ServicePurchasePageState extends State<ServicePurchasePage> {
   String? selectedBrand;
   String? selectedModel;
   bool isSubmitting = false;
+  bool isLoadingBrands = true;
+  // بنجيب كل الماركات والموديلات مباشرة من قاعدة البيانات، بدل
+  // ما نعتمد على قايمة السيارات المحمّلة في الذاكرة (اللي بتكون
+  // ناقصة أحيانًا لأنها بتتحمّل على دفعات، مش كلها مرة واحدة).
+  List<Map<String, String>> _allCarsBrandName = [];
 
   bool get isArabic => widget.isArabic;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAllBrandsAndModels();
+  }
+
+  Future<void> _loadAllBrandsAndModels() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('cars')
+          .select('brand, name')
+          .eq('is_available', true);
+      final rows = List<Map<String, dynamic>>.from(response as List);
+      if (!mounted) return;
+      setState(() {
+        _allCarsBrandName = rows
+            .map((r) => {
+                  'brand': (r['brand'] ?? '').toString().trim(),
+                  'name': (r['name'] ?? '').toString().trim(),
+                })
+            .where((r) => r['brand']!.isNotEmpty)
+            .toList();
+        isLoadingBrands = false;
+      });
+    } catch (e) {
+      if (mounted) setState(() => isLoadingBrands = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -55,16 +88,17 @@ class _ServicePurchasePageState extends State<ServicePurchasePage> {
   }
 
   List<String> get _brands {
-    final values = cars.map((c) => c.brand.trim()).toSet().toList();
+    final values =
+        _allCarsBrandName.map((c) => c['brand']!).toSet().toList();
     values.sort();
     return values;
   }
 
   List<String> get _modelsForSelectedBrand {
     if (selectedBrand == null) return const [];
-    final values = cars
-        .where((c) => c.brand == selectedBrand)
-        .map((c) => c.name.trim())
+    final values = _allCarsBrandName
+        .where((c) => c['brand'] == selectedBrand)
+        .map((c) => c['name']!)
         .where((n) => n.isNotEmpty)
         .toSet()
         .toList();
@@ -297,12 +331,12 @@ class _ServicePurchasePageState extends State<ServicePurchasePage> {
 
               Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1000),
+                  constraints: const BoxConstraints(maxWidth: 1400),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(28),
+                      padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
                         color: const Color(0xfff9f9fa),
                         borderRadius: BorderRadius.circular(18),
