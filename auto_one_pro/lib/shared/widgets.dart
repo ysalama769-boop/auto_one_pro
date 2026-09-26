@@ -156,11 +156,11 @@ class AutoOneHeader extends StatelessWidget {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: [
-                  Color(0xFFE53935),
-                  Color(0xFFB71C1C),
+                  Color(0xFFFF1E1E),
+                  Color(0xFFC40000),
                   Colors.white,
                 ],
-                stops: [0.0, 0.7, 1.0],
+                stops: [0.0, 0.8, 1.0],
               ),
             ),
       child: SafeArea(
