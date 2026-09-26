@@ -61,6 +61,10 @@ class _AutoOneAppState extends State<AutoOneApp> {
   // بدل الاعتماد على الكنترولر ده وحده).
   final ScrollController _scrollController = ScrollController();
   bool _showScrollTop = false;
+  // بنسجّل الـ context بتاع آخر إشعار سكرول وصلنا، عشان نقدر نلاقي
+  // الـ Scrollable الحقيقي اللي يشتغل فيه ونرجّعه لفوق، من غير ما
+  // نعتمد على PrimaryScrollController (اللي ما كانش بيتوصل صح).
+  BuildContext? _lastScrollContext;
 
   @override
   void initState() {
@@ -145,6 +149,7 @@ class _AutoOneAppState extends State<AutoOneApp> {
           controller: _scrollController,
           child: NotificationListener<ScrollNotification>(
             onNotification: (notification) {
+              _lastScrollContext = notification.context;
               final shouldShow = notification.metrics.pixels > 400;
               if (shouldShow != _showScrollTop) {
                 // بنأجّل الـ setState لآخر الفريم الحالي، عشان منعملش
@@ -159,10 +164,21 @@ class _AutoOneAppState extends State<AutoOneApp> {
               children: [
                 if (child != null) child,
                 AiChatBubble(isArabic: isArabic),
-                ScrollToTopButton(
-                  isArabic: isArabic,
-                  visible: _showScrollTop,
-                ),
+                // ديسكتوب بس — على الموبايل مش محتاجينه
+                if (MediaQuery.of(context).size.width >= 700)
+                  ScrollToTopButton(
+                    isArabic: isArabic,
+                    visible: _showScrollTop,
+                    onTap: () {
+                      final ctx = _lastScrollContext;
+                      if (ctx == null) return;
+                      Scrollable.maybeOf(ctx)?.position.animateTo(
+                            0,
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeOut,
+                          );
+                    },
+                  ),
               ],
             ),
           ),

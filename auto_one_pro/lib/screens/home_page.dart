@@ -465,44 +465,6 @@ final List<Map<String, String>> slideButtons = [
                                 ),
                               ),
 
-                              // أسهم التنقل يمين وشمال (ديسكتوب بس)
-                              if (!isSmall) ...[
-                                Positioned(
-                                  left: 20,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: Center(
-                                    child: Transform.scale(
-                                      scale: 0.9,
-                                      child: Directionality(
-                                        textDirection: TextDirection.ltr,
-                                        child: CarouselArrow(
-                                          icon: Icons.chevron_left_rounded,
-                                          onTap: previousImage,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  right: 20,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: Center(
-                                    child: Transform.scale(
-                                      scale: 0.9,
-                                      child: Directionality(
-                                        textDirection: TextDirection.ltr,
-                                        child: CarouselArrow(
-                                          icon: Icons.chevron_right_rounded,
-                                          onTap: nextImage,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-
                               // نقط التنقل أسفل الهيرو
                               Positioned(
                                 left: 0,

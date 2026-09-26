@@ -2454,11 +2454,13 @@ class _NewsletterSubscribeBlockState
 class ScrollToTopButton extends StatelessWidget {
   final bool isArabic;
   final bool visible;
+  final VoidCallback onTap;
 
   const ScrollToTopButton({
     super.key,
     required this.isArabic,
     required this.visible,
+    required this.onTap,
   });
 
   @override
@@ -2476,13 +2478,7 @@ class ScrollToTopButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(30),
             child: InkWell(
               borderRadius: BorderRadius.circular(30),
-              onTap: () {
-                PrimaryScrollController.maybeOf(context)?.animateTo(
-                  0,
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOut,
-                );
-              },
+              onTap: onTap,
               child: Container(
                 width: 46,
                 height: 46,
