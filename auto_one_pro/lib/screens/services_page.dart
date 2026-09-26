@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shared/constants.dart';
 import '../shared/widgets.dart';
 import '../admin/admin_shared.dart';
+import 'service_purchase_page.dart';
 
 // ============================================================
 // SERVICES PAGE (باقات الخدمات - صفحة مستقلة للزبائن)
@@ -298,6 +299,44 @@ class _ServicesPageState extends State<ServicesPage> {
                                                   ),
                                                 )
                                               : const SizedBox.shrink(),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        SizedBox(
+                                          width: double.infinity,
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                smoothRoute(
+                                                  ServicePurchasePage(
+                                                    isArabic: isArabic,
+                                                    serviceName: name,
+                                                    servicePrice:
+                                                        '$priceAfter ${isArabic ? 'ر.س' : 'SAR'}',
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              foregroundColor: Colors.white,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                vertical: 12,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              isArabic
+                                                  ? 'طلب شراء'
+                                                  : 'Request Purchase',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),

@@ -34,6 +34,8 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
   final carsPageBannerCtrl = TextEditingController();
   // بانر صفحة الخدمات
   final servicesBannerCtrl = TextEditingController();
+  // بانر صفحة طلب شراء خدمة
+  final servicePurchaseBannerCtrl = TextEditingController();
   // صورة قسم "نبذة عنا" وصورة خلفية قسم "تاريخنا" في صفحة من نحن
   final aboutImageCtrl = TextEditingController();
   final historyImageCtrl = TextEditingController();
@@ -174,6 +176,7 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
     branchesBannerCtrl.dispose();
     carsPageBannerCtrl.dispose();
     servicesBannerCtrl.dispose();
+    servicePurchaseBannerCtrl.dispose();
     aboutImageCtrl.dispose();
     historyImageCtrl.dispose();
     for (final c in brandPartnerArCtrls) {
@@ -244,6 +247,8 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
           (response?['cars_page_banner'] ?? '').toString();
       servicesBannerCtrl.text =
           (response?['services_banner'] ?? '').toString();
+      servicePurchaseBannerCtrl.text =
+          (response?['service_purchase_banner'] ?? '').toString();
       aboutImageCtrl.text = (response?['about_image'] ?? '').toString();
       historyImageCtrl.text = (response?['history_image'] ?? '').toString();
 
@@ -303,6 +308,10 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
 
   Future<void> _pickAndUploadServicesBanner() async {
     await _pickAndUploadBanner(servicesBannerCtrl);
+  }
+
+  Future<void> _pickAndUploadServicePurchaseBanner() async {
+    await _pickAndUploadBanner(servicePurchaseBannerCtrl);
   }
 
   Future<void> _pickAndUploadAboutImage() async {
@@ -473,6 +482,7 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
         'branches_banner': branchesBannerCtrl.text.trim(),
         'cars_page_banner': carsPageBannerCtrl.text.trim(),
         'services_banner': servicesBannerCtrl.text.trim(),
+        'service_purchase_banner': servicePurchaseBannerCtrl.text.trim(),
         'about_image': aboutImageCtrl.text.trim(),
         'history_image': historyImageCtrl.text.trim(),
         'brand_partners': partners,
@@ -932,6 +942,39 @@ class _AdminHomepagePageState extends State<AdminHomepagePage> {
             IconButton(
               onPressed:
                   isUploadingImage ? null : _pickAndUploadServicesBanner,
+              icon: const Icon(Icons.upload_file),
+              tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          isArabic
+              ? 'صورة بانر صفحة طلب شراء خدمة'
+              : 'Service purchase page banner image',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: servicePurchaseBannerCtrl,
+                decoration: InputDecoration(
+                  hintText:
+                      isArabic ? 'رابط صورة البانر' : 'Banner image URL',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: isUploadingImage
+                  ? null
+                  : _pickAndUploadServicePurchaseBanner,
               icon: const Icon(Icons.upload_file),
               tooltip: isArabic ? 'اختيار من الجهاز' : 'Browse',
             ),
