@@ -1623,7 +1623,13 @@ String _searchAlias(Car car) {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    sidebar,
+                    // بادينج فوق العمود بارتفاع صف البحث + المسافة
+                    // اللي بعده، عشان العمود يتحاذى مع أول كارت
+                    // سيارة بالظبط، مش مع صف البحث فوقه
+                    Padding(
+                      padding: const EdgeInsets.only(top: 74),
+                      child: sidebar,
+                    ),
                     const SizedBox(width: 20),
                     Expanded(child: mainContent),
                   ],

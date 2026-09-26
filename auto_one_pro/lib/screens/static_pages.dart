@@ -908,39 +908,115 @@ class PrivacyPolicyPage extends StatelessWidget {
 
   const PrivacyPolicyPage({super.key, required this.isArabic});
 
+  Widget _sectionCard({
+    required IconData icon,
+    required String title,
+    required String body,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.black12),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 14,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: Colors.red, size: 26),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            body,
+            style: const TextStyle(
+              fontSize: 16,
+              height: 2,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final content = isArabic
-        ? '''نحن في AUTO ONE نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية.
-
-**البيانات اللي بنجمعها**
-لما تعملي حجز، بنجمع اسمك، رقم جوالك، مدينتك، ووسيلة تواصل إضافية (واتساب أو إيميل) عشان نقدر نتواصل معاكِ بخصوص حجزك.
-
-**استخدام البيانات**
-البيانات دي بتُستخدم فقط لمتابعة طلب الحجز والتواصل معاكِ، ومش بيتم مشاركتها مع أي جهة خارجية.
-
-**حماية البيانات**
-بياناتك مخزنة بشكل آمن، وبنحرص على اتخاذ الإجراءات المناسبة لحمايتها من أي وصول غير مصرح به.
-
-**التواصل**
-لأي استفسار عن خصوصية بياناتك، تقدري تتواصلي معانا عبر وسائل التواصل الموجودة في التطبيق.
-
-هذا النص عام ويُفضّل مراجعته وتخصيصه حسب طبيعة نشاطك التجاري.'''
-        : '''At AUTO ONE, we respect your privacy and are committed to protecting your personal data.
-
-**Data we collect**
-When you make a booking, we collect your name, phone number, city, and an additional contact method (WhatsApp or email) so we can reach you about your booking.
-
-**How we use your data**
-This data is used only to process your booking request and contact you, and is never shared with third parties.
-
-**Data protection**
-Your data is stored securely, and we take reasonable measures to protect it from unauthorized access.
-
-**Contact**
-For any questions about your data privacy, you can reach us through the contact methods available in the app.
-
-This is generic starter text — please review and customize it to match your actual business practices.''';
+    final sections = isArabic
+        ? [
+            (
+              Icons.badge_rounded,
+              'البيانات اللي بنجمعها',
+              'لما تعملي حجز، بنجمع اسمك، رقم جوالك، مدينتك، ووسيلة تواصل إضافية (واتساب أو إيميل) عشان نقدر نتواصل معاكِ بخصوص حجزك.',
+            ),
+            (
+              Icons.data_usage_rounded,
+              'استخدام البيانات',
+              'البيانات دي بتُستخدم فقط لمتابعة طلب الحجز والتواصل معاكِ، ومش بيتم مشاركتها مع أي جهة خارجية.',
+            ),
+            (
+              Icons.lock_rounded,
+              'حماية البيانات',
+              'بياناتك مخزنة بشكل آمن، وبنحرص على اتخاذ الإجراءات المناسبة لحمايتها من أي وصول غير مصرح به.',
+            ),
+            (
+              Icons.support_agent_rounded,
+              'التواصل',
+              'لأي استفسار عن خصوصية بياناتك، تقدري تتواصلي معانا عبر وسائل التواصل الموجودة في التطبيق.',
+            ),
+          ]
+        : [
+            (
+              Icons.badge_rounded,
+              'Data we collect',
+              'When you make a booking, we collect your name, phone number, city, and an additional contact method (WhatsApp or email) so we can reach you about your booking.',
+            ),
+            (
+              Icons.data_usage_rounded,
+              'How we use your data',
+              'This data is used only to process your booking request and contact you, and is never shared with third parties.',
+            ),
+            (
+              Icons.lock_rounded,
+              'Data protection',
+              'Your data is stored securely, and we take reasonable measures to protect it from unauthorized access.',
+            ),
+            (
+              Icons.support_agent_rounded,
+              'Contact',
+              'For any questions about your data privacy, you can reach us through the contact methods available in the app.',
+            ),
+          ];
 
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
@@ -952,21 +1028,54 @@ This is generic starter text — please review and customize it to match your ac
           title: Text(isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'),
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800),
-              child: Text(
-                content,
-                style: const TextStyle(fontSize: 14, height: 1.8),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 30, 20, 0),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          isArabic ? 'سياسة الخصوصية' : 'Privacy Policy',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          isArabic
+                              ? 'نحن في AUTO ONE نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية.'
+                              : 'At AUTO ONE, we respect your privacy and are committed to protecting your personal data.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                            height: 1.8,
+                          ),
+                        ),
+                        const SizedBox(height: 34),
+                        for (final s in sections)
+                          _sectionCard(icon: s.$1, title: s.$2, body: s.$3),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
+              AutoOneFooter(isArabic: isArabic),
+            ],
           ),
         ),
       ),
     );
   }
 }
+
 
 
 // ============================================================

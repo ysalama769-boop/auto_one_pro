@@ -56,8 +56,9 @@ class _AutoOneAppState extends State<AutoOneApp> {
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-  // بيتحكم في السكرول لكل صفحات الموقع مع بعض، عشان زرار "الرجوع
-  // لأعلى الصفحة" يعرف يتابع مكان السكرول الحالي فين.
+  // لسه محتاجينه عشان زرار "ارجعي لفوق" يقدر يتحكم في سكرول
+  // الصفحة الحالية (رصد ظهور الزرار بقى عن طريق NotificationListener
+  // بدل الاعتماد على الكنترولر ده وحده).
   final ScrollController _scrollController = ScrollController();
   bool _showScrollTop = false;
 
@@ -76,13 +77,6 @@ class _AutoOneAppState extends State<AutoOneApp> {
       if (mounted) setState(() {});
     });
     _handleDeepLink();
-
-    _scrollController.addListener(() {
-      final shouldShow = _scrollController.offset > 400;
-      if (shouldShow != _showScrollTop) {
-        setState(() => _showScrollTop = shouldShow);
-      }
-    });
   }
 
   // بتفتح صفحة السيارة تلقائيًا لو الرابط جاي بـ ?car=رقم (رابط مشاركة)
@@ -140,22 +134,37 @@ class _AutoOneAppState extends State<AutoOneApp> {
       ),
 
       // بيلف كل صفحة في الموقع بـ Stack فيه زرار الشات وزرار
-      // الرجوع لأعلى الصفحة عائمين فوقها، عشان يفضلوا ظاهرين في
-      // كل الصفحات من غير ما نضيفهم لكل صفحة لوحدها. وبنحط
-      // PrimaryScrollController مشترك عشان كل صفحة تتصل بيه
-      // تلقائي، فزرار الرجوع لفوق يقدر يتحكم في أي صفحة مفتوحة.
+      // الرجوع لأعلى الصفحة عائمين فوقها. بنستخدم NotificationListener
+      // عشان نلتقط أي حركة سكرول في أي صفحة مباشرة (أضمن بكتير من
+      // محاولة نوصل بـ ScrollController واحد لكل الصفحات، اللي كان
+      // بيفشل بصمت وبيخلي الزرار ميظهرش خالص). وبنسيب
+      // PrimaryScrollController زي ما هو عشان زرار "ارجعي لفوق"
+      // نفسه يقدر يتحكم في سكرول الصفحة الحالية.
       builder: (context, child) {
         return PrimaryScrollController(
           controller: _scrollController,
-          child: Stack(
-            children: [
-              if (child != null) child,
-              AiChatBubble(isArabic: isArabic),
-              ScrollToTopButton(
-                isArabic: isArabic,
-                visible: _showScrollTop,
-              ),
-            ],
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              final shouldShow = notification.metrics.pixels > 400;
+              if (shouldShow != _showScrollTop) {
+                // بنأجّل الـ setState لآخر الفريم الحالي، عشان منعملش
+                // rebuild وسط عملية بناء شجرة الودجتس نفسها.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _showScrollTop = shouldShow);
+                });
+              }
+              return false;
+            },
+            child: Stack(
+              children: [
+                if (child != null) child,
+                AiChatBubble(isArabic: isArabic),
+                ScrollToTopButton(
+                  isArabic: isArabic,
+                  visible: _showScrollTop,
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -251,6 +260,14 @@ class _AutoOneShellState extends State<AutoOneShell> {
 
       child: Scaffold(
         backgroundColor: const Color(0xfff5f5f5),
+
+        endDrawer: MobileMenuDrawer(
+          isArabic: widget.isArabic,
+          showCars: showCars,
+          onHome: openHome,
+          onCars: ([brand]) => openCars(brand),
+          onLanguage: widget.onLanguageChanged,
+        ),
 
         // ======================================================
         // TOP BAR

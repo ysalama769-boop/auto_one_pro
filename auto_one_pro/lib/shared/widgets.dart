@@ -594,8 +594,12 @@ if (isMobile)
   ValueListenableBuilder<int>(
     valueListenable: customerNotificationsCount,
     builder: (context, notifCount, _) {
-      return PopupMenuButton<String>(
-        icon: Stack(
+      return InkWell(
+        borderRadius: BorderRadius.circular(30),
+        onTap: () => Scaffold.of(context).openEndDrawer(),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Stack(
           clipBehavior: Clip.none,
           children: [
             const Icon(
@@ -630,227 +634,272 @@ if (isMobile)
                 ),
               ),
           ],
-        ),
-    onSelected: (value) {
-      switch (value) {
-        case 'home':
-          onHome();
-          break;
-        case 'cars':
-          onCars();
-          break;
-        case 'language':
-          onLanguage();
-          break;
-        case 'whatsapp':
-          openWhatsApp();
-          break;
-        case 'favorites':
-          Navigator.of(context).push(
-            smoothRoute(FavoritesPage(isArabic: isArabic)),
-          );
-          break;
-        case 'compare':
-          Navigator.of(context).push(
-            smoothRoute(ComparisonPage(isArabic: isArabic)),
-          );
-          break;
-        case 'login':
-          Navigator.of(context).push(
-            smoothRoute(AuthPage(isArabic: isArabic)),
-          );
-          break;
-        case 'requests':
-          Navigator.of(context).push(
-            smoothRoute(MyRequestsPage(isArabic: isArabic)),
-          );
-          break;
-        case 'settings':
-          Navigator.of(context).push(
-            smoothRoute(
-              SettingsPage(
-                isArabic: isArabic,
-                onLanguageChanged: onLanguage,
-              ),
-            ),
-          );
-          break;
-        case 'notifications':
-          Navigator.of(context).push(
-            smoothRoute(NotificationsPage(isArabic: isArabic)),
-          );
-          break;
-        case 'services':
-          Navigator.of(context).push(
-            smoothRoute(ServicesPage(isArabic: isArabic)),
-          );
-          break;
-        case 'request_car':
-          Navigator.of(context).push(
-            smoothRoute(RequestCarPage(isArabic: isArabic)),
-          );
-          break;
-        case 'about':
-          Navigator.of(context).push(
-            smoothRoute(AboutAutoOnePage(isArabic: isArabic)),
-          );
-          break;
-        case 'branches':
-          Navigator.of(context).push(
-            smoothRoute(BranchesPage(isArabic: isArabic)),
-          );
-          break;
-        case 'brands':
-          Navigator.of(context).push(
-            smoothRoute(
-              BrandsPage(
-                isArabic: isArabic,
-                onBrandTap: (brand) => onCars(brand),
-              ),
-            ),
-          );
-          break;
-        case 'terms':
-          Navigator.of(context).push(
-            smoothRoute(TermsPage(isArabic: isArabic)),
-          );
-          break;
-        case 'privacy':
-          Navigator.of(context).push(
-            smoothRoute(PrivacyPolicyPage(isArabic: isArabic)),
-          );
-          break;
-        case 'logout':
-          signOutUser();
-          break;
-      }
-    },
-    itemBuilder: (context) => [
-      PopupMenuItem(
-        value: 'home',
-        child: Text(
-          isArabic ? 'الرئيسية' : 'HOME',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'cars',
-        child: Text(
-          isArabic ? 'سياراتنا' : 'OUR CARS',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'brands',
-        child: Text(
-          isArabic ? 'الماركات' : 'Brands',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'services',
-        child: Text(
-          isArabic ? 'الخدمات' : 'Services',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'request_car',
-        child: Text(
-          isArabic ? 'طلب سيارة' : 'Request a Car',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'about',
-        child: Text(
-          isArabic ? 'من نحن' : 'Who We Are',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'branches',
-        child: Text(
-          isArabic ? 'الفروع' : 'Branches',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'terms',
-        child: Text(
-          isArabic ? 'الشروط والأحكام' : 'Terms & Conditions',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'privacy',
-        child: Text(
-          isArabic ? 'سياسة الخصوصية' : 'Privacy Policy',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'favorites',
-        child: Text(
-          isArabic ? 'المفضلة' : 'Favorites',
-        ),
-      ),
-      PopupMenuItem(
-        value: 'compare',
-        child: Text(
-          isArabic ? 'مقارنة السيارات' : 'Compare Cars',
-        ),
-      ),
-      if (currentUser.value == null)
-        PopupMenuItem(
-          value: 'login',
-          child: Text(
-            isArabic ? 'تسجيل الدخول' : 'Sign in',
-          ),
-        )
-      else ...[
-        PopupMenuItem(
-          value: 'notifications',
-          child: Text(
-            isArabic
-                ? notifCount > 0
-                    ? 'الإشعارات ($notifCount)'
-                    : 'الإشعارات'
-                : notifCount > 0
-                    ? 'Notifications ($notifCount)'
-                    : 'Notifications',
           ),
         ),
-        PopupMenuItem(
-          value: 'requests',
-          child: Text(
-            isArabic ? 'طلباتي' : 'My Requests',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'settings',
-          child: Text(
-            isArabic ? 'الإعدادات' : 'Settings',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'logout',
-          child: Text(
-            isArabic ? 'تسجيل الخروج' : 'Log out',
-          ),
-        ),
-      ],
-      if (currentUser.value == null)
-        PopupMenuItem(
-          value: 'language',
-          child: Text(
-            isArabic ? 'English' : 'العربية',
-          ),
-        ),
-      PopupMenuItem(
-        value: 'whatsapp',
-        child: Text(
-          isArabic ? 'واتساب' : 'WHATSAPP',
-        ),
-      ),
-    ],
-  );
+      );
     },
   ),
 
              
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+// ============================================================
+// MOBILE MENU DRAWER (بيتفتح من جنب الشاشة بدل القايمة المنسدلة
+// القديمة، بنفس أسلوب درور الماركات في صفحة المخزون)
+// ============================================================
+class MobileMenuDrawer extends StatelessWidget {
+  final bool isArabic;
+  final bool showCars;
+  final VoidCallback onHome;
+  final void Function([String? brand]) onCars;
+  final VoidCallback onLanguage;
+
+  const MobileMenuDrawer({
+    super.key,
+    required this.isArabic,
+    required this.showCars,
+    required this.onHome,
+    required this.onCars,
+    required this.onLanguage,
+  });
+
+  Future<void> _openWhatsApp() async {
+    const phone = '966541577894';
+    final Uri url = Uri.parse('https://wa.me/$phone');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Widget _item(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: color ?? Colors.black87),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          color: color ?? Colors.black87,
+        ),
+      ),
+      onTap: () {
+        Navigator.of(context).pop(); // يقفل الدرور الأول
+        onTap();
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Drawer(
+        child: SafeArea(
+          child: ValueListenableBuilder<User?>(
+            valueListenable: currentUser,
+            builder: (context, user, _) {
+              return ValueListenableBuilder<int>(
+                valueListenable: customerNotificationsCount,
+                builder: (context, notifCount, _) {
+                  return ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: kBrandGradient,
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                        ),
+                        child: Image.asset(
+                          'assets/logo-autoone.png',
+                          height: 42,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stack) =>
+                              const SizedBox.shrink(),
+                        ),
+                      ),
+                      _item(
+                        context,
+                        icon: Icons.home_rounded,
+                        label: isArabic ? 'الرئيسية' : 'HOME',
+                        onTap: onHome,
+                      ),
+                      _item(
+                        context,
+                        icon: Icons.directions_car_filled_rounded,
+                        label: isArabic ? 'سياراتنا' : 'OUR CARS',
+                        onTap: () => onCars(),
+                      ),
+                      _item(
+                        context,
+                        icon: Icons.verified_rounded,
+                        label: isArabic ? 'الماركات' : 'Brands',
+                        onTap: () => Navigator.of(context).push(
+                          smoothRoute(
+                            BrandsPage(
+                              isArabic: isArabic,
+                              onBrandTap: (brand) => onCars(brand),
+                            ),
+                          ),
+                        ),
+                      ),
+                      _item(
+                        context,
+                        icon: Icons.miscellaneous_services_outlined,
+                        label: isArabic ? 'الخدمات' : 'Services',
+                        onTap: () => Navigator.of(context).push(
+                          smoothRoute(ServicesPage(isArabic: isArabic)),
+                        ),
+                      ),
+                      _item(
+                        context,
+                        icon: Icons.assignment_outlined,
+                        label: isArabic ? 'طلب سيارة' : 'Request a Car',
+                        onTap: () => Navigator.of(context).push(
+                          smoothRoute(RequestCarPage(isArabic: isArabic)),
+                        ),
+                      ),
+                      _item(
+                        context,
+                        icon: Icons.info_outline_rounded,
+                        label: isArabic ? 'من نحن' : 'Who We Are',
+                        onTap: () => Navigator.of(context).push(
+                          smoothRoute(AboutAutoOnePage(isArabic: isArabic)),
+                        ),
+                      ),
+                      _item(
+                        context,
+                        icon: Icons.location_on_outlined,
+                        label: isArabic ? 'الفروع' : 'Branches',
+                        onTap: () => Navigator.of(context).push(
+                          smoothRoute(BranchesPage(isArabic: isArabic)),
+                        ),
+                      ),
+                      const Divider(),
+                      _item(
+                        context,
+                        icon: Icons.favorite_rounded,
+                        label: isArabic ? 'المفضلة' : 'Favorites',
+                        color: Colors.red,
+                        onTap: () => Navigator.of(context).push(
+                          smoothRoute(FavoritesPage(isArabic: isArabic)),
+                        ),
+                      ),
+                      _item(
+                        context,
+                        icon: Icons.compare_arrows_rounded,
+                        label: isArabic ? 'مقارنة السيارات' : 'Compare Cars',
+                        onTap: () => Navigator.of(context).push(
+                          smoothRoute(ComparisonPage(isArabic: isArabic)),
+                        ),
+                      ),
+                      const Divider(),
+                      if (user == null)
+                        _item(
+                          context,
+                          icon: Icons.login_rounded,
+                          label: isArabic ? 'تسجيل الدخول' : 'Sign in',
+                          onTap: () => Navigator.of(context).push(
+                            smoothRoute(AuthPage(isArabic: isArabic)),
+                          ),
+                        )
+                      else ...[
+                        _item(
+                          context,
+                          icon: Icons.notifications_outlined,
+                          label: isArabic
+                              ? notifCount > 0
+                                  ? 'الإشعارات ($notifCount)'
+                                  : 'الإشعارات'
+                              : notifCount > 0
+                                  ? 'Notifications ($notifCount)'
+                                  : 'Notifications',
+                          onTap: () => Navigator.of(context).push(
+                            smoothRoute(NotificationsPage(isArabic: isArabic)),
+                          ),
+                        ),
+                        _item(
+                          context,
+                          icon: Icons.assignment_turned_in_outlined,
+                          label: isArabic ? 'طلباتي' : 'My Requests',
+                          onTap: () => Navigator.of(context).push(
+                            smoothRoute(MyRequestsPage(isArabic: isArabic)),
+                          ),
+                        ),
+                        _item(
+                          context,
+                          icon: Icons.settings_outlined,
+                          label: isArabic ? 'الإعدادات' : 'Settings',
+                          onTap: () => Navigator.of(context).push(
+                            smoothRoute(
+                              SettingsPage(
+                                isArabic: isArabic,
+                                onLanguageChanged: onLanguage,
+                              ),
+                            ),
+                          ),
+                        ),
+                        _item(
+                          context,
+                          icon: Icons.logout_rounded,
+                          label: isArabic ? 'تسجيل الخروج' : 'Log out',
+                          onTap: signOutUser,
+                        ),
+                      ],
+                      const Divider(),
+                      _item(
+                        context,
+                        icon: Icons.description_outlined,
+                        label: isArabic
+                            ? 'الشروط والأحكام'
+                            : 'Terms & Conditions',
+                        onTap: () => Navigator.of(context).push(
+                          smoothRoute(TermsPage(isArabic: isArabic)),
+                        ),
+                      ),
+                      _item(
+                        context,
+                        icon: Icons.privacy_tip_outlined,
+                        label: isArabic ? 'سياسة الخصوصية' : 'Privacy Policy',
+                        onTap: () => Navigator.of(context).push(
+                          smoothRoute(PrivacyPolicyPage(isArabic: isArabic)),
+                        ),
+                      ),
+                      if (user == null)
+                        _item(
+                          context,
+                          icon: Icons.language_rounded,
+                          label: isArabic ? 'English' : 'العربية',
+                          onTap: onLanguage,
+                        ),
+                      _item(
+                        context,
+                        icon: FontAwesomeIcons.whatsapp,
+                        label: isArabic ? 'واتساب' : 'WHATSAPP',
+                        color: const Color(0xFF25D366),
+                        onTap: _openWhatsApp,
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
