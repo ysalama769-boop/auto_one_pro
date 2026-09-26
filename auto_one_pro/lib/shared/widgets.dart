@@ -680,13 +680,13 @@ class MobileMenuDrawer extends StatelessWidget {
 
   Widget _item(
     BuildContext context, {
-    required IconData icon,
+    required Widget icon,
     required String label,
     required VoidCallback onTap,
     Color? color,
   }) {
     return ListTile(
-      leading: Icon(icon, color: color ?? Colors.black87),
+      leading: icon,
       title: Text(
         label,
         style: TextStyle(
@@ -735,19 +735,19 @@ class MobileMenuDrawer extends StatelessWidget {
                       ),
                       _item(
                         context,
-                        icon: Icons.home_rounded,
+                        icon: const Icon(Icons.home_rounded, color: Colors.black87),
                         label: isArabic ? 'الرئيسية' : 'HOME',
                         onTap: onHome,
                       ),
                       _item(
                         context,
-                        icon: Icons.directions_car_filled_rounded,
+                        icon: const Icon(Icons.directions_car_filled_rounded, color: Colors.black87),
                         label: isArabic ? 'سياراتنا' : 'OUR CARS',
                         onTap: () => onCars(),
                       ),
                       _item(
                         context,
-                        icon: Icons.verified_rounded,
+                        icon: const Icon(Icons.verified_rounded, color: Colors.black87),
                         label: isArabic ? 'الماركات' : 'Brands',
                         onTap: () => Navigator.of(context).push(
                           smoothRoute(
@@ -760,7 +760,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       ),
                       _item(
                         context,
-                        icon: Icons.miscellaneous_services_outlined,
+                        icon: const Icon(Icons.miscellaneous_services_outlined, color: Colors.black87),
                         label: isArabic ? 'الخدمات' : 'Services',
                         onTap: () => Navigator.of(context).push(
                           smoothRoute(ServicesPage(isArabic: isArabic)),
@@ -768,7 +768,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       ),
                       _item(
                         context,
-                        icon: Icons.assignment_outlined,
+                        icon: const Icon(Icons.assignment_outlined, color: Colors.black87),
                         label: isArabic ? 'طلب سيارة' : 'Request a Car',
                         onTap: () => Navigator.of(context).push(
                           smoothRoute(RequestCarPage(isArabic: isArabic)),
@@ -776,7 +776,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       ),
                       _item(
                         context,
-                        icon: Icons.info_outline_rounded,
+                        icon: const Icon(Icons.info_outline_rounded, color: Colors.black87),
                         label: isArabic ? 'من نحن' : 'Who We Are',
                         onTap: () => Navigator.of(context).push(
                           smoothRoute(AboutAutoOnePage(isArabic: isArabic)),
@@ -784,7 +784,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       ),
                       _item(
                         context,
-                        icon: Icons.location_on_outlined,
+                        icon: const Icon(Icons.location_on_outlined, color: Colors.black87),
                         label: isArabic ? 'الفروع' : 'Branches',
                         onTap: () => Navigator.of(context).push(
                           smoothRoute(BranchesPage(isArabic: isArabic)),
@@ -793,7 +793,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       const Divider(),
                       _item(
                         context,
-                        icon: Icons.favorite_rounded,
+                        icon: const Icon(Icons.favorite_rounded, color: Colors.red),
                         label: isArabic ? 'المفضلة' : 'Favorites',
                         color: Colors.red,
                         onTap: () => Navigator.of(context).push(
@@ -802,7 +802,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       ),
                       _item(
                         context,
-                        icon: Icons.compare_arrows_rounded,
+                        icon: const Icon(Icons.compare_arrows_rounded, color: Colors.black87),
                         label: isArabic ? 'مقارنة السيارات' : 'Compare Cars',
                         onTap: () => Navigator.of(context).push(
                           smoothRoute(ComparisonPage(isArabic: isArabic)),
@@ -812,7 +812,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       if (user == null)
                         _item(
                           context,
-                          icon: Icons.login_rounded,
+                          icon: const Icon(Icons.login_rounded, color: Colors.black87),
                           label: isArabic ? 'تسجيل الدخول' : 'Sign in',
                           onTap: () => Navigator.of(context).push(
                             smoothRoute(AuthPage(isArabic: isArabic)),
@@ -821,7 +821,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       else ...[
                         _item(
                           context,
-                          icon: Icons.notifications_outlined,
+                          icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
                           label: isArabic
                               ? notifCount > 0
                                   ? 'الإشعارات ($notifCount)'
@@ -835,7 +835,7 @@ class MobileMenuDrawer extends StatelessWidget {
                         ),
                         _item(
                           context,
-                          icon: Icons.assignment_turned_in_outlined,
+                          icon: const Icon(Icons.assignment_turned_in_outlined, color: Colors.black87),
                           label: isArabic ? 'طلباتي' : 'My Requests',
                           onTap: () => Navigator.of(context).push(
                             smoothRoute(MyRequestsPage(isArabic: isArabic)),
@@ -843,7 +843,7 @@ class MobileMenuDrawer extends StatelessWidget {
                         ),
                         _item(
                           context,
-                          icon: Icons.settings_outlined,
+                          icon: const Icon(Icons.settings_outlined, color: Colors.black87),
                           label: isArabic ? 'الإعدادات' : 'Settings',
                           onTap: () => Navigator.of(context).push(
                             smoothRoute(
@@ -856,7 +856,7 @@ class MobileMenuDrawer extends StatelessWidget {
                         ),
                         _item(
                           context,
-                          icon: Icons.logout_rounded,
+                          icon: const Icon(Icons.logout_rounded, color: Colors.black87),
                           label: isArabic ? 'تسجيل الخروج' : 'Log out',
                           onTap: signOutUser,
                         ),
@@ -864,7 +864,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       const Divider(),
                       _item(
                         context,
-                        icon: Icons.description_outlined,
+                        icon: const Icon(Icons.description_outlined, color: Colors.black87),
                         label: isArabic
                             ? 'الشروط والأحكام'
                             : 'Terms & Conditions',
@@ -874,7 +874,7 @@ class MobileMenuDrawer extends StatelessWidget {
                       ),
                       _item(
                         context,
-                        icon: Icons.privacy_tip_outlined,
+                        icon: const Icon(Icons.privacy_tip_outlined, color: Colors.black87),
                         label: isArabic ? 'سياسة الخصوصية' : 'Privacy Policy',
                         onTap: () => Navigator.of(context).push(
                           smoothRoute(PrivacyPolicyPage(isArabic: isArabic)),
@@ -883,13 +883,13 @@ class MobileMenuDrawer extends StatelessWidget {
                       if (user == null)
                         _item(
                           context,
-                          icon: Icons.language_rounded,
+                          icon: const Icon(Icons.language_rounded, color: Colors.black87),
                           label: isArabic ? 'English' : 'العربية',
                           onTap: onLanguage,
                         ),
                       _item(
                         context,
-                        icon: FontAwesomeIcons.whatsapp,
+                        icon: const FaIcon(FontAwesomeIcons.whatsapp, color: Color(0xFF25D366)),
                         label: isArabic ? 'واتساب' : 'WHATSAPP',
                         color: const Color(0xFF25D366),
                         onTap: _openWhatsApp,
